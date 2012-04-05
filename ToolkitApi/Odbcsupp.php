@@ -51,10 +51,10 @@ public function execXMLStoredProcedure( $conn, $stmt, $bindArray )
 		return false;
 	}
 	
-	/* extension problem: sends an warning message into the php_log 
+	/* extension problem: sends an warning message into the php_log or to stdout 
 	 * about of number of result sets .  ( switch on return code of SQLExecute() 
 	 * SQL_SUCCESS_WITH_INFO  */
-		$ret = odbc_execute ( $crsr , array($InternalKey, $ControlKey, $InputXML ));
+		$ret = @odbc_execute ( $crsr , array($InternalKey, $ControlKey, $InputXML ));
 		if(!$ret){
 			$this->last_error = odbc_errormsg  ($conn );
 			echo  $this->last_error;	
