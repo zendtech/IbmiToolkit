@@ -412,8 +412,7 @@ MSGID      TYPE                    SEV  DATE      TIME             FROM PGM     
 	
 		return true;
 	} //( function extractErrorFromJoblog)
-	
-	
+		
 	
 } //(class ToolkitServiceCw)
 
@@ -468,7 +467,7 @@ class I5Error
 		$i5ErrorArray = array(0=>$errNum,     1=>$errCat,      2=>$errMsg,    3=>$errDesc,
 		                      'num'=>$errNum, 'cat'=>$errCat, 'msg'=>$errMsg, 'desc'=>$errDesc);
 		
-		$this->_i5Error = $i5ErrorArray;
+		self::$_i5Error = $i5ErrorArray;
 		
 	} //(setI5Error)
 	
@@ -477,7 +476,7 @@ class I5Error
      * @return array Error array for most recent action.
      */
     public function getI5Error() {
-    	return $this->_i5Error;
+    	return self::$_i5Error;
     } //(getI5Error)
 	
 	

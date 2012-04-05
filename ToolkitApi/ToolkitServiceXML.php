@@ -7,6 +7,7 @@ class XMLWrapper {
 	private $outputXML;
 	private $error;	
 	private $joblog;
+	protected $opm; // true if should specify OPM mode on program call mode='opm'
 	private $joblogErrors = array(); // cpf=>msgtext array
 
 	protected $ToolkitSrvObj;
@@ -38,11 +39,15 @@ class XMLWrapper {
 			} //(convertToCCsid)
 			 
 		} //(is_string)s
-		
 
-		if ($ToolkitSrvObj instanceof ToolkitService ) {
+		if (isset($ToolkitSrvObj) && $ToolkitSrvObj instanceof ToolkitService ) {
+			
 			$this->ToolkitSrvObj = $ToolkitSrvObj ;
-		}
+			
+			$this->opm = $this->ToolkitSrvObj->getToolkitServiceParam('v5r4'); // wrap program calls with mode=opm.
+	
+			
+		} //(if ($ToolkitSrvObj instanceof ToolkitService ))
 		
 		
 	} //(__construct)
@@ -110,11 +115,16 @@ class XMLWrapper {
 		 if(trim ($return_parameters_xml)!= ''){		 
 		 	$return_parameters_xml ="<return> $return_parameters_xml </return>";
 		 }
-			   	
-	if(!$function)
-		$pgmtag = "<pgm name='$pgm' lib='$lib'>";
-	else 
-		$pgmtag = "<pgm name='$pgm' lib='$lib' func='$function'>";
+
+
+		 
+    // specify opm mode if true
+    $opmString = ($this->opm) ? " mode='opm'" : "";
+    
+    // specify function if given
+    $funcString = ($function) ? " func='$function'" : "";
+    
+	$pgmtag = "<pgm name='$pgm' lib='$lib'$opmString$funcString>";
 		
 	$xmlIn = $this->xmlStart() . 	
 	"<script>
@@ -186,11 +196,14 @@ class XMLWrapper {
 		 	$return_parameters_xml ="<return> $return_parameters_xml </return>";
 		 }
 			   	
-	if(!$function)
-		$pgmtag = "<pgm name='$pgm' lib='$lib'>";
-	else 
-		$pgmtag = "<pgm name='$pgm' lib='$lib' func='$function'>";
-		
+    // specify opm mode if true
+    $opmString = ($this->opm) ? " mode='opm'" : "";
+    
+    // specify function if given
+    $funcString = ($function) ? " func='$function'" : "";
+    
+	$pgmtag = "<pgm name='$pgm' lib='$lib'$opmString$funcString>";
+		 		
 	$xmlIn = $this->xmlStart() .	
 	"<script>
 	$pgmtag

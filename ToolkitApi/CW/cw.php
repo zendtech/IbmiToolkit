@@ -41,7 +41,7 @@ function makeIpc($user, $connNum = 0) {
     } 
     //$ipc = "/tmp/abc";///tmp/ipc_cw_$ipcUser" . "_" . uniqid();
     $ipc = "/tmp/ipc_cw_$ipcUser" . "_" . $connNum;
-    logThis("ipc made: $ipc");
+
     return $ipc;
 } //(makeIpc)
 
@@ -215,7 +215,7 @@ function i5_connect($host='', $user='', $password='', $options=array()) {
     // check and handle I5_OPTIONS_PRIVATE_CONNECTION option
     if (isset($options[I5_OPTIONS_PRIVATE_CONNECTION])) {
 
-    	// only works if connection is persisent, too.
+    	// only works if connection is persistent, too.
     	if (!$isPersistent) {
     		// not persistent. this is an error.
     		i5ErrorActivity(I5_ERR_PHP_TYPEPARAM, I5_CAT_PHP, 'I5_OPTIONS_PRIVATE_CONNECTION was set but connection was not persistent. Try again using i5_pconnect().', 'I5_OPTIONS_PRIVATE_CONNECTION was set but connection was not persistent. Try again using i5_pconnect().');
@@ -253,8 +253,6 @@ function i5_connect($host='', $user='', $password='', $options=array()) {
     	
     // check and handle I5_OPTIONS_IDLE_TIMEOUT
     // Number of seconds of not being used after which a persistent/private connection job will end.
-    
-    
     $idleTimeout = 0; // default of 0 means no timeout (infinite wait)
     if (isset($options[I5_OPTIONS_IDLE_TIMEOUT])) {
     
@@ -286,6 +284,21 @@ function i5_connect($host='', $user='', $password='', $options=array()) {
     } //(if (isset($options[CW_EXISTING_TRANSPORT_CONN])))
     
 
+	// check and store CW_TRANSPORT_TYPE, if given. It's optional.
+	$transportType = ''; // empty is ok.
+	if (isset( $options [CW_TRANSPORT_TYPE])) {
+		$validTransports = array ('ibm_db2', 'odbc');
+		if (!in_array($options[CW_TRANSPORT_TYPE], $validTransports)) {
+			// invalid transport specified.
+			$errmsg = "Invalid CW_TRANSPORT_TYPE option ({$options[CW_TRANSPORT_TYPE]}). Omit or choose between " . explode(', ', $validTransports) . ".";
+			i5ErrorActivity ( I5_ERR_PHP_TYPEPARAM, I5_CAT_PHP, $errmsg, $errmsg );
+			return false;
+		} else {
+			// valid transport 
+			$transportType = $options [CW_TRANSPORT_TYPE];
+		} // (if (!is_resource))
+	} //(if (isset($options[CW_EXISTING_TRANSPORT_CONN])))
+    
     
     
     // localhost is default if no host was specified. 
@@ -335,8 +348,8 @@ function i5_connect($host='', $user='', $password='', $options=array()) {
     	 	// use existing resource
     	 	$tkit = ToolkitServiceCw::getInstance($existingTransportResource, $existingTransportI5NamingFlag, '', '', $isPersistent);
     	 } else {
-    	    // specify dbname, user, and password to create new transport
-    	    $tkit = ToolkitServiceCw::getInstance($dbname, $user, $password, '', $isPersistent); 
+    	    // specify dbname, user, and password, transport type to create new transport
+    	    $tkit = ToolkitServiceCw::getInstance($dbname, $user, $password, $transportType, $isPersistent); 
     	 } //(if ($existingTransportResource))
          
      } catch (Exception $e) {
@@ -370,15 +383,11 @@ function i5_connect($host='', $user='', $password='', $options=array()) {
     // override toolkit settings if nec.
     $sbmjobParams = getConfigValue('system', 'sbmjob_params');
     $xmlServiceLib = getConfigValue('system', 'XMLServiceLib', 'ZENDSVR');
-/*    
-    $debug = getConfigValue('system', 'debug', false);
-    $debugLogFile = getConfigValue('system', 'debugLogFile', false);
-    $encoding = getConfigValue('system', 'encoding', 'ISO-8859-1'); // XML encoding 
- 
-*/    
     
 
     $stateless = false; // default
+
+    $cwVersion = i5_version();
     
     // If we have a private conn, create an IPC based on it.
     if (isset($privateConnNum) && $privateConnNum) {
@@ -386,6 +395,7 @@ function i5_connect($host='', $user='', $password='', $options=array()) {
         // save private conn number. Can be retrieved later with getPrivateConnNum
         $tkit->setPrivateConnNum($privateConnNum);
         $tkit->setIsNewConn($isNewConn);
+		logThis ( "Running statefully with IPC '$ipc', private connection '$privateConnNum'. CW version $cwVersion. Service library: $xmlServiceLib" );
         
     } else {
     	
@@ -395,11 +405,13 @@ function i5_connect($host='', $user='', $password='', $options=array()) {
         if ($stateless) {
             // don't need IPC if stateless, running in QSQ job.
             $ipc = '';
-            logThis('Running stateless; no IPC needed. Service library: ' . $xmlServiceLib);
+            logThis("Running stateless; no IPC needed. CW version $cwVersion. Service library: $xmlServiceLib");
         } else {
+        	// Not stateless, so create an IPC
             // TODO this will change based on persistent/nonpersistent logic
     	    // IPC to use in separate toolkit job using just user id and unique additions in makeIpc
             $ipc = makeIpc($user);
+			logThis ( "Not private but not stateless; running with IPC '$ipc'. CW version $cwVersion. Service library: $xmlServiceLib" );
         } //(if stateless)
     } //(privateconn and other options for generating IPC)
         
@@ -412,8 +424,18 @@ function i5_connect($host='', $user='', $password='', $options=array()) {
         // override any values for the last parm of $sbmjobParams
         // check that $sbmjobParams is set and has at least one slash
         if (!isset($sbmjobParams) || empty($sbmjobParams)) {
-            i5ErrorActivity(I5_ERR_PHP_NBPARAM_BAD, I5_CAT_PHP, 'Job name was set but SBMJOB params were not. Please set SBMJOB params in toolkit.ini', 'Job name was set but SBMJOB params were not. Please set SBMJOB params in toolkit.ini');
-            return false;
+        	
+        	// not specified in .INI file, but may be a default in toolkit itself.
+        	$toolkitDefaultSbmjob = $tkit->getToolkitServiceParam('sbmjob');
+
+        	if (!$toolkitDefaultSbmjob) {
+        	
+                i5ErrorActivity(I5_ERR_PHP_NBPARAM_BAD, I5_CAT_PHP, 'Job name was set but SBMJOB params were not. Please set SBMJOB params in toolkit.ini', 'Job name was set but SBMJOB params were not. Please set SBMJOB params in toolkit.ini or in ToolkitService.php default settings');
+                return false;
+        	} else {
+        		// use the default as starting point
+        		$sbmjobParams = $toolkitDefaultSbmjob;
+        	}
         } //(if sbmjobParams not set)
         
         // check that sbmjob params has at least one, but not more than two, slashes in it. Final format: lib/jobd/jobname
@@ -441,12 +463,7 @@ function i5_connect($host='', $user='', $password='', $options=array()) {
     
     $serviceParams = array('InternalKey'       => $ipc,
                            'stateless'         => $stateless);
-/*                            'debug'             => $debug,
-                            'debugLogFile'      => $debugLogFile,
-                            
-                            'XMLServiceLib'     => $xmlServiceLib,
-                            'encoding'          => $encoding);
-*/                            
+
     // additional settings
     if ($idleTimeout) {
         $serviceParams['idleTimeout'] = $idleTimeout;
@@ -875,11 +892,17 @@ function i5_command($cmdString, $input = array(), $output = array(), $connection
 
     // pass command string into non-fast (but result-returning) or fast (true/false only) method.
     if ($needOutputParms) {
-        // slower but improved "result" technique was used
+
+    	// Use slower but improved "result" (REXX) technique
         $result = $connection->ClCommandWithOutput($finalCmdString);
 
-        // sets and exports output variables.
-        $exportedThem = $connection->setOutputVarsToExport($simpleParmVarArray, $result);
+        if ($result) {
+        	// Command succeeded. Set and export output variables.
+            $exportedThem = $connection->setOutputVarsToExport($simpleParmVarArray, $result);
+        } else {
+        	// command failed; don't try to export its output variables.
+        	$exportedThem = false; 
+        } //(if $result)
 
     } else {
         // do fast way without rows but with CPF error if available.

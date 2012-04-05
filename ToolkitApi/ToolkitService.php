@@ -9,7 +9,8 @@ class ToolkitService {
 	// changed private to protected	
 	protected $XMLServiceLib = XMLSERVICELIB;
 	protected $plug    = 'iPLUG512K';//for ibm_db2. for  odbc $plug='iPLUGR512K'.  consider 32k with small data 
-    protected $plugsize = 4;	
+    protected $plugSize = '512K'; // 4K, 32K, 512K, 65K, 512K, 1M, 5M, 10M, 15M
+    protected $plugPrefix = 'iPLUG'; // db2. for odbc is iPLUGR because ODBC requires Result sets.
 	protected $InternalKey = XMLINTERNALKEY;
 	protected $ControlKey = '';
 	protected $InputXML = '';
@@ -20,6 +21,7 @@ class ToolkitService {
 	protected $cpfErr = '';
 	protected $debug = false;
 	protected $requestCdata = true; // whether to ask XMLSERVICE to wrap its output in CDATA to protect reserved XML characters
+	protected $v5r4 = false; // whether to ask XMLSERVICE to carefully use features that v5r4 can handle
 	protected $convertToCcsid = null; // Note: this feature not complete yet. Specify CCSID for difficult or DBCS CCSID needs.   
 	protected $encoding = "ISO-8859-1"; /*English 
 	                                    Hebrew:ISO-8859-8 */
@@ -92,6 +94,7 @@ class ToolkitService {
         $debugLogFile = getConfigValue('system', 'debugLogFile', false);
         $encoding = getConfigValue('system', 'encoding', 'ISO-8859-1'); // XML encoding 
         $sbmjobParams = getConfigValue('system', 'sbmjob_params'); 
+        $v5r4 = getConfigValue('system', 'v5r4', false);
 
         // set service parameters to use in object.
 		$serviceParams = array('debug'             => $debug,
@@ -104,6 +107,12 @@ class ToolkitService {
             $serviceParams['subsystem'] = $sbmjobParams;
         } //(if sbmjobParams)
 
+        if ($v5r4) {
+        	// optional. Don't specify if not true (default is false).
+        	$serviceParams['v5r4'] = $v5r4;
+        } //(if sbmjobParams)
+        
+        
         // set up params in this object. Includes debugging, logging.
         $this->setToolkitServiceParams($serviceParams);
 		
@@ -188,32 +197,39 @@ catch (Exception $e)
 	    	$extension_name_prfx = $extensionPrefix;//ibm_db2, odbc. 
 	    
 		if( $extension_name_prfx === 'ibm_db2'){
-			if( function_exists('db2_connect'))
+			if( function_exists('db2_connect')) {
+				
 				$this->db2 = true;
-			else 
-				throw new Exception("Extension $extension_name_prfx not loaded.");				
-		}
+			} else { 
+				throw new Exception("Extension $extension_name_prfx not loaded.");
+			} //(if db2_connect exists)				
+		} //(if extensinon prefix is 'ibm_db2')
 			
 		if($extension_name_prfx === 'odbc'){
-			if( function_exists('odbc_connect'))
+			if( function_exists('odbc_connect')) {
+				
 				$this->db2 = false ;
-			else 
-				throw new Exception("Extension $extension_name_prfx not loaded.");					
-		}
+			} else { 
+				throw new Exception("Extension $extension_name_prfx not loaded.");
+			} //(odbc_connect exists)					
+		} //(if extensinon prefix is 'odbc')
 		
 		if($this->db2){
+			 $this->plugPrefix = 'iPLUG';
 		 	 include_once 'Db2supp.php';
 		     $this->db  = new db2supp();
-		}
-		  else		
-		  {
+		} else {
 			 include_once 'Odbcsupp.php';
 			 //for odbc will be used another default stored procedure call
+			 $this->plugPrefix = 'iPLUGR'; // "R" = "result set" which is how ODBC driver returns param results
 			 $this->setToolkitServiceParams(array('plug'=>'iPLUGR512K') );
 			 $this->db =  new odbcsupp(); 
-		  }
-		return ;		
+		} //(if db2)
+		return;		
 	}
+	
+	
+	
 	
 	public function setToolkitServiceParams ( array $XmlServiceOptions )
 	{
@@ -224,10 +240,22 @@ catch (Exception $e)
 	  if( isset ($XmlServiceOptions['InternalKey'])){
 	  	$this->InternalKey = $XmlServiceOptions['InternalKey'];
 	  } 
-	  
+
+	  // if plug name specified, use it. Otherwise, see if size was specified.
+	  // Can generate plug name from the size.
 	  if( isset ($XmlServiceOptions['plug'])){
 	  	$this->plug = $XmlServiceOptions['plug'];
-	  }
+	  } else {
+	  	// plug not set; perhaps plug size was.
+	  	if( isset ($XmlServiceOptions['plugSize'])){
+		    
+	  		$this->plugSize = $XmlServiceOptions ['plugSize'];
+	  		// Set plug based on plugSize
+  			$this->plug = $this->plugPrefix . $this->plugSize; 
+		    
+	  	} //(plugSize)
+	  } //(if plug)
+	  
 	  /* reset "Debug" flag of  Toolkit service php class*/
 	  if( isset ($XmlServiceOptions['debug'])){
 	  	$this->debug  = $XmlServiceOptions['debug'];
@@ -282,6 +310,11 @@ catch (Exception $e)
 	  if( isset ($XmlServiceOptions['cdata'])){
 	  	$this->requestCdata  = $XmlServiceOptions['cdata'];
 	  } 
+
+	  if( isset ($XmlServiceOptions['v5r4'])){
+	  	$this->v5r4  = $XmlServiceOptions['v5r4'];
+	  }
+	   
 	  
 	  
 	} //(setToolkitServiceParameters)
@@ -295,7 +328,15 @@ catch (Exception $e)
 	  		return $this->XMLServiceLib;
 	    }
 			
-			
+	    if( $paramName == 'v5r4'){
+	    	return $this->v5r4;
+	    }
+	    
+	    if( $paramName == 'sbmjob'){
+	    	return $this->subsystem;
+	    }
+	     
+	    
     	return false;
 	}	
 	
@@ -395,6 +436,7 @@ catch (Exception $e)
 	}	
 */	
 	
+	// $options can include 'func' and 'opm'
 	public function PgmCall($pgmname, $lib,
 	                        $InputParam =  NULL,
 							$ReturnValue = NULL, 
@@ -405,8 +447,9 @@ catch (Exception $e)
     $optional  = false;
 	$function = NULL;
 	$this->XMLWrapper = new XMLWrapper( array('encoding'       => $this->encoding, 
-	                                          'convertToCcsid' => $this->convertToCcsid) );	
-
+	                                          'convertToCcsid' => $this->convertToCcsid),
+			                                  $this
+			 );	
 	$InputParamArray = ProgramParameter::ParametersToArray($InputParam);
 	$ReturnValueArray = ProgramParameter::ParametersToArray($ReturnValue);
 
@@ -643,7 +686,7 @@ catch (Exception $e)
     	$resultArray = $this->CLInteractiveCommand($qshCommand);
     	
     	if (empty($resultArray) || !is_array($resultArray)) {
-    		$this->logThis("Result of QSH command $qshCommand is empty or not an array."); 
+    		logThis("Result of QSH command $qshCommand is empty or not an array."); 
     		return false;
     	}
     	
@@ -675,7 +718,7 @@ catch (Exception $e)
     			} else {
     			    $this->cpfErr = $qshCode;
     			    $this->error = 'Could not get exit code. Check toolkit error log for error.';
-    			    $this->logThis("Result of QSH command $qshCommand was error: $firstLine.");
+    			    logThis("Result of QSH command $qshCommand was error: $firstLine.");
     				return false;
     			}
     			
@@ -714,7 +757,7 @@ catch (Exception $e)
     		case 'QSH0007':
     			$this->cpfErr = $qshCode;
     			$this->error = 'Check toolkit error log for error.';
-    			$this->logThis("Result of QSH command $qshCommand was error: $firstLine.");
+    			logThis("Result of QSH command $qshCommand was error: $firstLine.");
     			return false;
     			break;
     	} //(switch $qshcode)
@@ -956,16 +999,13 @@ catch (Exception $e)
 		return $this->InternalKey;
 	}
 	
-	/* *justproc, *debug, *debugproc, *immed, *nostart, *rpt)*/
 	// construct a string of space-delimited control keys based on properties of this class.
 	protected function getControlKey($disconnect = false){
 
 		$key = ''; // initialize
 		
-		//acc. to parameter size use attempt program size.
 		if( $disconnect ){
-			// TODO alan, see how to remedy the fact that $disconnect is always coming in as true.			
-		    //return "*immed";
+		    return "*immed";
 		}
 		/*
 		if(?) *justproc
@@ -989,7 +1029,6 @@ catch (Exception $e)
 
 	    
 	    
-	    
 /* may be used an additional set of parameters
 	// get performance last call data (no XML calls)
 	    if ($this->performance) {
@@ -1010,13 +1049,12 @@ catch (Exception $e)
 		// stateless calls in stored procedure job
 		 * 
 		 * Add *here, which will run everything inside the current PHP/transport job
-		 * without spawning a separate XTOOLKIT job.
+		 * without spawning or submitting a separate XTOOLKIT job.
 		 */
 	    if ($this->stateless) {
 			$key .= " *here";
 			
 	    } else {
-	    	
 	    	// not stateless, so could make sense to supply *sbmjob parameters for spawning a separate job.
 		    if( trim($this->subsystem ) != '' ) {
 			   $key .= " *sbmjob($this->subsystem)";
@@ -1045,15 +1083,12 @@ catch (Exception $e)
  
 	protected function VerifyPLUGName ()
 	{
+		// if plug already set, don't need to set it now.
 		if($this->plug != ''){
-		    return ;
+		    return;
 		}
-		//use this in case that no special stored procedure selected.    
+		//Sets the default plug.    
 		$size = 512;
-		if($this->db2)
-			$plug = 'iPLUG';
-		else
-			$plug = 'iPLUGR';//odbc	
 		$Add = 'K';//or M
 
 		/*4, 32, 65, 512 K*/
@@ -1064,15 +1099,16 @@ catch (Exception $e)
 		//verify that all last blob ptfs are applied on i5 machine
 		//set the $this->plug = "iPLUG4K";, 
 		//it calls the program that returns data via char storage
-		$this->plug = $plug . $size . $Add;
+		$this->plug = $this->plugPrefix() . $size . $Add;
 		
 		//$this->plug = "iPLUG512K";
 	    //$this->plug = "iPLUG1M";
 		//$this->plug = "iPLUG4K";
-	}
+		
+	} //(VerifyPLUGName)
 	
 
-        // Ensures that an IPC has been set
+    // Ensures that an IPC has been set
 	protected function VerifyInternalKey(){
             // if we are running in stateless mode, there's no need for an IPC key.
 	    if ($this->stateless) {
