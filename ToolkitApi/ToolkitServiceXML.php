@@ -269,9 +269,11 @@ class XMLWrapper {
 			$type = $props['type'];
 			
 			// optional varying
-			$varying = $props['varying'];
-			$varyingStr = ($varying) ? " varying='$varying'" : '';
-
+			// varying only inserted if set on or varying is allowed for data type
+			$varyingStr = '';
+			if ($props['varying'] == 'on' || in_array(strtolower(substr($props['type'], -1)), array('a', 'g', 'c')))
+				$varyingStr = " varying='{$props['varying']}'";
+			
 			// optional setLen to set length value to a numeric field (see 'len' for where the length comes from)
 		    $labelSetLen = $props['setlen'];
 		    $labelSetLenStr = ($labelSetLen) ? " setlen='$labelSetLen'" : '';
