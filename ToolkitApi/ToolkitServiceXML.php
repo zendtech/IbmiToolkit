@@ -8,6 +8,7 @@ class XMLWrapper {
 	private $error;	
 	private $joblog;
 	protected $opm; // true if should specify OPM mode on program call mode='opm'
+	protected $debug; // true if debug mode is enabled through toolkit.ini
 	private $joblogErrors = array(); // cpf=>msgtext array
 
 	protected $ToolkitSrvObj;
@@ -45,6 +46,7 @@ class XMLWrapper {
 			$this->ToolkitSrvObj = $ToolkitSrvObj ;
 			
 			$this->opm = $this->ToolkitSrvObj->getToolkitServiceParam('v5r4'); // wrap program calls with mode=opm.
+			$this->debug = $this->ToolkitSrvObj->getToolkitServiceParam('debug'); // Omit some optimizations
 	
 			
 		} //(if ($ToolkitSrvObj instanceof ToolkitService ))
@@ -164,9 +166,14 @@ class XMLWrapper {
 			foreach ( $params as $element ) {
 				
 				// do parm tag with comment and io.
-				$elementProps  = $element->getParamProperties(); 
+				$elementProps  = $element->getParamProperties();
 
-				$parametersXml .= "<parm io='{$elementProps['io']}' comment='{$elementProps['comment']}'>";
+				// Use comments only when in debug mode.
+				$commentStr = '';
+				if ($this->debug)
+					$commentStr = " comment='{$elementProps['comment']}'";
+
+				$parametersXml .= "<parm io='{$elementProps['io']}'$commentStr>";
 				
 				// buildParamXml takes one ProgramParameter object and recursively build XML.
 				$parametersXml .= $this->buildParamXmlCw($element);
@@ -676,7 +683,10 @@ class XMLWrapper {
 		   return ''; 
 
 		  
-			$comment = $param ['comment'];
+			// Use comments only when in debug mode.
+			$commentStr = '';
+			if ($this->debug)
+				$commentStr = " comment='{$param['comment']}'";
 			$data = $param ['data'];
 			
 			if ($this->sendReceiveHex) {
@@ -696,7 +706,7 @@ class XMLWrapper {
 			if($param ['varying']== 'on')
 				$varying = " varying='on'";
 				
-			$parameter_xml = "<parm comment='$comment' io='$io'> ";
+			$parameter_xml = "<parm$commentStr io='$io'> ";
 			$count =1; //one parameter 	
 			$addDimenstion='';
 		 	if($param['dim'] != 0) {			 		
@@ -724,7 +734,11 @@ class XMLWrapper {
 		   return ''; 
 		   $parameter_xml='';
 		   
-			$comment = $param ['comment'];
+			// Use comments only when in debug mode.
+			$commentStr = '';
+			if ($this->debug)
+				$commentStr = " comment='{$param['comment']}'";
+			
 			$data = $param ['data'];
 			if ($this->sendReceiveHex) {
 				// if hex format requested 
@@ -758,7 +772,7 @@ class XMLWrapper {
 				if($count > 1)
 					$addDimenstion = $j;//should have a different identificaion
 						
-				$parameter_xml .= "<data type='$type' var='$var$addDimenstion' comment='$comment'>$data</data>";
+				$parameter_xml .= "<data type='$type' var='$var$addDimenstion'$commentStr>$data</data>";
 			}
 			return $parameter_xml;  	
 				

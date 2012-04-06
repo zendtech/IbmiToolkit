@@ -319,23 +319,11 @@ catch (Exception $e)
 	  
 	} //(setToolkitServiceParameters)
 	
-	// TODO make more general, not have to specify each param as a separate class attribute.
+	// TODO which other parameters should be accessible?
 	public function getToolkitServiceParam( $paramName ){
-		if( $paramName == 'plug' )
-			return $this->plug;
-
-	    if( $paramName == 'XMLServiceLib'){
-	  		return $this->XMLServiceLib;
+	    if (in_array($paramName, array('plug', 'XMLServiceLib', 'v5r4', 'sbmjob', 'debug'))) {
+	    	return $this->$paramName;
 	    }
-			
-	    if( $paramName == 'v5r4'){
-	    	return $this->v5r4;
-	    }
-	    
-	    if( $paramName == 'sbmjob'){
-	    	return $this->subsystem;
-	    }
-	     
 	    
     	return false;
 	}	
