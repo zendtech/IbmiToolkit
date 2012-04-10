@@ -426,7 +426,7 @@ function i5_connect($host='', $user='', $password='', $options=array()) {
         if (!isset($sbmjobParams) || empty($sbmjobParams)) {
         	
         	// not specified in .INI file, but may be a default in toolkit itself.
-        	$toolkitDefaultSbmjob = $tkit->getToolkitServiceParam('sbmjob');
+        	$toolkitDefaultSbmjob = $tkit->getToolkitServiceParam('sbmjobParams');
 
         	if (!$toolkitDefaultSbmjob) {
         	
@@ -470,7 +470,7 @@ function i5_connect($host='', $user='', $password='', $options=array()) {
     }
     if ($sbmjobParams) {
     	// taking into account jobname preferences
-        $serviceParams['subsystem'] = $sbmjobParams;
+        $serviceParams['sbmjobParams'] = $sbmjobParams;
     }
 
     // these will be in addition to / overriding any params set in toolkit service constructor.

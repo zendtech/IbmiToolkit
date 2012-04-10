@@ -8,6 +8,8 @@ class XMLWrapper {
 	private $error;	
 	private $joblog;
 	protected $opm; // true if should specify OPM mode on program call mode='opm'
+	protected $debug; // true if debug mode is enabled through toolkit.ini
+
 	private $joblogErrors = array(); // cpf=>msgtext array
 
 	protected $ToolkitSrvObj;
@@ -45,6 +47,9 @@ class XMLWrapper {
 			$this->ToolkitSrvObj = $ToolkitSrvObj ;
 			
 			$this->opm = $this->ToolkitSrvObj->getToolkitServiceParam('v5r4'); // wrap program calls with mode=opm.
+
+
+			$this->debug = $this->ToolkitSrvObj->getToolkitServiceParam('debug'); // Omit some optimizations
 	
 			
 		} //(if ($ToolkitSrvObj instanceof ToolkitService ))
@@ -95,6 +100,7 @@ class XMLWrapper {
 				else {
 					$param = $element;
 				}			
+				
 				$parameters_xml .= $this->FillXmlParamElement ( $ds, $param, $i );		
 			}
 		}//io parameters
@@ -160,28 +166,41 @@ class XMLWrapper {
     	    	
     	} elseif (is_array($params) && (!empty($params))) {
     		
-    		// an array of ProgramParameter objects. Build XML from it.
+	   		// an array of ProgramParameter objects. Build XML from it.
 			foreach ( $params as $element ) {
 				
-				// do parm tag with comment and io.
-				$elementProps  = $element->getParamProperties(); 
-
-				$parametersXml .= "<parm io='{$elementProps['io']}' comment='{$elementProps['comment']}'>";
-				
-				// buildParamXml takes one ProgramParameter object and recursively build XML.
-				$parametersXml .= $this->buildParamXmlCw($element);
-				
-				// end parm tag
-				$parametersXml .= "</parm>";
-				
+			    // do parm tag with comment and io.
+			    $elementProps  = $element->getParamProperties();
+	
+			    // Use comments only when in debug mode. (Reduce XML sent)
+			    $commentStr = '';
+			    if (isset($elementProps['comment']) && $this->debug) {
+			        $commentStr = " comment='{$elementProps['comment']}'";
+			    }
+	
+	            // only send io if not the default 'both'. (Reduce XML sent)
+	            $ioStr = '';
+	            if (isset($elementProps['io']) && $elementProps['io'] != 'both') {
+			        $ioStr = " io='{$elementProps['io']}'";
+			    }
+					
+			    $parametersXml .= "<parm{$ioStr}{$commentStr}>";
+					
+			    // buildParamXml takes one ProgramParameter object and recursively build XML.
+			    $parametersXml .= $this->buildParamXmlCw($element);
+					
+			    // end parm tag
+			    $parametersXml .= "</parm>";
+					
 			} //(foreach $params)
     		
     	} //(is_string/is_array)
-
-		
-		$return_parameters_xml = '';
-		if(isset($ReturnParams ))
-		{
+    	
+    	$return_parameters_xml = '';
+	
+	
+	if(isset($ReturnParams )) {
+	
 			foreach($ReturnParams as $element)
 			{	
 				 $ds = false;			
@@ -190,11 +209,11 @@ class XMLWrapper {
 				 }
 			     $return_parameters_xml .= $this->fillXMLReturnElement($ds,  $element);
 			 }
-		 }
-		 
-		 if(trim ($return_parameters_xml)!= ''){		 
+	}
+	 
+	if(trim ($return_parameters_xml)!= ''){		 
 		 	$return_parameters_xml ="<return> $return_parameters_xml </return>";
-		 }
+	}
 			   	
     // specify opm mode if true
     $opmString = ($this->opm) ? " mode='opm'" : "";
@@ -269,9 +288,11 @@ class XMLWrapper {
 			$type = $props['type'];
 			
 			// optional varying
-			$varying = $props['varying'];
-			$varyingStr = ($varying) ? " varying='$varying'" : '';
-
+			// varying only inserted if set on (default is off, so we can let XMLSERVICE supply the default behavior if off). The less XML we create and send, the more efficient we will be.
+			$varyingStr = '';
+			if (isset($props['varying']) && $props['varying'] == 'on') {
+			    $varyingStr = " varying='{$props['varying']}'";
+			}
 			// optional setLen to set length value to a numeric field (see 'len' for where the length comes from)
 		    $labelSetLen = $props['setlen'];
 		    $labelSetLenStr = ($labelSetLen) ? " setlen='$labelSetLen'" : '';
@@ -665,53 +686,69 @@ class XMLWrapper {
 		if($param ['varying']== 'on')
 			$varying = " varying='on'";
 			
-		return  "<data type='$descr' var='$var' $varying >$data</data>\n"; 
+		return  "<data type='$descr' var='$var' $varying>$data</data>\n"; 
 	}	
 	
 	private function createXMLParamElement ($param, $i)
 	{
-		if(!is_array($param))
+		
+		if(!is_array($param)) {
 		   return ''; 
+		}
+		
+		$data = $param ['data'];
+			
+		if ($this->sendReceiveHex) {
+		    // if hex format requested 
+			$data = bin2hex($data);
+		} // (if ($this->sendReceiveHex))
+			
+		$type = $param ['type'];
 
-		  
-			$comment = $param ['comment'];
-			$data = $param ['data'];
-			
-			if ($this->sendReceiveHex) {
-				// if hex format requested 
-			    $data = bin2hex($data);
-			} // (if ($this->sendReceiveHex))
-			
-			$type = $param ['type'];
-			$io   = $param ['io'];
-			if (isset($param ['var'])){
-				$var   = $param ['var'];
-			}
-			else
-				$var   = 'var'.$i;
-			$type = $param ['type'];
-			$varying = '';
-			if($param ['varying']== 'on')
-				$varying = " varying='on'";
+		if (isset($param ['var'])) {
+			$var   = $param ['var'];
+		} else {
+			$var   = 'var'.$i;
+		}
+		$type = $param ['type'];
+		$varying = '';
+		if(isset($param['varying']) && $param['varying']== 'on') {
+			$varying = " varying='on'";
+        }
 				
-			$parameter_xml = "<parm comment='$comment' io='$io'> ";
-			$count =1; //one parameter 	
-			$addDimenstion='';
-		 	if($param['dim'] != 0) {			 		
-				$count = $param['dim'];
-				$parameter_xml .= "<ds>";
-		 	}
+        // only send io if not the default 'both'. (Reduce XML sent)
+        $ioStr = '';
+        if (isset($param['io']) && $param['io'] != 'both') {
+            $ioStr = " io='{$param['io']}'";
+		}
+
+		// Use comments only when in debug mode. (Reduce XML sent)
+		$commentStr = '';
+		if ($this->debug && isset($param['comment'])) {
+		    $commentStr = " comment='{$param['comment']}'";
+        } 
+        
+		$parameter_xml = "<parm{$ioStr}{$commentStr}>";
+
+		$count =1; //one parameter 	
+		$addDimenstion='';
+		if($param['dim'] != 0) {			 		
+			$count = $param['dim'];
+		    $parameter_xml .= "<ds>";
+		}
 		 		 		 			
 			for($j =1; $j<= $count ; $j++){/*for array definition */
 				 if($count > 1)
 				 	$addDimenstion = $j;
-				$parameter_xml .="<data type='$type' var='$var$addDimenstion' $varying>$data</data>";
+				$parameter_xml .="<data type='$type' var='$var$addDimenstion'$varying>$data</data>";
 			}	
 					
-			if($param['dim'] != 0)	
-				$parameter_xml .= "</ds>";	 		  
+			if($param['dim'] != 0) {	
+				$parameter_xml .= "</ds>";
+			}	 		  
 		
-			$parameter_xml .="  </parm>";	
+			$parameter_xml .="</parm>";
+			
 			return $parameter_xml;
 				
 	}	
@@ -722,7 +759,12 @@ class XMLWrapper {
 		   return ''; 
 		   $parameter_xml='';
 		   
-			$comment = $param ['comment'];
+			// Use comments only when in debug mode.
+			$commentStr = '';
+			if ($this->debug && isset($param['comment'])) {
+				$commentStr = " comment='{$param['comment']}'";
+		    }
+
 			$data = $param ['data'];
 			if ($this->sendReceiveHex) {
 				// if hex format requested 
@@ -739,7 +781,7 @@ class XMLWrapper {
 				$var   = 'var'.$i;
 			$type = $param ['type'];
 			$varying = '';
-			if($param ['varying']== 'on')
+			if(isset($param ['varying']) && $param ['varying']== 'on')
 				$varying = " varying='on'";
 		
 				
@@ -756,7 +798,7 @@ class XMLWrapper {
 				if($count > 1)
 					$addDimenstion = $j;//should have a different identificaion
 						
-				$parameter_xml .= "<data type='$type' var='$var$addDimenstion' comment='$comment'>$data</data>";
+				$parameter_xml .= "<data type='$type' var='$var$addDimenstion'$commentStr>$data</data>";
 			}
 			return $parameter_xml;  	
 				

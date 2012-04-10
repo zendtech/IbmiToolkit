@@ -61,7 +61,7 @@ $param[]=$ToolkitServiceObj->AddParameterChar('both',10,'comment1','P1',array("t
 		$this->io              = (is_array($value)) ? 'both' : $io; 
 		$this->comment         = $comment;
 		$this->varName         = $varName;
-		$this->data            = $this->handleParamValue($type, $io, $comment, $varName, $value, $varing, $dimension, $by, $isArray); // handles array with original info
+		$this->data            = self::handleParamValue($type, $io, $comment, $varName, $value, $varing, $dimension, $by, $isArray); // handles array with original info
 		$this->varing          = (is_array($value)) ? 'off' : $varing;
 		$this->dimension       = $dimension;
 		$this->by              = $by;
@@ -118,7 +118,7 @@ $param[]=$ToolkitServiceObj->AddParameterChar('both',10,'comment1','P1',array("t
                 $value = $ds;
                 
 			} else {
-				throw new Exception("Empty array passed as value for {$this->varName}");
+				throw new Exception("Empty array passed as value for {$varName}");
 			} //(if count)
 			
 		} //(is array)
@@ -180,41 +180,35 @@ $param[]=$ToolkitServiceObj->AddParameterChar('both',10,'comment1','P1',array("t
 	// $arrParms is an array of parameter arrays or objects.
 	static function UpdateParameterValues(&$arrParams, array $arrValues){
 		
-        //echo "<BR>params: <PRE>" . print_r($arrParams, true) . "</PRE><BR> values: <PRE>" .  print_r($arrValues, true) . "</PRE>";   		
-		
 		// added the params part
 		if(!is_array($arrValues) || !is_array($arrParams)) {
 			return false;
 	    }
 
-	    
+        // loop through all values passed in	    
 	    foreach($arrValues as $varName =>$newData){
 	    	
+	    	// for each value, loop through all params at this level to see if the names match.
 			foreach($arrParams as $single)
 			{
 				
-				
-				
-/*				if (!is_object($single)) {
-					// if not object, could be array for final 
-					var_dump($single);
-					die;
-				}
-*/				
 				if( is_object($single) && $single->isDS()){
 					$arr = $single->getParamValue();
 					self::UpdateParameterValues( $arr, array ($varName =>$newData));
 				} else {
-					// regular param, not a ds. could be an array of values 
+					// regular param, not a ds. could be an array of values, though. 
+			        
 					$paramName =$single->getParamName();
+
 					if($paramName === $varName ){
-						$single->setParamValue($this->handleParamValue($newData));
+						//$single->setParamValue(self::handleParamValue($newData)); // if data is an array; not done right
+						$single->setParamValue($newData);
 						break;
 					}
 		    	}			
 		    }	
 	    }		
-	}
+	} //(UpdateParameterValues)
 	
 	static function ParametersToArray( $arrParams = null ){
 	  if(!is_array($arrParams ) && !( $arrParams instanceof ProgramParameter))

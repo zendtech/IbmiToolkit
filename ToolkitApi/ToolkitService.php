@@ -25,14 +25,15 @@ class ToolkitService {
 	protected $convertToCcsid = null; // Note: this feature not complete yet. Specify CCSID for difficult or DBCS CCSID needs.   
 	protected $encoding = "ISO-8859-1"; /*English 
 	                                    Hebrew:ISO-8859-8 */
-	// TODO test mode too see PLUGCFG1 and 2. It's called $subsystem but really parameters for *SBMJOB() control 
-	protected $subsystem = "ZENDSVR/ZSVR_JOBD/XTOOLKIT"; // in test mode, use QSVRJOB/QDFTJOBD                                    
+	// TODO test mode too see PLUGCFG1 and 2. 
+	protected $sbmjobParams = "ZENDSVR/ZSVR_JOBD/XTOOLKIT"; // in test mode, use QSYS/QSRVJOB/XTOOLKIT                                    
+	protected $sbmjobEnabled = true; //  whether we are allowed to submit a job for toolkit
     protected $transport = false;
 	protected $prestart = false;
 	protected $stateless = false;
 	protected $performance = false;
 	protected $license = false;
-	protected $sbmjob = true; // default ZENDSVR subsystem
+
 	protected $idleTimeout = null; // created for Compat. Wrapper (CW)
 	protected $db2 = false;
 	protected $db = null;
@@ -104,7 +105,7 @@ class ToolkitService {
                             
         if ($sbmjobParams) {
         	// optional. Don't specify if not given in INI.
-            $serviceParams['subsystem'] = $sbmjobParams;
+            $serviceParams['sbmjobParams'] = $sbmjobParams;
         } //(if sbmjobParams)
 
         if ($v5r4) {
@@ -275,12 +276,12 @@ catch (Exception $e)
 	      $this->_schemaSep  = $XmlServiceOptions['schemaSep'];
 	  }
 	  
-	  if( isset ($XmlServiceOptions['subsystem'])){
+	  if( isset ($XmlServiceOptions['sbmjobParams'])){
 	  {
-	  		if (  strstr($XmlServiceOptions['subsystem'], "/") ){
+	  		if (  strstr($XmlServiceOptions['sbmjobParams'], "/") ){
 	  			/* verify that subsystem name and subsytem decscription (and, optionally, job name) 
 	  			 * are presented in the string*/	  			
-	  		$this->subsystem  = $XmlServiceOptions['subsystem'];
+	  		$this->sbmjobParams  = $XmlServiceOptions['sbmjobParams'];
 	  		}
 	  	}
 	  }
@@ -319,23 +320,12 @@ catch (Exception $e)
 	  
 	} //(setToolkitServiceParameters)
 	
-	// TODO make more general, not have to specify each param as a separate class attribute.
+	// TODO which other parameters should be accessible?
+	// TODO Perhaps allow user-defined control keys and properties to be passed as well?
 	public function getToolkitServiceParam( $paramName ){
-		if( $paramName == 'plug' )
-			return $this->plug;
-
-	    if( $paramName == 'XMLServiceLib'){
-	  		return $this->XMLServiceLib;
+	    if (in_array($paramName, array('plug', 'XMLServiceLib', 'v5r4', 'sbmjobParams', 'debug'))) {
+	    	return $this->$paramName;
 	    }
-			
-	    if( $paramName == 'v5r4'){
-	    	return $this->v5r4;
-	    }
-	    
-	    if( $paramName == 'sbmjob'){
-	    	return $this->subsystem;
-	    }
-	     
 	    
     	return false;
 	}	
@@ -1056,8 +1046,8 @@ catch (Exception $e)
 			
 	    } else {
 	    	// not stateless, so could make sense to supply *sbmjob parameters for spawning a separate job.
-		    if( trim($this->subsystem ) != '' ) {
-			   $key .= " *sbmjob($this->subsystem)";
+		    if( trim($this->sbmjobParams ) != '' ) {
+			   $key .= " *sbmjob($this->sbmjobParams)";
 	        } //(if subsystem *sbmjob specified)
 	    	
 		} //(if stateless)
