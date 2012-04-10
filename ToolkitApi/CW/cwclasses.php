@@ -1175,8 +1175,25 @@ class DataDescriptionPcml extends DataDescription
 		$this->setConnection($connection);
 
 		// Convert PCML from ANSI format (which old toolkit required) to UTF-8 (which SimpleXML requires).
-		// No harm if the string is already in UTF-8.
-		$pcml = utf8_encode($pcml);
+		
+		//TODO this could possibly be done more efficiently, reading the ini-File again is suboptimal
+		$encoding = getConfigValue('system', 'encoding', 'ISO-8859-1'); // XML encoding
+		
+		/*
+		 * Look for optionally set <?xml encoding attribute
+		 * and change encoding if attribute is set and not UTF-8
+		 * or change encoding if attribute is not set and ini encoding is not UTF-8
+		 */ 
+		$pcml = trim($pcml);
+		$matches = array();
+		$regex = '/^<\?xml\s.*?encoding=["\']([^"\']+)["\'].*?\?>/is';
+		if (preg_match($regex, $pcml, $matches) && $matches[1] != 'UTF-8') {
+			//remove xml-tag
+			$pcml = substr($pcml, strlen($matches[0]));
+			$pcml = mb_convert_encoding($pcml, 'UTF-8', $matches[1]);
+		} elseif ($encoding != 'UTF-8') {
+			$pcml = mb_convert_encoding($pcml, 'UTF-8', $encoding);
+		}		
 		
         //program name is stored as: /pcml/program name="/qsys.lib/eacdemo.lib/teststruc.pgm"
         $xmlObj = new SimpleXMLElement($pcml);
@@ -1234,6 +1251,10 @@ class DataDescriptionPcml extends DataDescription
 
         // Now create data description array.
         $dataDescriptionArray = $this->pcmlToArray($xmlObj);
+        
+        //Change the encoding back to the one wanted by the user, since SimpleXML encodes its output always in UTF-8
+        $pgmName = mb_convert_encoding($pgmName, $encoding, 'UTF-8');
+        mb_convert_variables($encoding, 'UTF-8', $dataDescriptionArray);
 
 		// call parent's constructor with:
 		//$descObj = new DataDescriptionPcml($description, $connection);
