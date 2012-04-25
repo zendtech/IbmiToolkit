@@ -309,7 +309,15 @@ class XMLWrapper {
 			    $data = bin2hex($data);
 			} // (if ($this->sendReceiveHex))
 			
-			$paramXml .= "<data var='$name' type='$type'$dimStr$byStr$varyingStr$labelSetLenStr>$data</data>";			
+			// Google Code issue 11
+			// Use short type tag when it's empty
+			if (empty($data)) {
+				$dataEndTag = "/>";
+			} else {
+				$dataEndTag = ">$data</data>";
+			}		
+			
+			$paramXml .= "<data var='$name' type='$type'$dimStr$byStr$varyingStr$labelSetLenStr$dataEndTag";
 			
 		} //(if a data structure / else)
 		return $paramXml;
@@ -686,7 +694,15 @@ class XMLWrapper {
 		if($param ['varying']== 'on')
 			$varying = " varying='on'";
 			
-		return  "<data type='$descr' var='$var' $varying>$data</data>\n"; 
+		// Google Code issue 11
+		// Use short type tag when it's empty
+		if (empty($data)) {
+			$dataEndTag = "/>";
+		} else {
+			$dataEndTag = ">$data</data>";
+		}		
+		
+		return  "<data type='$descr' var='$var' $varying$dataEndTag\n"; 
 	}	
 	
 	private function createXMLParamElement ($param, $i)
@@ -703,6 +719,14 @@ class XMLWrapper {
 			$data = bin2hex($data);
 		} // (if ($this->sendReceiveHex))
 			
+		// Google Code issue 11
+		// Use short type tag when it's empty
+		if (empty($data)) {
+			$dataEndTag = "/>";
+		} else {
+			$dataEndTag = ">$data</data>";
+		}		
+		
 		$type = $param ['type'];
 
 		if (isset($param ['var'])) {
@@ -740,7 +764,7 @@ class XMLWrapper {
 			for($j =1; $j<= $count ; $j++){/*for array definition */
 				 if($count > 1)
 				 	$addDimenstion = $j;
-				$parameter_xml .="<data type='$type' var='$var$addDimenstion'$varying>$data</data>";
+				$parameter_xml .="<data type='$type' var='$var$addDimenstion'$varying$dataEndTag";
 			}	
 					
 			if($param['dim'] != 0) {	
@@ -771,7 +795,14 @@ class XMLWrapper {
 			    $data = bin2hex($data);
 			} // (if ($this->sendReceiveHex))
 			
-			
+			// Google Code issue 11
+			// Use short type tag when it's empty
+			if (empty($data)) {
+				$dataEndTag = "/>";
+			} else {
+				$dataEndTag = ">$data</data>";
+			}				
+				
 			$type = $param ['type'];
 			$io   = $param ['io'];
 			if (isset($param ['var'])){
@@ -798,7 +829,7 @@ class XMLWrapper {
 				if($count > 1)
 					$addDimenstion = $j;//should have a different identificaion
 						
-				$parameter_xml .= "<data type='$type' var='$var$addDimenstion'$commentStr>$data</data>";
+				$parameter_xml .= "<data type='$type' var='$var$addDimenstion'$commentStr$dataEndTag";
 			}
 			return $parameter_xml;  	
 				
