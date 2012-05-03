@@ -311,7 +311,7 @@ class XMLWrapper {
 			
 			// Google Code issue 11
 			// Use short type tag when it's empty
-			if (empty($data)) {
+			if ($data === '') {
 				$dataEndTag = "/>";
 			} else {
 				$dataEndTag = ">$data</data>";
@@ -696,7 +696,7 @@ class XMLWrapper {
 			
 		// Google Code issue 11
 		// Use short type tag when it's empty
-		if (empty($data)) {
+		if ($data === '') {
 			$dataEndTag = "/>";
 		} else {
 			$dataEndTag = ">$data</data>";
@@ -721,7 +721,7 @@ class XMLWrapper {
 			
 		// Google Code issue 11
 		// Use short type tag when it's empty
-		if (empty($data)) {
+		if ($data === '') {
 			$dataEndTag = "/>";
 		} else {
 			$dataEndTag = ">$data</data>";
@@ -797,7 +797,7 @@ class XMLWrapper {
 			
 			// Google Code issue 11
 			// Use short type tag when it's empty
-			if (empty($data)) {
+			if ($data === '') {
 				$dataEndTag = "/>";
 			} else {
 				$dataEndTag = ">$data</data>";
