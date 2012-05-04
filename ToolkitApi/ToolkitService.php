@@ -784,13 +784,14 @@ catch (Exception $e)
 					  'dim' =>   $dimension);/*number of array elements*/
 	}
 	
-    static function AddParameterChar( $io, $size , $comment,  $varName = '', $value , $varying = 'off',$dimension = 0) {
-    		return ( new CharParam( $io, $size , $comment,  $varName, $value , $varying ,$dimension = 0));  		    	
-   	}
+    static function AddParameterChar( $io, $size , $comment,  $varName = '', $value , $varying = 'off',$dimension = 0)
+    {
+        return ( new CharParam( $io, $size , $comment,  $varName, $value, $varying, $dimension));
+    }
 	
-	static function AddParameterInt32( $io,  $comment,  $varName = '', $value, $dimension = 0 ) {
-		return(new Int32Param ($io, $comment, $varName, $value, $dimension));    		
-	}
+    static function AddParameterInt32( $io,  $comment,  $varName = '', $value, $dimension = 0 ) {
+        return(new Int32Param ($io, $comment, $varName, $value, $dimension));
+    }
     //Size ($comment,  $varName = '', $labelFindLen = null) {
 	static function AddParameterSize($comment,  $varName = '', $labelFindLen ) {
 		return(new SizeParam ($comment, $varName, $labelFindLen));    		
