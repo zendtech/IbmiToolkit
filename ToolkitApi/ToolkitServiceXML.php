@@ -1,359 +1,627 @@
 <?php
 class XMLWrapper {
 
-	private $encoding =''; 	
-	private $sendReceiveHex = false;
-	private $inputXML;
-	private $outputXML;
-	private $error;	
-	private $joblog;
-	protected $opm; // true if should specify OPM mode on program call mode='opm'
-	protected $debug; // true if debug mode is enabled through toolkit.ini
-
-	private $joblogErrors = array(); // cpf=>msgtext array
+	protected $encoding ='';
+	protected $inputXML;
+	protected $outputXML;
+	protected $cpfErr; 
+	protected $error;
+	protected $errorText;
+	protected $joblog;
+	protected $joblogErrors = array(); // cpf=>msgtext array
 
 	protected $ToolkitSrvObj;
 	
-	// 'system' provides cpfs.   
-	protected $_cmdTypes = array('cmd', 'rexx', 'system'); 
+	// 'system' type can return CPF error codes.
+	protected $_cmdTypes = array('cmd', 'rexx', 'system');
+
+    // valid "on" values for varying. Can also be 'off' but that's the default so no reason to specify it
+	protected $_varyingTypes = array('on', '2', '4');
+
+	// whether CW is being used. 
+	protected $_isCw = false; 
 	
 	// options can be string or array.
 	// If string, assume it's "encoding." Otherwise can be array of options.
 	function __construct( $options ='',  ToolkitService $ToolkitSrvObj = null)
 	{
-		
+
 		if (is_string($options)) {
 			// $options is a string so it must be encoding (assumption for backwards compatibility)
-		    $this->encoding = $options;	
+		    $this->encoding = $options;
 		} elseif (is_array($options)) {
-           
+
 			// $options is an array so check for its various settings.
-			
+
 			if (isset($options['encoding'])) {
-				$this->encoding = $options['encoding']; 
-			}
-			if (isset($options['convertToCcsid']) && $options['convertToCcsid']) {
-				// Today, convertToCcsid means the XML Wrapper should convert to and from hex.
-				// it could mean more in the future.
-				$this->sendReceiveHex = true;
-			} else {
-				$this->sendReceiveHex = false;
-			} //(convertToCCsid)
-			 
-		} //(is_string)s
+				$this->encoding = $options['encoding'];
+			} //((isset($options['encoding'])))
+
+		} //(is_string)
 
 		if (isset($ToolkitSrvObj) && $ToolkitSrvObj instanceof ToolkitService ) {
-			
-			$this->ToolkitSrvObj = $ToolkitSrvObj ;
-			
-			$this->opm = $this->ToolkitSrvObj->getToolkitServiceParam('v5r4'); // wrap program calls with mode=opm.
+           
+			$this->ToolkitSrvObj = $ToolkitSrvObj;
 
-
-			$this->debug = $this->ToolkitSrvObj->getToolkitServiceParam('debug'); // Omit some optimizations
-	
+			$this->_isCw = $this->ToolkitSrvObj->getIsCw();
+			
 			
 		} //(if ($ToolkitSrvObj instanceof ToolkitService ))
 		
-		
+
 	} //(__construct)
 
-	// generate first line of XML based on configured encoding
-	// it's important to use correct encoding for non-ASCII languages
-	protected function xmlStart() 
+
+    // get option from toolkit object
+    protected function getOption($optionName) 
+    {
+	    return $this->ToolkitSrvObj->getOption($optionName);
+	
+    } //(getOption)
+
+
+	// are we using CW or not?
+	protected function getIsCw() 
 	{
+		return $this->_isCw;
+		
+	} //(function getIsCw())
+	
+	// Do any processing on parameter properties
+	// to prepare for hex, ccsid.
+	// Adds these elements to array:
+	// processedData, ccsidStr, hexStr
+	// TODO: This works but is somewhat clumsy to use. Refactor as method of ProgramParam object with XML creator injected into it.  
+	protected function processParamProps(&$props = array())
+	{
+		
+		$alphanumeric = true; // start with assumption
+		// if type is not alphanumeric/char, get out of here! Hex has no purpose for non-char.
+		if (isset($props['type']) && $props['type'] && (strtolower(substr($props['type'], -1)) != 'a')) {
+			// there's a data type but it doesn't end with 'a' as in '3a'.
+			$alphanumeric = false;
+		} 
+		$data = (isset($props['data'])) ? $props['data'] : '';
+		$props['processedData'] = $data; // default
+		$props['ccsidStr'] = ''; // default
+		$props['hexStr'] = ''; // default
+		
+		$propUseHexValue = (isset($props['useHex'])) ?  $props['useHex'] : null;
+		
+		// if alphanumeric (therefore a candidate for hex conversion),
+		// and hex is set for this specific property,
+		// or it's set globally 
+		if ($alphanumeric && ($propUseHexValue || $this->getOption('useHex'))) {
+			
+			// convert data to hex
+			$props['processedData'] = bin2hex($data);
+			
+			$props['hexStr'] = " hex='on'";
+			
+			// check for CCSID before and after. We should expect it since we're using hex.
+			// Use property-specific value, if available, otherwise global.
+			$ccsidBefore = (isset($props['ccsidBefore']) && $props['ccsidBefore']) ? $props['ccsidBefore'] : $this->getOption('ccsidBefore');
+			$ccsidAfter = (isset($props['ccsidAfter']) && $props['ccsidAfter']) ? $props['ccsidAfter'] :  $this->getOption('ccsidAfter');
+	        			
+			$props['ccsidStr'] = " before='$ccsidBefore' after='$ccsidAfter'";
+
+		} //(want hex)
+		
+		
+	} //(processParamProps)
+
+
+	// for strings such as program and library names and commands,
+	// apply global hex settings to a string, then return the encoded string.
+	protected function encodeString($string) 
+	{
+		if ($this->getOption('useHex')) {
+			return bin2hex($string);
+		} else {
+			return $string;
+		}
+		
+	} //(encodeString($string))
+	
+
+	/**********************************************************
+	 * getPgmTag()
+	 * return the XML string that specifies a program's name,
+	 * including potential library, function, and atttributes.
+	 *
+	 **********************************************************
+    **/
+	protected function getPgmTag($pgm, $lib, $function) {
+		 
+		$pgmtag = ''; // what we'll return
+		 
+		// specify opm mode if specified
+		$opmString = ($this->getOption('v5r4')) ? " mode='opm'" : "";
+		 
+		// get encoded pgm/lib/func names
+		$propArray = array();
+		$this->processParamProps($propArray);
+		 
+		// if directed to use hex/CCSID, specify "long form" of program tag, with nested name/lib/func tags.
+		// If not using hex/CCSID, use "short form" of program tag.
+		// Why allow both? For backward compatibility with older (pre-1.6.8) XMLSERVICE that didn't support long form.
+		 
+		if ($propArray['hexStr']) {
+			 
+			// Hex/CCSID, so use long form of pgm tag
+	
+			// specify function if given
+			$encodedFunction = $this->encodeString($function);
+			$funcString = ($function) ? " <func{$propArray['ccsidStr']}{$propArray['hexStr']}>$encodedFunction</func>" : "";
+			 
+			//	$pgmtag = "<pgm name='$pgm' lib='$lib'$opmString$funcString>";
+			 
+			//  split pgm, name, lib into separate lines to can give separate encodings.
+			$pgmtag = "<pgm$opmString>
+			<name{$propArray['ccsidStr']}{$propArray['hexStr']}>". $this->encodeString($pgm) . "</name>
+			<lib{$propArray['ccsidStr']}{$propArray['hexStr']}>".$this->encodeString($lib)."</lib>
+			$funcString";
+				
+		} else {
+	
+		    // no hex/CCSID, so use short form of pgm tag
+			// (For backward compability with pre-1.6.8 XMLSERVICE)
+			$funcString = ($function) ? " func='$function'" : "";
+			$pgmtag = "<pgm name='$pgm' lib='$lib'$opmString$funcString>";
+	
+	
+		} //(if ($propArray['hexStr']))
+				
+			 
+		return $pgmtag;
+				 
+	} //(getPgmTag)
+	
+	
+	// Beginning XML tag
+	protected function xmlStart()
+	{
+	
+		// ensure configured encoding for proper behavior with non-ASCII languages
 		return "<?xml version=\"1.0\" encoding=\"$this->encoding\" ?>";
 		
 	} //(function xmlStart)
 
-	// correct first line if encoding not there.
-	// Possibly other cleanups as well,
-	// to be done so SimpleXml doesn't choke on it.
-	public function cleanXml($xml) 
-	{
-		// If XMLSERVICE can provide encoding back to us, we can remove these. 
-		$tooLittle = '<?xml version="1.0"?>';
-		return str_replace($tooLittle,$this->xmlStart(), $xml);
+	
+	// For consistently, add commonly used starting and ending tags to input XML
+	// TODO: $xml should be a property of the class (true OO style), then $this->addOuterTags();
+	protected function addOuterTags($inputXml) {
+		// 
 		
-		    
-	} //(cleanXml)
+		// start xml with encoding tag
+		$finalXml = $this->xmlStart();
 		
-	public function disconnectXMLIn() {		
+		// open script tag
+		$finalXml .= "\n<script>";
+		
+		// include override of submit command if specified
+		if ($this->getOption('sbmjobCommand')) { 
+			$sbmjobCommand = $this->getOption('sbmjobCommand');
+ 			$finalXml .= "\n<sbmjob>{$sbmJobCommand}</sbmjob>";
+		} //(if submitCommand)
+		
+		// inner "meat" of the XML
+		$finalXml .= "\n$inputXml";
+		
+		// close script tag
+		$finalXml .= "\n</script>";
+				
+		return $finalXml; 
+		
+	} //(protected function addOuterTags($inputXml))
+
+	
+	// provide XML for disconnecting (beware, reconnecting can be slow)
+	public function disconnectXMLIn() {
 		$xml = $this->xmlStart(); // start is all we need
 		return $xml;
-	}
-	public function buildXmlIn(array $params = NULL, array $ReturnParams = NULL,
-								$pgm, 
-								$lib = "",
-								$function = NULL )
+	} //(public function disconnectXMLIn())
+
+	
+
+	// convert xml string to simplexml object
+	protected function xmlToObj($xml)
+	{
+	
+		$xmlobj = simplexml_load_string ( $xml );
+	
+		if (! $xmlobj instanceof SimpleXMLElement) {
+			$badXmlLog = '/tmp/bad.xml';
+			$this->error = "Unable to parse output XML, which has been logged in $badXmlLog. Possible problems: CCSID, encoding, binary data in an alpha field (use binary/BYTE type instead); if < or > are the problem, consider using CDATA tags.";
+			error_log ( $xml, 3, $badXmlLog );
+			return false;
+		} //(if (! $xmlobj instanceof SimpleXMLElement))
+	
+	
+		return $xmlobj;
+	
+	} //(protected function xmlToObj($xml))
+	
+	
+	
+	// $info can be 'joblog' (joblog and additional info) or 'conf' (if custom config info set up in PLUGCONF)
+	public function diagnosticsXmlIn($info = 'joblog', $jobName = '', $jobUser = '', $jobNumber = '') {
+		
+		// xml tag
+		$xml = $this->xmlStart();
+		
+		// start of tag and info attribute
+		$xml .= "<script><diag info='$info'";
+		
+		// if specific job requested. (If not then will be current job)
+		if ($jobName && $jobUser && $jobNumber) {
+			$xml .= " job='$jobName' user='$jobUser' nbr='$jobNumber'";
+		}
+		
+		// end tag
+		$xml .= " /></script>";
+		
+		return $xml;
+		
+		
+	} //(public function diagnosticsXmlIn)
+
+	public function parseDiagnosticsXml($xml)
     {
-    	
-		$parameters_xml ='';
-		$cmd_xml = '';
-		$i=0;
-		if(isset($params)){
-			foreach ( $params as $element ) {
-				$ds = false;
-				if (isset ( $element ['ds'] )) {
-					$param = $element ['ds'];
-					$ds = true;
-				}
-				else {
-					$param = $element;
-				}			
-				
-				$parameters_xml .= $this->FillXmlParamElement ( $ds, $param, $i );		
+
+    	$xmlobj = $this->xmlToObj($xml);
+		
+		if (!$xmlobj) {
+			return false;
+		}
+		
+		$diag = $xmlobj->diag;
+	
+		
+		$info = array();
+		
+		// jobinfo tag is there with job info as attributes
+		if (isset($diag->jobinfo)) {
+		    	
+			$tempJobInfo = (array) $diag->jobinfo;
+			// ensure that all values are strings. Blanks might have remained Simple XML Objects.
+			foreach ($tempJobInfo as $name=>$value) {
+				$info['jobinfo'][$name] = (string) $value; 
 			}
-		}//io parameters
+		} //(if (isset($diag->jobinfo)))
 		
-		$return_parameters_xml = '';
-		if(isset($ReturnParams ))
-		{
-			foreach($ReturnParams as $element)
-			{	
-				 $ds = false;			
-				 if(isset($element['fields']) && isset($element['ds_descr'])){
-				 	$ds = true;			 					 	
-				 }
-			     $return_parameters_xml .= $this->fillXMLReturnElement($ds,  $element);
-			 }
-		 }
-		 
-		 if(trim ($return_parameters_xml)!= ''){		 
-		 	$return_parameters_xml ="<return> $return_parameters_xml </return>";
-		 }
-
-
-		 
-    // specify opm mode if true
-    $opmString = ($this->opm) ? " mode='opm'" : "";
-    
-    // specify function if given
-    $funcString = ($function) ? " func='$function'" : "";
-    
-	$pgmtag = "<pgm name='$pgm' lib='$lib'$opmString$funcString>";
 		
-	$xmlIn = $this->xmlStart() . 	
-	"<script>
-	$cmd_xml
-	$pgmtag
-	$parameters_xml
-	$return_parameters_xml	
-	</pgm>
-	</script>";
-	
-	return $xmlIn;
-	}
-	
-	
+		$info['version'] = (isset($diag->version)) ? (string) $diag->version : '';
+		$info['joblog'] = (isset($diag->joblog)) ? (string) $diag->joblog : '';
+		
+		return $info;
+		
+		/*
+		 * 
+diag
+   version
+   jobinfo
+   stuff
+   joblog
 
-	// CW version of building input xml. 
-	// $params can be an array of ProgramParameter objects, 
-	// or 
+<jobinfo job='QSQSRVR' user='QUSER' nbr='174131'>
+<jobipc></jobipc>
+<jobipcskey>FFFFFFFF</jobipcskey>
+<jobname>QSQSRVR</jobname>
+<jobuser>QUSER</jobuser>
+<jobnbr>174131</jobnbr>
+<jobsts>*ACTIVE</jobsts>
+<curuser>TKITU1</curuser>
+<ccsid>37</ccsid>
+<dftccsid>37</dftccsid>
+<paseccsid>0</paseccsid>
+<langid>ENU</langid>
+<cntryid>US</cntryid>
+<sbsname>QSYSWRK</sbsname>
+<sbslib>QSYS</sbslib>
+<curlib></curlib>
+<syslibl>QSYS QSYS2 QHLPSYS QUSRSYS</syslibl>
+<usrlibl>XMLSERVICE</usrlibl>
+<jobcpffind>see log scan, not error list</jobcpffind>
+</jobinfo>
+
+<joblogscan>
+ these repeat
+<joblogrec>
+<jobcpf>CPF2105</jobcpf>
+<jobtime><![CDATA[11/20/12  17:07:19.666282]]></jobtime>
+<jobtext><![CDATA[ASEIDEN QREXXMN qrexx_main 80 Object OUTREXX in QTEMP type *FILE not found.]]></jobtext>
+</joblogrec>
+
+<joblog job='QSQSRVR' user='QUSER' nbr='174131'>
+stuff
+ />
+*/
+	
+		
+		
+	} //(public function parseDiagnosticsXml($xml))
+	
+	
+	// $inputOutputParams can be an array of ProgramParameter objects,
+	// or
 	// an XML string representing parameters already in XML form ("parm" tags).
-	public function buildXmlInCw($params = NULL, array $ReturnParams = NULL,
-								$pgm, 
-								$lib = "",
+	public function buildXmlIn($inputOutputParams = NULL, array $returnParams = NULL,
+								$pgm,
+								$lib = "", // blank library means use current/default or library list
 								$function = NULL )
     {
+    
+    	// initialize XML to empty. Could remain blank if no parameters were passed 
+    	$parametersXml = ''; 
+    	$returnParametersXml = '';
+    	 
+    	// input/output params and return params
+    	$params = array();
     	
     	
-    	$parametersXml = ''; // could remain blank if no parameters are passed
-    	
-    	if (is_string($params)) {
-    		
+    	// XML can be passed directly in. If a string, assume we received XML directly.
+    	if (is_string($inputOutputParams)) {
+
     		// XML for params is being provided raw. Use it.
-    	    $parametersXml = $params;
-    	    	
-    	} elseif (is_array($params) && (!empty($params))) {
+    	    $parametersXml = $inputOutputParams;
+
+    	} elseif (is_array($inputOutputParams) && (!empty($inputOutputParams))) {
+
+	   		// an array of ProgramParameter objects. Set tagName to 'parm'
+    		$params['parm'] = $inputOutputParams;
+    	} //( (is_string($params)))
+    	
+    	
+    	// Prepare to create XML from return param definitions, too, if they exist.
+    	if (is_array($returnParams) && (!empty($returnParams))) {
+    		// tagName is 'return'
+    		$params['return'] = $returnParams;
+    	} //(if (is_array($returnParams) && (!empty($returnParams))))
+    	
+
+    	// process 'parm' and 'return' in the same manner.
+    	// $path will be 'parm' or 'return', which are used in creating XML path
+    	foreach ($params as $tagName=>$paramElements) {
+
+    		// within each tag name (parm or return), process each param.
+    		foreach ($paramElements as $param) {
     		
-	   		// an array of ProgramParameter objects. Build XML from it.
-			foreach ( $params as $element ) {
-				
-			    // do parm tag with comment and io.
-			    $elementProps  = $element->getParamProperties();
+				// do parm tag with comment and io.
+				$elementProps  = $param->getParamProperties();
 	
-			    // Use comments only when in debug mode. (Reduce XML sent)
-			    $commentStr = '';
-			    if (isset($elementProps['comment']) && $this->debug) {
-			        $commentStr = " comment='{$elementProps['comment']}'";
-			    }
+				// Use comments only when in debug mode. (Reduce XML sent)
+				$commentStr = '';
+				if (isset($elementProps['comment']) && $this->getOption('debug')) {
+				    $commentStr = " comment='{$elementProps['comment']}'";
+				}
 	
-	            // only send io if not the default 'both'. (Reduce XML sent)
+				// only send io if not the default 'both'. (Reduce XML sent)
 	            $ioStr = '';
 	            if (isset($elementProps['io']) && $elementProps['io'] != 'both') {
 			        $ioStr = " io='{$elementProps['io']}'";
 			    }
-					
-			    $parametersXml .= "<parm{$ioStr}{$commentStr}>";
-					
+	
+			    // The XML tag will be named 'parm' or 'return' (value of $path).
+			    $parametersXml .= "<{$tagName}{$ioStr}{$commentStr}>";
+	
 			    // buildParamXml takes one ProgramParameter object and recursively build XML.
-			    $parametersXml .= $this->buildParamXmlCw($element);
-					
+			    $parametersXml .= $this->buildParamXml($param);
+	
 			    // end parm tag
-			    $parametersXml .= "</parm>";
-					
-			} //(foreach $params)
-    		
-    	} //(is_string/is_array)
-    	
-    	$return_parameters_xml = '';
-	
-	
-	if(isset($ReturnParams )) {
-	
-			foreach($ReturnParams as $element)
-			{	
-				 $ds = false;			
-				 if(isset($element['fields']) && isset($element['ds_descr'])){
-				 	$ds = true;			 					 	
-				 }
-			     $return_parameters_xml .= $this->fillXMLReturnElement($ds,  $element);
-			 }
-	}
-	 
-	if(trim ($return_parameters_xml)!= ''){		 
-		 	$return_parameters_xml ="<return> $return_parameters_xml </return>";
-	}
-			   	
-    // specify opm mode if true
-    $opmString = ($this->opm) ? " mode='opm'" : "";
-    
-    // specify function if given
-    $funcString = ($function) ? " func='$function'" : "";
-    
-	$pgmtag = "<pgm name='$pgm' lib='$lib'$opmString$funcString>";
-		 		
-	$xmlIn = $this->xmlStart() .	
-	"<script>
-	$pgmtag
-	$parametersXml
-	$return_parameters_xml	
-	</pgm>
-	</script>";
-	
-	return $xmlIn;
-	}
+			    $parametersXml .= "</{$tagName}>\n";
 
+    	    } //(foreach $paramElements)
+		    
+    	} //(foreach ($params as $path=>$param))
 
-	protected function buildParamXmlCw(ProgramParameter $paramElement) {
+	
+	    $pgmtag = $this->getPgmTag($pgm, $lib, $function);
 		
+	    $xmlIn = "{$pgmtag}\n{$parametersXml}{$returnParametersXml}</pgm>";
+
+	    return $this->addOuterTags($xmlIn);
+
+    } //(buildXmlInCw)
+
+
+    // Do all that's necessary to convert a single parameter into XML.
+    // Can call itself recursively for infinitely deep data structures.
+	protected function buildParamXml(ProgramParameter $paramElement) {
+
 		$paramXml = '';
 
 		// build start ds tag
-		$props  = $paramElement->getParamProperties(); 
+		$props  = $paramElement->getParamProperties();
 
 		// optional by
 		$by = $props['by'];
-		$byStr = ($by) ? " by='$by'" : ''; 
-		
+		$byStr = ($by) ? " by='$by'" : '';
+
 		$name = $props['var'];
-		
+
 		// optional "array" attribute
 		$isArray = $props['array'];
 		$isArrayStr = ($isArray) ? " array='on'" : '';
-		
-		// optional dim
+
+		// optional dim (goes best with multi but could exist on its own, too)
 		$dim = $props['dim'];
 		$dimStr = ($dim) ? " dim='$dim'" : '';
+
+		// if dim>0 and array integrity is specified 
+		$isMulti = ($dim && $this->getOption('arrayIntegrity'));
+		/* if a multiple occurrence DS or scalar field.
+		 * later we will wrap an additional DS around it
+		* The inner DS or scalar field will be a template with a 'dim' attribute to be expanded on output from XMLSERVICE.
+		*/
+		/* if we add an outer DS that's "multi," don't bother to give the inner (original) ds a name.
+		 * The inner ds will be repeated many times and its name will be replaced on output by numeric indexes.
+		*  So no need to include an inner ds name.
+		*/
+		if ($isMulti) {
+			$specialOuterDsName = $name;
+			$innerName = '';
+		} else {
+			// not multi. Use normal inner name.
+			$innerName = $name; // starts with space, directly following "<data"
+		} //(if ($isMulti) )
 		
+		// optional dou (do until)
+		$dou = $props['dou'];
+		$douStr = ($dou) ? " dou='$dou'" : ''; 
 
 		// optional len that checks length of the structure/field to which it's appended
 		$labelLen = $props['len'];
 		$labelLenStr = ($labelLen) ? " len='$labelLen'" : '';
-		
+
+
 		// it's a data structure
 		if ($props['type'] == 'ds') {
-
+					
 			// start ds tag with name and optional dim and by
-			$paramXml .= "<ds var='$name'$dimStr$isArrayStr$labelLenStr>";
-			
+			$innerNameStr = ($innerName) ? " var='$innerName'" : '';
+			$paramXml .= "<ds$innerNameStr$dimStr$douStr$isArrayStr$labelLenStr>\n";
+
 			// get the subfields
 			$dsSubFields = $paramElement->getParamValue();
 			if (is_array($dsSubFields) && count($dsSubFields)) {
 
-				// recursively build XML from data structure subfields
-				foreach ($dsSubFields as $subField) {
-					$paramXml .= $this->buildParamXmlCw($subField);
+				// recursively build XML from each data structure subfield
+				foreach ($dsSubFields as $subField) {					
+					$paramXml .= $this->buildParamXml($subField);
 				} //(foreach)
 
 			} //(is_array, count)
-			
+
 			// complete the ds tag
-			$paramXml .= "</ds>";
-			
+			$paramXml .= "</ds>\n";
+
 		} else {
-			
+
 			// not a data structure. a regular single field
-			
+
 			$type = $props['type'];
-			
+
 			// optional varying
-			// varying only inserted if set on (default is off, so we can let XMLSERVICE supply the default behavior if off). The less XML we create and send, the more efficient we will be.
+			// varying only inserted if set on/2/4 (default is off, so we can let XMLSERVICE supply the default behavior if off). The less XML we create and send, the more efficient we will be.
 			$varyingStr = '';
-			if (isset($props['varying']) && $props['varying'] == 'on') {
-			    $varyingStr = " varying='{$props['varying']}'";
-			}
+			if (isset($props['varying'])) {
+				// a valid non-off value, so add the varying attribute.
+				if (in_array($props['varying'], $this->_varyingTypes)) {
+				    $varyingStr = " varying='{$props['varying']}'";
+				}
+			} //(if isset($props['varying']))
+
+			// optional enddo
+			$enddo = $props['enddo'];
+			$enddoStr = ($enddo) ? " enddo='$enddo'" : '';
+
 			// optional setLen to set length value to a numeric field (see 'len' for where the length comes from)
 		    $labelSetLen = $props['setlen'];
 		    $labelSetLenStr = ($labelSetLen) ? " setlen='$labelSetLen'" : '';
-			
+
 			$data = $props['data'];
 			if (is_object($data)) {
 				// uh-oh. Something wrong
 				echo "data is not a string. type is: $type. data is: " . var_export($data, true) . "<BR>";
 			}
 
-			if ($this->sendReceiveHex) {
-				// if hex format requested 
+			// get hex/ccsid information to include in the data tag
+			$this->processParamProps($props);
+			$ccsidHexStr = "{$props['ccsidStr']}{$props['hexStr']}";
+			$processedData = $props['processedData'];
 				
-			    $data = bin2hex($data);
-			} // (if ($this->sendReceiveHex))
-			
 			// Google Code issue 11
 			// Use short type tag when it's empty
-			if ($data === '') {
-				$dataEndTag = "/>";
+			if ($processedData === '') {
+				$dataEndTag = " />";
 			} else {
-				$dataEndTag = ">$data</data>";
-			}		
-			
-			$paramXml .= "<data var='$name' type='$type'$dimStr$byStr$varyingStr$labelSetLenStr$dataEndTag";
-			
+				$dataEndTag = ">$processedData</data>";
+			}
+
+			// use the old, inefficient "repeat item with sequential numbering of field name" technique if backwards compatibility is desired
+			$useOldDimWay = ($dim && !$isMulti);
+			if ($useOldDimWay) {
+				//  Backward compatibility technique
+				// a flattened group of data fields with sequentially increasing names
+                foreach (range(1, $dim) as $sequence) {		
+                	// only difference is the $sequence inserted after $innerNameStr	
+                	// and no $dimStr. Because we're physically repeating the line
+                	// And always need the name specified with sequence.	
+				    $paramXml .= "<data var='$innerName$sequence' type='$type'$ccsidHexStr$enddoStr$byStr$varyingStr$labelSetLenStr$dataEndTag";
+                } //(foreach)
+            } else {
+            	// Not dim or perhaps dim and multi 
+				// Use new, efficient, good way. Only one line needed with $dimStr, which XMLSERVICE will expand for us.
+				$innerNameStr = ($innerName) ? " var='$innerName'" : ''; // only need name if exists. If not then it's probably a "multi" and doesn't need an inner name.
+            	$paramXml .= "<data$innerNameStr type='$type'$ccsidHexStr$dimStr$enddoStr$byStr$varyingStr$labelSetLenStr$dataEndTag";
+			} //(if ($useOldDimWay))	
+
 		} //(if a data structure / else)
-		return $paramXml;
 		
-	} //(buildParamXmlCw)
+		
+		// if a multi-occurrence DS or scalar field, wrap in an identially named "array" DS shell.
+		// The "array" indicator will help us parse the results on the way out. 
+		if ($isMulti) {
+		    $paramXml = "\n\n<ds var='$specialOuterDsName' comment='Multi-occur container' array='on'>\n{$paramXml}\n</ds>";		
+		} elseif ($dim) {
+			// if not multi but regular old-style dim, an ordinary <ds> tag will do to contain all the <data> elements. 
+			$paramXml = "\n\n<ds comment='old-style repeated data array container'>\n{$paramXml}\n</ds>";
+		} //(if ($isMulti))
+		
+		return $paramXml;
+
+	} //(buildParamXml)
 
 	// given XMLSERVICE type such as 10i0, 5i0, 4f, 4p2, set data to the corresponding PHP type as closely as possible.
 	// Omit alpha/string because that's our default.
-	protected function updateType(&$data, $xmlServiceType) 
+	protected function updateType(&$data, $xmlServiceType)
 	{
 		$patterns = array('/10i0/', '/5i0/', '/4f/', '/\d*p\d*/');
 		$replacements = array('integer', 'integer', 'float', 'float');
 		// look for a match
 		$newType = preg_replace($patterns, $replacements, $xmlServiceType);
-		
+
 		// if a different type is warranted
 		if ($newType != $xmlServiceType) {
 			settype($data, $newType);
 		}
 	} //(phpTypeFromXmlServiceType)
+
 	
-	// recursive
-	protected function getSingleParamFromXmlCw(SimpleXMLElement $simpleXmlElement) {
-		
+	/* typical XML program call
+	 * 
+	 * <script>
+      *   <pgm name='ZZCALL'> 
+      *      <parm>
+      *       <data type='1A'>a</data>
+      *      </parm> 
+      *      <parm>
+      *       <data type='2s'>23</data>
+      *      </parm> 
+      *      <return>
+      *       <data type='10i0' comment='Could be a data structure, too'>0</data>
+      *      </return> 
+      *   </pgm> 
+      * </script>
+	 */
+	
+	// Parse a piece of XML representing a single parameter (whether output or return type).
+	// Can all itself recursively for infinitely deep data structures.
+	// Returns an array containing nested key/value pairs for the parameter. 
+	protected function getSingleParamFromXml(SimpleXMLElement $simpleXmlElement) {
+
 		// if it's too slow to set types, change it to false.
-		$setTypes = true;//true;
-		
+		$setTypes = $this->getIsCw(); // do it if in CW mode because old toolkit did return correct types
+
 		$element = array();
-		
+
 	    // is this a parm, or perhaps a DS??
-	    $elementType = $simpleXmlElement->getName(); // name of the tag is data type
+	    $elementType = $simpleXmlElement->getName(); // "name" of the XML tag is element type
 	    $elementAttrs = $simpleXmlElement->attributes();
-//	    echo ("Type: $elementType. Attrs: " . printArray($elementAttrs) . ".<BR>");
-	    
-	    // if this is the outer (parm) element, go down one level to either ds or data.
-	    if ($elementType == 'parm') {
+
+	    // if this is the outer (parm or return) element, go down one level to either ds or data.
+	    if ($elementType == 'parm' || $elementType == 'return') {
 	    	if (isset($simpleXmlElement->ds)) {
 	    		// get ds beneath.
     	        $simpleXmlElement = $simpleXmlElement->ds;
@@ -363,7 +631,7 @@ class XMLWrapper {
 	    	}
 	    } //(parm)
 
-	    // either way, let's see what we have now.
+	    // now we should be at a ds or data level. let's see what we have now.
 	    $elementType = $simpleXmlElement->getName();
 
 	    if ($elementType == 'ds') {
@@ -372,19 +640,17 @@ class XMLWrapper {
 			$ds = $simpleXmlElement;
 
 			$subElementArray = array();
-			
+
 			/// get info about this data structure
 			$outerDsAttributes = $ds->attributes();
 			$outerDsName = (string) $outerDsAttributes['var'];
-			$outerDsIsArray = (isset($outerDsAttributes['array']) && (strtolower($outerDsAttributes['array']) == 'on')); // whether it's to be considered a simple array
+			// determine whether this element is to be considered a simple array
+			$outerDsIsArray = (isset($outerDsAttributes['array']) && (strtolower($outerDsAttributes['array']) == 'on'));
+			$outerDsIsDim = (isset($outerDsAttributes['dim']) && ($outerDsAttributes['dim'] > 1));
 			// look for data elements OR another ds under this ds
-			//$testFindDs = $ds->xpath('ds');
-			//echo "testFindDs: " . var_export($testFindDs, true) . "<BR>";  
-			
 	        // get every data or ds element under here.
 			if ($underDs = $ds->xpath('data|ds')) {
-  //             echo "outerdsname: $outerDsName. underDs: " . var_export($underDs, true) . "<BR><BR>";  
-				// we have an array of ds elements or  data elements. Loop through them. 
+				// we have an array of ds elements or  data elements. Loop through them.
   			    foreach ($underDs as $indexNum=>$subElement) {
 
 					$attrs = $subElement->attributes();
@@ -392,30 +658,35 @@ class XMLWrapper {
 					// OR the subparam has no var/name for some reason,
 					// use a numeric index as key.
 					$givenSubelementName = (isset($attrs['var'])) ? $attrs['var'] : '';
-					$givenSubelementName = (string) $givenSubelementName; 
+					$givenSubelementName = (string) $givenSubelementName;
 					if ($outerDsIsArray || empty($givenSubelementName)) {
 						$subElementName = $indexNum;
 					} else {
 						// else elememnt has its own var/name.
-					    $subElementName = $givenSubelementName;	
+					    $subElementName = $givenSubelementName;
 					} //(if ($isArray || !isset($subParam['var'])))
 
-			        // is it another ds? get contents recursively.
-				    $elType = $subElement->getName();
+			        // is it another ds? 
+				    $elType = $subElement->getName(); // getName returns type
 
 				    if ($elType == 'ds') {
-							
-					    $data = $this->getSingleParamFromXmlCw($subElement);
-	
+                        // yes, another DS. Get contents recursively.
+					    $data = $this->getSingleParamFromXml($subElement);
+
 				    	// ignore inner array name because we have outer numbering name.
 				    	// drill down one level past inner array name.
 				    	//echo "Array: " . printArray($data) . " with given name: $givenSubelementName and nametouse: $subElementName<BR>";
 				    	$data = $data[$givenSubelementName];
 
 				    } else {
-				    	
-				    	// single data element. present its value.				    	
+
+				    	// single data element. present its value.
 				    	$data = (string) $subElement;
+
+				    	// if $attrs['hex'] == on, decode the data.
+				    	if (isset($attrs['hex']) && $attrs['hex'] == 'on') {
+				    		$data = pack("H*" , $data); // reverse of bin2hex()
+				    	}
 				    	
 				    	// if data is a DTS date that needs to be converted to a regular date.
 				    	// and data is not empty or blank (hex ebcdic)
@@ -426,27 +697,40 @@ class XMLWrapper {
 				    			$dateTimeApi = new DateTimeApi($this->ToolkitSrvObj);
 				    		}
 				    		// replace DTS date with "real" date
-				    		$data = $dateTimeApi->dtsToYymmdd($data);	 
-				    	} //(if a DTS date) 
+				    		$data = $dateTimeApi->dtsToYymmdd($data);
+				    	} //(if a DTS date)
 
-				    	// TODO check performance of type casting. 
+				    	// TODO check performance of type casting.
 				    	if ($setTypes) {
 							$type = $attrs->type;
 							$this->updateType($data, $type);
 				    	}
-				    	
+
 				    } //(if (isset($subElement->ds)
 
 				    // add data element to ds
 					$subElementArray[$subElementName] = $data;
-					
+
 			    } //(foreach subparams)
 			} //(endif underds)
 
-			// set ds and its contents to be returned to caller
-			$element[$outerDsName] = $subElementArray; 
-				
-			    
+			// Set ds and its contents to be returned to caller
+			// though if in "old" DS mode, don't include DS structure--just add elements individually (single level).
+			// check condition: if dataStructureIntegrity global setting or NEED that integrity to interpret array/dim
+            if ($this->getOption('dataStructureIntegrity') || $outerDsIsArray || $outerDsIsDim) {
+                // keep $outerDsName as index for inner array
+                $element[$outerDsName] = $subElementArray;
+            } else {
+		        /* no data structure integrity requested.
+		         * Return without a name. Later that will be intepreted as being able to flatten the structure.
+		         * This non-inegrity feature included for backward compatibility.
+		         */
+		         // 
+	        	 $element[''] = $subElementArray;
+	        	 
+			} //(if ($this->getOption('dataStructureIntegrity') )
+
+
 		} elseif ($elementType == 'data') {
 
 			// we're exploring a single outer data element. return simple name/value pair
@@ -454,34 +738,38 @@ class XMLWrapper {
 			$dataVarName = (string)$attr->var;
 			// name=>value
 			$element[$dataVarName] = ( string ) $simpleXmlElement;
+
+			// if $attr['hex'] == on, decode the data.
+			if (isset($attr['hex']) && $attr['hex'] == 'on') {
+				$element[$dataVarName] = pack("H*" , $element[$dataVarName]); // reverse of bin2hex()
+			}
 			
 			// other types (old toolkit cast output values as correct types)
-			// TODO check performance of type casting.
-	        if ($setTypes) { 
+	        if ($setTypes) {
 			    $type = $attr->type;
-			    $this->updateType($data, $type);
+			    $this->updateType($data, $type); // TODO interesting--shouldn't this be $element[$dataVarName], not $data?
 	        }
 			// Similar to code above in "single data element under a DS"
 			// if data is a DTS date that needs to be converted to a regular date.
-		    // and data is not empty or blank (hex ebcdic)			
+		    // and data is not empty or blank (hex ebcdic)
 		    // TODO could convert 4040 into blanks
-	    	if (isset($attr->dtsdate) && (((string) $attr->dtsdate) == 'on') 
+	    	if (isset($attr->dtsdate) && (((string) $attr->dtsdate) == 'on')
 	    	     && $element[$dataVarName] && ($element[$dataVarName] != '4040404040404040')) {
 	    		if (!isset($dateTimeApi)) {
 	    			$dateTimeApi = new DateTimeApi($this->ToolkitSrvObj);
 	    		}
 	    		// replace DTS date with "real" date
-	    		$element[$dataVarName] = $dateTimeApi->dtsToYymmdd($element[$dataVarName]);	 
-	    	} //(if a DTS date) 
-			
-            
-		} //(ds / data)
-			
-		return $element;
-			
-	} //(getSingleParamFromXmlCw)
+	    		$element[$dataVarName] = $dateTimeApi->dtsToYymmdd($element[$dataVarName]);
+	    	} //(if a DTS date)
 
-/* sample		
+
+		} //(ds / data)
+		
+		return $element;
+
+	} //(getSingleParamFromXml)
+
+/* sample
 <parm io='both' comment='PS'>
 <ds var='PS' array='on'>
 <ds var='PS_0'>
@@ -498,122 +786,102 @@ class XMLWrapper {
 </parm>
 </pgm>
 */
-	
-	// CW version of getting output parameters from program call
-	public function getParamsFromXmlCw($xml) {
 
-		//$xml = $this->cleanXml($xml); // don't need cleanXml now that XMLSERVICE provides proper encoding on XML, even for errors 
-		
-		// Replace ampersands with corresponding entity codes. Not needed anymore with data wrapped in CDATA by XMLSERVICE
-		
-		//$xml = preg_replace('/&[^; ]{0,6}.?/e', "((substr('\\0',-1) == ';') ? '\\0' : '&amp;'.substr('\\0',1))", $xml);
+	// Given the full XML received from XMLSERVICE program call,
+	// parse it into an array of parameter key/value pairs (can be nested if complex DSes) ready to use.
+	// The array will contain both 'io_param' (regular output params) and 'retvals' (return param) elements.
+	public function getParamsFromXml($xml) {
+
+		// initialize results array to empty arrays for both regular in/out params and return params
+		$callResults = array('io_param'=>array(), 'retvals'=>array());
+				
 		$xmlobj = simplexml_load_string ( $xml );
 
 		if (! $xmlobj instanceof SimpleXMLElement) {
 			$badXmlLog = '/tmp/bad.xml';
 			$this->error = "Unable to parse output XML, which has been logged in $badXmlLog. Possible problems: CCSID, encoding, binary data in an alpha field (use binary/BYTE type instead); if < or > are the problem, consider using CDATA tags.";
-			error_log ( $xml, 3, $badXmlLog );		
+			error_log ( $xml, 3, $badXmlLog );
 			return false;
 		}
-		
-		if( isset($xmlobj->error))	
+
+		if( isset($xmlobj->error))
 		{
 			// capture XML error and joblog.
-			// In PgmCall method we will try to get a better error than the XML error. 
-			$this->error =(string)$xmlobj->error->xmlerrmsg . 
+			// In PgmCall method we will try to get a better error than the XML error.
+			$this->error =(string)$xmlobj->error->xmlerrmsg .
 			              ' (' . (string)$xmlobj->error->xmlhint . ')';
-			$this->joblog = (string)$xmlobj->joblog;				
-			return false; 
+			$this->joblog = (string)$xmlobj->joblog;
+			return false;
 		}
+
+		// array to provide both 'io_param/parm' and 'retvals/return' parameter types.
+		$xmlParamElements = array();		
 		
-		$values = array();
-
-		// get all parameters
-		$params = $xmlobj->xpath ( '/script/pgm/parm' );
-
-		foreach ( $params as $simpleXmlElement ) {
-
-			// pass parms into a recursive function to get ds/data elements
+		// get XML elements for regular input/output parameters
+		$xmlParamElements['io_param'] = $xmlobj->xpath ( '/script/pgm/parm' );
+		// get XML elements for return parameter(s) 
+		$xmlParamElements['retvals'] = $xmlobj->xpath ( '/script/pgm/return' );
+		
+		
+		// read through elements
+		foreach ( $xmlParamElements as $paramType=>$elements ) {
 			
-			// process and get value(s) from that parm.
-            $paramValue = $this->getSingleParamFromXmlCw($simpleXmlElement);
-
-            // add key/value to values array
-            $varName = key($paramValue); 
-            $values[$varName] = $paramValue[$varName];
-            			
-		} //(foreach $params)		
-
-		/*or data structure (or data structure array) or single value may be returned.*/
-		$retval_values = array();		
-		$ds_retvals = $xmlobj->xpath ( '/script/pgm/return/ds' );
-		if( $ds_retvals){
-			foreach ($ds_retvals as $simpleXMLElement )
-			{			
-				$el = $simpleXMLElement->xpath('data');		
-				$el_values = $this->readElement($el);		 		
-				$retval_values[] = $el_values;		
+			// within a given element type (parm or return)
+			foreach ($elements as $simpleXmlElement) {
+				// pass parms into a recursive function to get ds/data elements
+				// process and get value(s) from that parm.
+				$param = $this->getSingleParamFromXml($simpleXmlElement);
+				
+				// Append this single element (a key=>value pair) to the proper array.
+				// $paramType will be 'io_param' or 'retvals'.
+				$paramName = key($param);
+				$paramValue = $param[$paramName];
+				
+				// if it's a flattened data structure (i.e. without data structure integrity),
+				// add the individual elements instead of the structure.
+				if ($paramName) {
+					$callResults[$paramType][$paramName] = $paramValue;
+				} else {
+			        		
+					// structure name is blank. Append array elements as if they were separate values.
+					// (Backward compability with original new toolkit behavior)
+					if ($paramValue) { // nonempty
+					    foreach ($paramValue as $subFieldName=>$subFieldValue) {
+						   $callResults[$paramType][$subFieldName] = $subFieldValue;
+				 	    }
+					} //(if $paramValue)
+				} //(if ($paramName))
+				
+				
+				
+			} //(foreach ($elements as $simpleXmlElement))
 			
-			}
-		}
-		else
-		{		
-			$retvals = $xmlobj->xpath ( '/script/pgm/return/data' );
-			foreach ($retvals as $simpleXMLElement ){
-				$Attr = $simpleXMLElement->attributes();			   
-				$retval_values [(string)$Attr->var] = ( string ) $simpleXMLElement;
-			}			
-		}
-		
-		$callresults['io_param'] = $values; 
-		$callresults['retvals'] =  $retval_values;
-		
- 	
-	   return $callresults;	
-	}
-	
-	
- 	private function FillXmlParamElement($ds = false, $params, &$i ) {
-		
-		if (!$ds) {
-			$parameters_xml = $this->createXMLParamElement ($params, $i);			
-			$i++;
-					
-		} else {
-			// is a data structure
-			// Started to add code to give variable/parm names to data structures.
-			//$var = ($params.
-			$varStr = '';
-			if (isset($var) && $var) {
-				$varStr = " var='$var'";
-			}
-			$parameters_xml = "<parm io='both'><ds$varStr>";
-			foreach ( $params as $param ) {				
-		        $parameters_xml .= $this->createXMLDataStructElement ($param, $i);				
-			    $i++;
-			}			
-			$parameters_xml .= "</ds> </parm>";			
-		}
-		
-		return $parameters_xml;
-	}
+			            
+		} //(foreach ( $xmlParamElements as $paramType=>$elements ))
 
-	
-	
+	   return $callResults;
+	   
+	} //(getParamsFromXml)
+
+
    public function getCommandXmlInPase( $cmd )
-    {     	
+    {
     	return $this->buildCommandXmlIn($cmd, 'pase');
     }
-    
+
     // $cmd can be a string or array of multiple commands
     // It's more efficient to run multiple commands with one XMLSERVICE call than to do many calls
    public function buildCommandXmlIn( $cmd, $exec = 'pase')
-    {   
-
-    	// always starts the same
-    	$xmlIn = $this->xmlStart() .
-    	         "<script>";
+    {
     	
+    	$xmlIn = '';
+    	
+    	// get hex/ccsid information to pass along on the command.
+    	$propArray = array();
+    	$this->processParamProps($propArray);
+    	    	
+    	$ccsidHexStr = "{$propArray['ccsidStr']}{$propArray['hexStr']}"; 
+
     	// if a string, make a single-item array from it.
     	if (is_string($cmd)) {
     		$cmdArray = array($cmd);
@@ -623,316 +891,44 @@ class XMLWrapper {
     	}
 
     	foreach ($cmdArray as $oneCmd) {
-    	
+
+
+    		// Run PASE utility 'system', which runs an IBM i native command.
+    		// We call this an "interactive" command because it can return output from DSP* interactive commands.
+    		// Use double quotes around $cmd so that $cmd can safely contain single quotes.
+    		if ($exec == 'pase') {
+    		    $oneCmd = '/QOpenSys/usr/bin/system "' . $oneCmd . '"';
+    		}
+
+    		// if need to convert to hex, do so.
+    		$encodedCmd = $this->encodeString($oneCmd);
+    		
+    		// with pase and pasecmd is <sh, not <cmd.    		
 	    	// inner command depends on what was passed in.
-	    	if ($exec == 'pase') {
-	    		// changed single quotes around $cmd to doubles so that $cmd can contain single quotes.
-		    	$xmlIn .= "<sh rows='on'>/QOpenSys/usr/bin/system \"$oneCmd\"</sh>";
+	    	if ($exec == 'pase' || $exec == 'pasecmd') {
+	    		
+		    	$xmlIn .= "<sh rows='on'$ccsidHexStr>$encodedCmd</sh>";
+		  	
 	    	} else {
 
+	    		// Not a "<sh>" tag. Try one of the cmd exec= command styles.
+	    		
 	    	    // check that our exec value is in whitelist.
 	    	    // blank is a synonym for default of cmd.
 	    	    if ($exec && in_array($exec, $this->_cmdTypes)) {
-	    		    $execStr = " exec='$exec'"; // e.g. <cmd exec='rexx'>                		
+	    		    $execStr = " exec='$exec'"; // e.g. <cmd exec='rexx'>
 	    	    } else {
 	     		    $execStr = ''; // OK because blank string defaults to cmd on XMLSERVICE side
-	    	    } 
-	            $xmlIn .= "<cmd$execStr>$oneCmd</cmd>";
-	    	} //(if $pase)  
+	    	    }
+	            $xmlIn .= "<cmd$execStr$ccsidHexStr>$encodedCmd</cmd>";
+	    	} //(if $pase)
 
     	} //(foreach $cmdArray)
-	    	
-        // always ends the same
-        $xmlIn .= "</script>";
-	    return $xmlIn;	
-    }
-    
-   private function FillXMLReturnElement( $ds=false , $ReturnParams  ){
-    	
-    	if( !is_array($ReturnParams ))
-    	   return false;
-    	   
-    	$parameters_xml = '';   
-    	if( $ds )/*data structrure */
-    	{
-    		if( isset( $ReturnParams  ['ds_descr']['dim']) && 
-    		 		   $ReturnParams  ['ds_descr']['dim'] > 0 )
-    			$dim ="dim='".$ReturnParams  ['ds_descr']['dim']."'";
-    			
-    		if( isset( $ReturnParams  ['ds_descr']['var']))    				  
-    			$name = $ReturnParams  ['ds_descr']['var'];
-    		
-    	    if(trim($name)!=='')
-    	    	$dsname = "var='$name'";	
-    	    		
-    		$params = $ReturnParams   ['fields'];    		
-    		$parameters_xml .= "<ds $dim $dsname>";
-	    	 
-	    	foreach( $params as $param) {	    	
-		  		$parameters_xml .= $this->createXMLReturnElement ($param);							
-	    	}
-    		$parameters_xml .= "</ds>";
-    	}
-    	else
-    	{ 
-            $param = $ReturnParams;	      			
-			$parameters_xml .= $this->createXMLReturnElement ($param);		
-    	} 
-    	 
-        return $parameters_xml;
-    }
-    
-    private function createXMLReturnElement ($param)
-	{
-		if(!is_array($param))
-		 return '';
-		 
-		$var = $param ['var'];
-		$data = $param ['data'];
-		$descr = $param ['type'];
-		$varying = '';
-		if($param ['varying']== 'on')
-			$varying = " varying='on'";
-			
-		// Google Code issue 11
-		// Use short type tag when it's empty
-		if ($data === '') {
-			$dataEndTag = "/>";
-		} else {
-			$dataEndTag = ">$data</data>";
-		}		
-		
-		return  "<data type='$descr' var='$var' $varying$dataEndTag\n"; 
-	}	
-	
-	private function createXMLParamElement ($param, $i)
-	{
-		
-		if(!is_array($param)) {
-		   return ''; 
-		}
-		
-		$data = $param ['data'];
-			
-		if ($this->sendReceiveHex) {
-		    // if hex format requested 
-			$data = bin2hex($data);
-		} // (if ($this->sendReceiveHex))
-			
-		// Google Code issue 11
-		// Use short type tag when it's empty
-		if ($data === '') {
-			$dataEndTag = "/>";
-		} else {
-			$dataEndTag = ">$data</data>";
-		}		
-		
-		$type = $param ['type'];
 
-		if (isset($param ['var'])) {
-			$var   = $param ['var'];
-		} else {
-			$var   = 'var'.$i;
-		}
-		$type = $param ['type'];
-		$varying = '';
-		if(isset($param['varying']) && $param['varying']== 'on') {
-			$varying = " varying='on'";
-        }
-				
-        // only send io if not the default 'both'. (Reduce XML sent)
-        $ioStr = '';
-        if (isset($param['io']) && $param['io'] != 'both') {
-            $ioStr = " io='{$param['io']}'";
-		}
+        return $this->addOuterTags($xmlIn);
+    } //(function buildCommandXmlIn)
 
-		// Use comments only when in debug mode. (Reduce XML sent)
-		$commentStr = '';
-		if ($this->debug && isset($param['comment'])) {
-		    $commentStr = " comment='{$param['comment']}'";
-        } 
-        
-		$parameter_xml = "<parm{$ioStr}{$commentStr}>";
 
-		$count =1; //one parameter 	
-		$addDimenstion='';
-		if($param['dim'] != 0) {			 		
-			$count = $param['dim'];
-		    $parameter_xml .= "<ds>";
-		}
-		 		 		 			
-			for($j =1; $j<= $count ; $j++){/*for array definition */
-				 if($count > 1)
-				 	$addDimenstion = $j;
-				$parameter_xml .="<data type='$type' var='$var$addDimenstion'$varying$dataEndTag";
-			}	
-					
-			if($param['dim'] != 0) {	
-				$parameter_xml .= "</ds>";
-			}	 		  
-		
-			$parameter_xml .="</parm>";
-			
-			return $parameter_xml;
-				
-	}	
-	
-	private function createXMLDataStructElement ($param, $i)
-	{
-		if(!is_array($param))
-		   return ''; 
-		   $parameter_xml='';
-		   
-			// Use comments only when in debug mode.
-			$commentStr = '';
-			if ($this->debug && isset($param['comment'])) {
-				$commentStr = " comment='{$param['comment']}'";
-		    }
-
-			$data = $param ['data'];
-			if ($this->sendReceiveHex) {
-				// if hex format requested 
-			    $data = bin2hex($data);
-			} // (if ($this->sendReceiveHex))
-			
-			// Google Code issue 11
-			// Use short type tag when it's empty
-			if ($data === '') {
-				$dataEndTag = "/>";
-			} else {
-				$dataEndTag = ">$data</data>";
-			}				
-				
-			$type = $param ['type'];
-			$io   = $param ['io'];
-			if (isset($param ['var'])){
-				$var   = $param ['var'];
-			}
-			else
-				$var   = 'var'.$i;
-			$type = $param ['type'];
-			$varying = '';
-			if(isset($param ['varying']) && $param ['varying']== 'on')
-				$varying = " varying='on'";
-		
-				
-			if($param['dim'] != 0)
-				$count =$param['dim'];
-			else 	 $count = 1;
-			
-            $addDimenstion='';
-			for($j=0; $j< $count ; $j++){			
-				
-			/* If parameter values includes special characters there is a need to surround them with an XML tag CDATA. 
-			 * $parameters_xml = "<parm comment='$comment' io='$io'>
-  		 </parm>";*/	
-				if($count > 1)
-					$addDimenstion = $j;//should have a different identificaion
-						
-				$parameter_xml .= "<data type='$type' var='$var$addDimenstion'$commentStr$dataEndTag";
-			}
-			return $parameter_xml;  	
-				
-	}   
-
-	/* parse returned  xml */
-	/* put all element attributes in array with name ('var') as index */
-	private function readElement( array $el){
-		$el_values= null;		
- 		foreach ( $el as $element ){
- 		   $Attr = $element->attributes();
- 		   $data = (string) $element;
-
- 		   if ($this->sendReceiveHex) {
-				// convert back from hex 
-			    $data = pack("H*" , $data); 
-		    } // (if ($this->sendReceiveHex))
- 		   
- 		   $el_values [(string)$Attr->var] = $data;
- 		}
-	  return $el_values;								
-	}
-	
-	public function getParamValueFromXml($xml) {		
-		$xmlobj = @simplexml_load_string ( $xml );
-		if (! $xmlobj instanceof SimpleXMLElement) {
-			$this->error = "Can't read output xml";	
-			error_log ( $xml, 3, '/tmp/bad.xml' );		
-			return false;
-		}
-		
-		if( isset($xmlobj->error))	
-		{
-/*			TODO consider using 
-			<errnoile> if not 0. It can have a CPE prepended for a "CPF-style" message.
-			
-			Added xmlhint as a helpful message.
-*/			
-			$this->error =(string)$xmlobj->error->xmlerrmsg . 
-			              ' (' . (string)$xmlobj->error->xmlhint . ')';			
-			return false; 
-		}
-        // TODO if not a parm, also be able to parse. 		
-		$values = array();
-		$params = $xmlobj->xpath ( '/script/pgm/parm' );
-		foreach ( $params as $simpleXMLElement ) {
-			if (isset ( $simpleXMLElement->ds )) {
-				// data structure with multiple values				
-				$ds = $simpleXMLElement->ds;	
-				$el = $ds->xpath('data'); // all nodes of type data under the ds	
-				$addval = $this->readElement($el);
-				// add array of values to array.
-				$values = array_merge($values, $addval);
-				
-			} else {
-				// a single value   
-				$Attr = $simpleXMLElement->data->attributes();
-				$data = ( string ) $simpleXMLElement->data;
- 		        
-				if ($this->sendReceiveHex) {
-				    // convert back from hex 
-			        $data = pack("H*" , $data); 
-		        } // (if ($this->sendReceiveHex))
-				
-		        // add this single value to array
-				$values [(string)$Attr->var] = $data;
-					
-			} //(if (isset ( $simpleXMLElement->ds )))			
-		} //(foreach ( $params as $simpleXMLElement ))		
-		
-		/*or data structure (or data structure array) or single value may be returned.*/
-		// TODO this "return ds" code may need work
-		$retval_values = array();		
-		$ds_retvals = $xmlobj->xpath ( '/script/pgm/return/ds' ); // all return ds nodes
-		if( $ds_retvals){
-			foreach ($ds_retvals as $simpleXMLElement )
-			{			
-				$el = $simpleXMLElement->xpath('data');		
-				$el_values = $this->readElement($el);		 		
-				$retval_values[] = $el_values;		
-			
-			} // (foreach)
-		} else {
-			// no return ds'es. Look at single data items.		
-			$retvals = $xmlobj->xpath ( '/script/pgm/return/data' ); // all return data nodes
-			foreach ($retvals as $simpleXMLElement ){
-				$Attr = $simpleXMLElement->attributes();
-
-				$data = ( string ) $simpleXMLElement;
-				if ($this->sendReceiveHex) {
-			        $data = pack("H*" , $data); // convert back from hex 
-		        } // (if ($this->sendReceiveHex))
-				
-				$retval_values [(string)$Attr->var] = $data;
-			} //(foreach)			
-		}
-		
-		$callresults['io_param'] = $values; 
-		$callresults['retvals'] =  $retval_values;
-		
- 	
-	   return $callresults;	
-	}
 
    // gets any error code and sets it in toolkit.
    // returns true or false depending on interpretation of status
@@ -942,122 +938,194 @@ class XMLWrapper {
 	   $xmlobj = simplexml_load_string ( $xml );
 	   if (! $xmlobj instanceof SimpleXMLElement) {
 	   	    /*bad xml returned*/
-			$this->error = "Can't read output xml";	
-			error_log ( $xml, 3, '/tmp/bad.xml' );		
+			$this->error = "Can't read output xml";
+			error_log ( $xml, 3, '/tmp/bad.xml' );
+			
 			return false;
 		}
-		
-		
+
+
 		$retval = true; // assume OK unless error found. Was false, but sh doesn't return success flag.
 		$params = $xmlobj->xpath ( "/script/$parentTag" );
 
 		foreach ( $params as $simpleXMLElement ) {
 
 			// Note: there may be multiple ->error tags
-			
+
 			if (isset ( $simpleXMLElement->error )){//*** error
+
+				// newer way in XMLSERVICE 
+				///bookstore/book[last()]
+
+				// get last joblogscan/joblogrec nested tags in the XML section. Returned as one-element array. function 'current' returns the one element.
+				$lastJoblogTag = current($simpleXMLElement->xpath ( "joblogscan/joblogrec[last()]" ));
 				
+				// if last job log tag contained a real CPF-style code, of length 7 (e.g. CPF1234), parsed for us.
+				if ($lastJoblogTag && isset($lastJoblogTag->jobcpf) && (strlen($lastJoblogTag->jobcpf) == 7)) {
+					$this->cpfErr = (string) $lastJoblogTag->jobcpf;
+					$this->error = $this->cpfErr; // ->error has ambiguous meaning. Include for backward compatibility.
+					
+					$this->errorText = (string) $lastJoblogTag->jobtext;
+
+					$retval = false;
+					break;
+						
+				} //(if ($lastJoblogTag))
 				
+				/*
+				 * <joblogscan>
+<joblogrec>
+<jobcpf>CPF1124</jobcpf>
+<jobtime><![CDATA[10/11/12  19:33:54.102423]]></jobtime>
+<jobtext><![CDATA[Job 127257/ASEIDEN/XTOOLKIT started on 10/11/12 at Job 127257/ASEIDEN/XTOOLKIT submitted.]]></jobtext>
+</joblogrec>
+<joblogrec>
+<jobcpf>*NONE</jobcpf>
+<jobtime><![CDATA[10/11/12  19:33:54.102423]]></jobtime>
+<jobtext><![CDATA[CALL PGM(XMLSERVICE/XMLSERVICE) PARM('/tmp/ASEIDEN_abc')]]></jobtext>
+</joblogrec>
+<joblogrec>
+<jobcpf>CPF3142</jobcpf>
+<jobtime><![CDATA[10/11/12  19:33:54.102423]]></jobtime>
+<jobtext><![CDATA[PLUGILE ILECMDEXC 5116 File NONEXIST in library *LIBL not found.]]></jobtext>
+</joblogrec>
+</joblogscan>
+*/
+				// xpath(joblogscan/joblogrec[last()])
+				// then ->jobcpf and ->jobtext
+				
+
 				// Note: there may be multiple ->error tags
-				
+
 				// As of XMLSERVICE 1.60:
 				// array element[0] is probably the *** error text.
-				// array element[1] may be the CPF code.
+				// array element[1] may be the CPF code (not likely).
 				if (isset($simpleXMLElement->error[1])) {
-				    $this->error = (string) $simpleXMLElement->error[1];	
+				    $this->error = (string) $simpleXMLElement->error[1];
 				} else {
 					$this->error = "Command execute failed.";
 				}
-				
+
 				//$err = (string )$simpleXMLElement->error;
                 // there's an error code of some kind. use it.
                 // A change: get rid of standard msg. Only return the err, which may be a CPF.
 				//$this->error = "Command execute failed. ".$err;
-				
+
 				$retval = false;
-				break;				
+				break;
 			}
 
 			// Older style. Now, *** error appears in ->error tag
 			if(strstr(((string)$simpleXMLElement),"*** error")){
-				// this message is a generic failure so it's OK.				
+				// this message is a generic failure so it's OK.
 				$this->error = "Command execute failed. ";
 				$retval = false;
-				break;	
+				break;
 		    }
-			
+
 		    // in the case of interactive commands, there may be no "success" msg.
-			if (isset ( $simpleXMLElement->success )){								
+			if (isset ( $simpleXMLElement->success )){
 				$retval = true;
 				break;
-			} 
-			
-			// Older style. Now, +++ success appears in ->success tag			
-			if(strstr(((string)$simpleXMLElement),"+++ success")){										
-				$retval = true;
-				break;	
 			}
-			
+
+			// Older style. Now, +++ success appears in ->success tag
+			if(strstr(((string)$simpleXMLElement),"+++ success")){
+				$retval = true;
+				break;
+			}
+
 		}
 
 		return $retval;
    }
-	
-   // getting rows from command output.
+
+   // Get rows from command output.
    public function getRowsFromXml($xml, $parent = 'sh')
    {
-   	
+
 		$this->error = '';
    		$values = array();
-		/* bad xml returned*/
+		
 		$xmlobj = @simplexml_load_string ( $xml );
 		if (! $xmlobj instanceof SimpleXMLElement) {
-		
+			/* bad xml returned*/
 			$this->error = "Can't read output xml";
 			return false;
 		}
+		// get all rows of data
 		$params = $xmlobj->xpath ( "/script/$parent/row" );
 
+		// get data for each row found.
 		foreach ( $params as $simpleXMLElement ) {
-			if ($parent == 'sh') {
+
+			// If hex, get data from script->$parent->hex
+			// Then can un-hex (pack) that and do simplexml load string on it, and proceed as below afterward.
+			// Examples from XMLSERVICE documentation: http://174.79.32.155/wiki/index.php/XMLSERVICE/XMLSERVICECCSID
+			// if hex info was sent back
+			
+			//  <sh rows='on' hex='on' before='819/37' after='37/819'>
+			//      <row><hex>746F74616C2031363636313034</hex></row>
+			//  </sh>
+					
+			
+			/*  <cmd exec='rexx' hex='on' before='819/37' after='37/819'>
+			*       <success><![CDATA[+++ success RTVJOBA USRLIBL(?) SYSLIBL(?)]]></success>
+			*       <row><data desc='USRLIBL'><hex><![CDATA[5147504C20202020202020]]></hex></data></row>
+			*       <row><data desc='SYSLIBL'><hex><![CDATA[5153595320202020202020]]></hex></data></row>
+			*   </cmd>
+			*/
+
+			
+			// if there's a data element, go down one level to it (->data).
+			$element = (isset($simpleXMLElement->data)) ? $simpleXMLElement->data : $simpleXMLElement;
+
+			// if a hex tag is present, de-hex (pack) the data inside that hex tag; otherwise, use the outer element's value directly.
+			$data = (isset($element->hex)) ? pack("H*" , ( string )$element->hex) : ( string )$element;
+           
+			// process data string received, then add to $values array.
+			
+			// rows will either be from parent 'cmd' or 'sh'.
+			if ($parent == 'cmd') {
+				// for RTV* commands,
+				// attribute 'desc' of data tag will hold the output field name to which the data belongs.
+				$outputFieldName = (string) $element->attributes()->desc;
+
+				$data = trim($data, " \n"); // trim spaces and end-of-line chars of data that comes from REXX RTV* commands ('cmd')
 				
-				$data =  ( string )$simpleXMLElement;
-			    if ($this->sendReceiveHex) {
-			        $data = pack("H*" , $data); // convert back from hex 
-		        } // (if ($this->sendReceiveHex))
-				
-			    $values[]= $data; // add to array of 'sh' values.
-			    
-			} elseif ($parent == 'cmd' ) {
-				// attribute 'desc' will hold the output field name to which the data belongs.
-				$outputFieldName = (string) $simpleXMLElement->data->attributes()->desc;
-				// get the data and trim any spaces or line feeds.
-				
-				$data = ( string )$simpleXMLElement->data;
-				
-			    if ($this->sendReceiveHex) {
-			        $data = pack("H*" , $data); // convert back from hex 
-		        } // (if ($this->sendReceiveHex))
-				
-			    $values[$outputFieldName]= trim($data, " \n"); // with 'cmd', each piece of data is named. Trim spaces and end-of-line chars
-			} //(if parent == 'sh')			
-		}
-		
-		if(count($params)==0){
-			$this->error = "No rows";	
+				$values[$outputFieldName] = $data;
+			
+			} else {
+				// 'sh'
+				$values[] = $data; // no particular index 
+			} //(if ($parent == 'cmd'))
+					
+		} //(foreach ( $params as $simpleXMLElement ))
+
+		if(count($params)==0) {
+			$this->error = "No rows";
 			$params = $xmlobj->xpath ( "/script/$parent" );
 			foreach ( $params as $simpleXMLElement ) {
 				if(strstr(((string)$simpleXMLElement),"+++ no output")){
 					$this->error = "Command does not return output";
 				}
-				break;	    	
+				break;
 			}
 		}
-		
-    return $values;	
-  }	
-	
-  // return error message text
+
+    return $values;
+  } //(public function getRowsFromXml($xml, $parent = 'sh'))
+
+  public function getErrorCode() {
+      return (isset($this->cpfErr)) ? $this->cpfErr : '';
+  }
+  
+  public function getErrorMsg() {
+  	return (isset($this->errorText)) ? $this->errorText : '';
+  }
+  
+  
+  // return error message text (?)
   public function getLastError()
   {
   	return $this->error;
@@ -1066,6 +1134,6 @@ class XMLWrapper {
   {
   	return $this->joblog;
   }
-  
-      
+
+
 } //(class XMLWrapper)

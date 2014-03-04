@@ -1,8 +1,9 @@
 <?php 
 class odbcsupp {
 
-private $last_error = '';
-
+private $last_errorcode = ''; // SQL State
+private $last_errormsg = ''; // SQL Code with message
+	
 // 'persistent' is one option
 public function connect($database, $user, $password, $options = null){
 	
@@ -15,13 +16,17 @@ public function connect($database, $user, $password, $options = null){
 	
   // could be connect or pconnect
   $conn = $connectFunc ( $database, $user, $password );
-  if(is_resource($conn))	
+  
+  if (is_resource($conn)) {	
 	  return $conn;
+	  
+  } else {
 
-	$this->last_error = odbc_errormsg();
-
-   return false;
-}
+  	$this->setError();
+    return false;
+  }  //(if is resource)
+  
+} //(function connect)
 
 public function disconnect( $conn ){
 
@@ -30,40 +35,77 @@ public function disconnect( $conn ){
 
 }
 
-public function retrieveError(){
 
-	return $this->last_error;
+public function getErrorCode(){
+
+	return $this->last_errorcode;
 }
+
+// added
+public function getErrorMsg(){
+
+	return $this->last_errormsg;
+}
+
+protected function setError($conn = null) {
+	// set error code and message based on last odbc connection/prepare/execute error.
+
+	// TODO: consider using GET DIAGNOSTICS for even more message text:
+	// http://publib.boulder.ibm.com/infocenter/iseries/v5r4/index.jsp?topic=%2Frzala%2Frzalafinder.htm
+
+	if ($conn) {
+		// specific connection resource was provided
+		$this->setErrorCode(odbc_error($conn));
+		$this->setErrorMsg(odbc_errormsg($conn));
+	} else {
+		// no specific statemtent. Get last error
+		$this->setErrorCode(odbc_error());
+		$this->setErrorMsg(odbc_errormsg());
+	} //(if ($stmt))
+
+} //(setStmtError($stmt = null))
+
+protected function setErrorCode($errorCode) {
+	$this->last_errorcode = $errorCode;
+}
+
+
+protected function setErrorMsg($errorMsg) {
+	$this->last_errormsg = $errorMsg;
+}
+
+
 /* this function used for special stored procedure call only  */
 public function execXMLStoredProcedure( $conn, $stmt, $bindArray )										
 {
 
 
-	$InternalKey= $bindArray['InternalKey'];
-	$ControlKey = $bindArray['ControlKey'];
-	$InputXML   = $bindArray['InputXML'];
-	$OutputXML  = $bindArray['OutputXML'];
+	$internalKey= $bindArray['internalKey'];
+	$controlKey = $bindArray['controlKey'];
+	$inputXml   = $bindArray['inputXml'];
+	$outputXml  = $bindArray['outputXml'];
 	$disconnect = $bindArray['disconnect'];
 
 	$crsr = odbc_prepare ( $conn, $stmt);
 	if( !$crsr ){ 				
-		$this->last_error = odbc_errormsg (odbc_error );
+		$this->setError($conn);
 		return false;
 	}
 	
 	/* extension problem: sends an warning message into the php_log or to stdout 
 	 * about of number of result sets .  ( switch on return code of SQLExecute() 
 	 * SQL_SUCCESS_WITH_INFO  */
-		$ret = @odbc_execute ( $crsr , array($InternalKey, $ControlKey, $InputXML ));
+		$ret = @odbc_execute ( $crsr , array($internalKey, $controlKey, $inputXml ));
 		if(!$ret){
-			$this->last_error = odbc_errormsg  ($conn );
-			echo  $this->last_error;	
-			return false;
+			$this->setError($conn);
+				
+			return "ODBC error code: " . $this->getErrorCode() . ' msg: ' . $this->getErrorMessage();
 		}
 	
 	//disconnect operation cause crush in fetch ,
 	//nothing appears as sql script.
-	 $row='';
+	 $row='';	
+	 $outputXML = '';
 	 if(!$disconnect){			
         while( odbc_fetch_row($crsr)) {
     		$tmp = odbc_result($crsr, 1);
@@ -82,9 +124,9 @@ public function execXMLStoredProcedure( $conn, $stmt, $bindArray )
     		}
        }//while
        		
-		$OutputXML = $row;		
+		$outputXML = $row;		
 	}//!$disconnect
-	return $OutputXML;
+	return $outputXML;
 }
 
 
@@ -98,14 +140,12 @@ public function executeQuery($conn,  $stmt ){
 		  		   break;  		   	
 		  
 		  		$Txt[]=  $row;
-	  		} 	  	
-	  }
-	  else 
-	  {
-	  	 //$err =odbc_error ();
-	     $this->last_error = odbc_errormsg ();
-	  }	  	
+	  		} //(while) 	  	
+	  } else {
+	     $this->setError($conn);
+	  }	//(is resource)  	
+	  
 	  return $Txt;
-  }
-}
-?>
+	  
+  } //(function execute)
+} //(end of class)

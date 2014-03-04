@@ -1,19 +1,33 @@
 <?php 
 class db2supp {
 
-private $last_error = '';
-// added
-private $last_sqlstate = '';
+// TODO define common transport class/interface extended/implemented by all transports 	
+// They have a lot in common.	
+	
+private $last_errorcode = ''; // SQL State
+private $last_errormsg = ''; // SQL Code with message
 
 // 'persistent' is one option
 public function connect($database, $user, $password, $options = null){
 
 	/*
-	 * Throw in your "transport/adapter" framework for a real OO look and feel ....
+	 * TODO Throw in your "transport/adapter" framework for a real OO look and feel ....
 Throw new Exception( "Fail execute ($sql) ".db2_stmt_errormsg(),db2_stmt_error());
 ... and retrieve via try/catch + Exception methods.
 	 */
 
+	// check for blank password with non-blank user. If so, throw the same error that wrong password would generate.
+	// Compensate for older ibm_db2 driver that may not do this check.
+	if ($user && empty($password)) {
+		
+		$this->setErrorCode('08001');
+		$this->setErrorMsg('Authorization failure on distributed database connection attempt. SQLCODE=-30082');
+		
+		return false;
+		
+	} //(if (empty($password)))
+	
+	
     $connectFunc = 'db2_connect'; // default
 	if ($options) {
 		if ((isset($options['persistent'])) && $options['persistent']) {
@@ -23,19 +37,19 @@ Throw new Exception( "Fail execute ($sql) ".db2_stmt_errormsg(),db2_stmt_error()
 	
 	// could be connect or pconnect
 	
-  $conn = $connectFunc ( $database, $user, $password );
+    $conn = $connectFunc ( $database, $user, $password );
 
-  if(is_resource($conn))
-  { 
-	  return $conn;
-  }
+    if(is_resource($conn)) { 
+	    return $conn;
+    }
   
-	$this->last_error = db2_conn_errormsg();
-	// added
-	$this->last_sqlstate = db2_conn_error();
+    // error  
+    $this->setErrorCode(db2_conn_error());
+    $this->setErrorMsg(db2_conn_errormsg());
 	  
-   return false;
-}
+    return false;
+   
+} //(public function connect($database, $user, $password, $options = null))
 
 public function disconnect( $conn ){
 
@@ -53,94 +67,122 @@ public function disconnectPersistent( $conn ){
 }
 
 
-public function retrieveError(){
+public function getErrorCode(){
 
-	return $this->last_error;
+	return $this->last_errorcode;
 }
 
 // added
-public function retrieveSqlState(){
+public function getErrorMsg(){
 
-	return $this->last_sqlstate;
+	return $this->last_errormsg;
 }
 
+protected function setStmtError($stmt = null) {
+	// set error code and message based on last db2 prepare or execute error.
+	
+	// TODO: consider using GET DIAGNOSTICS for even more message text:
+	// http://publib.boulder.ibm.com/infocenter/iseries/v5r4/index.jsp?topic=%2Frzala%2Frzalafinder.htm
+	if ($stmt) {
+		// specific statement resource was provided
+	    $this->setErrorCode(db2_stmt_error($stmt));
+	    $this->setErrorMsg(db2_stmt_errormsg($stmt));
+	} else {
+		// no specific statemtent. Get last error
+		$this->setErrorCode(db2_stmt_error());
+		$this->setErrorMsg(db2_stmt_errormsg());	
+	} //(if ($stmt))
+	
+} //(setStmtError($stmt = null))
+
+protected function setErrorCode($errorCode) {
+	$this->last_errorcode = $errorCode;
+}
+
+
+protected function setErrorMsg($errorMsg) {
+	$this->last_errormsg = $errorMsg;
+}
+
+
 /* this function used for special stored procedure call only  */
-public function execXMLStoredProcedure( $conn, $stmt, $bindArray )										
+public function execXMLStoredProcedure( $conn, $sql, $bindArray )										
 {
 
-	$InternalKey= $bindArray['InternalKey'];
-	$ControlKey = $bindArray['ControlKey'];
-	$InputXML   = $bindArray['InputXML'];
-	$OutputXML  = $bindArray['OutputXML'];
+	$internalKey= $bindArray['internalKey'];
+	$controlKey = $bindArray['controlKey'];
+	$inputXml   = $bindArray['inputXml'];
+	$outputXml  = $bindArray['outputXml'];
 	
 	// TODO error doesn't properly bubble up to top level.
 	// But added some error handling in ToolkitService.php, ExecuteProgram, looking at error code.
-	$crsr = @db2_prepare ( $conn, $stmt);
+	$crsr = @db2_prepare ( $conn, $sql);
 	
-	if( !$crsr ){
-		$this->last_error = db2_stmt_error (); // changed from conn_error
+	// if the prepare failed
+	if( !$crsr ) {
+		$this->setStmtError();
 		return false;
-	}
+	} //(if( !$crsr ))
 
-	$ret = db2_bind_param ( $crsr, 1, "InternalKey", DB2_PARAM_IN );					
-	if (!$ret){	    	
-			$this->last_error =  db2_stmt_errormsg ($crsr);	
-			return false;
-	    }
-	    
-		$ret = db2_bind_param ( $crsr, 2, "ControlKey", DB2_PARAM_IN );
-		if (!$ret){		
-			$this->last_error =  db2_stmt_errormsg ($crsr);
-			return false;
-		}
+	// stored procedure takes four parameters. Each 'name' will be bound to a real PHP variable
+	$params = array(
+			       array('position' => 1, 'name' => "internalKey", 'inout' => DB2_PARAM_IN),
+			       array('position' => 2, 'name' => "controlKey",  'inout' => DB2_PARAM_IN),
+			       array('position' => 3, 'name' => "inputXml",    'inout' => DB2_PARAM_IN),
+			       array('position' => 4, 'name' => "outputXml",   'inout' => DB2_PARAM_OUT),
+			       );
+	
+	// bind the four parameters
+	foreach ($params as $param) {
 		
-		$ret = db2_bind_param ( $crsr, 3, "InputXML", DB2_PARAM_IN );		
-		if (!$ret){			
-			$this->last_error =  db2_stmt_errormsg ($crsr);			
+		$ret = db2_bind_param ( $crsr, $param['position'], $param['name'], $param['inout'] );
+		if (!$ret) {
+			// unable to bind a param. Set error and exit	
+			$this->setStmtError($crsr);
 			return false;
-		}
-		
-		$ret = db2_bind_param ( $crsr, 4, "OutputXML", DB2_PARAM_OUT );		
-		if(!$ret){			
-		    $this->last_error =  db2_stmt_errormsg ($crsr);				
-			return false;
-		}
-		
-        $ret = @db2_execute ( $crsr ); // @ so we don't get warning. Deal with !$ret on next line.
+		} //(if (!$ret))
+			
+	} //(foreach ($params...))
+	
 
-        if(!$ret){
-			$this->last_error = db2_stmt_error($crsr); // 22003 means XML is too big to get
-			return false;
-		}
+	// execute the stored procedure.
+    // @ hides any warnings. Deal with !$ret on next line.
+    $ret = @db2_execute ( $crsr ); 
+
+    if(!$ret) {
+    	// execution of XMLSERVICE stored procedure failed.
+    	$this->setStmtError($crsr); // set error and exit
+		return false;
+	} //(if(!$ret) {)
 		
-		return $OutputXML;
-}
+	return $outputXml;
+		
+} //(public function execXMLStoredProcedure)
 /*returns a first column from sql stmt result set*/
-public function executeQuery($conn, $stmt ){
+// used in one place: iToolkitService's ReadSPLFData().
+// TODO eliminate this method if possible.
+public function executeQuery($conn, $sql )
+{
 
      $Txt ='';
-	 $crsr = db2_exec($conn, $stmt, array('cursor' => DB2_SCROLLABLE));	  
-	 if(is_resource($crsr )) {	  	
-	 	while (true)
-	  	{  		  		
-	  		$row = db2_fetch_row( $crsr );	  		
+	 $stmt = db2_exec($conn, $sql, array('cursor' => DB2_SCROLLABLE));	  
+	 if(is_resource($stmt )) {	  	
+	 	  while (true) {  		  		
+	  		$row = db2_fetch_row( $stmt );	  		
 	  		if(!$row) 
 	  		   break;  		   	
 	  	
-	  		$column = db2_result($crsr, 0);
+	  		$column = db2_result($stmt, 0);
 	  		$Txt[] = $column;
 	  		 
-	  	}
-	  }
-	  else 
-	 {
+	  	  } // while
+	 } else {
 	  	 //$err = db2_stmt_error();
-	  	 die('db2 error: ' . db2_stmt_error() . ' ' . db2_stmt_errormsg()); 
-	     $this->last_error = db2_stmt_errormsg();
-	  }
+	     $this->setStmtError();
+	     Throw new Exception( "Failure executing SQL: ($sql) ".db2_stmt_errormsg(), db2_stmt_error()); 
+	 } //(if is resource)
 	  	
 	  return $Txt;
-	}
+} //(public function executeQuery)
 
-}
-?>
+} //(end of class)

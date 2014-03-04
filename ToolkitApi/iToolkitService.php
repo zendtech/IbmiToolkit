@@ -288,8 +288,8 @@ class UserSpace{
         if($this->ToolkitSrvObj->verify_CPFError($retPgmArr, "Retrieve user space attributes failed. Error: "))
 		   return false;
 		   
-        // ds'es are discarded when reading output. The subfields become independent.
-        // So 'receiver' may not exist. But this may change in future, so allow for receiver var.
+        // If data structure integrity turned off, ds'es are discarded when reading output. The subfields become independent.
+        // So 'receiver' may not exist. But this changes with data structure integrity, so allow for receiver var.
         if (isset($retPgmArr['io_param']['receiver'])) {
         	// receiver ds var does exist.
         	$retArr = $retPgmArr['io_param']['receiver'];
@@ -588,39 +588,67 @@ class DataQueue{
 		
 		return true;
 	}
-	public function ReceieveDataQueue($WaitTime, $KeyOrder = '', $KeyLength = 0, $KeyData = '', $WithRemoveMsg = 'N') {
+	
+	// Correct spelling with this alias
+	public function receiveDataQueue($WaitTime, $KeyOrder = '', $KeyLength = 0, $KeyData = '', $WithRemoveMsg = 'N') {
+		
+		// call misspelled one
+		return $this->receieveDataQueue($WaitTime, $KeyOrder, $KeyLength, $KeyData, $WithRemoveMsg);
+	} //receiveDataQueue)
+	
+
+	public function receieveDataQueue($WaitTime, $KeyOrder = '', $KeyLength = 0, $KeyData = '', $WithRemoveMsg = 'N') {
+		
+		
+		// uses QRCVDTAQ API
+		// http://publib.boulder.ibm.com/infocenter/iseries/v5r3/index.jsp?topic=%2Fapis%2Fqrcvdtaq.htm
+		
+		
 		$params [] = $this->ToolkitService->AddParameterChar ( 'in', 10, 'dqname', 'dqname', $this->DataQueueName );
 		$params [] = $this->ToolkitService->AddParameterChar ( 'in', 10, 'dqlib', 'dqlib', $this->DataQueueLib );
 		
-		$DataLen = 100;
+		// TODO do not hard-code data size. Use system of labels as allowed by XMLSERVICE.
+		$DataLen = 300;
 		$Data = ' ';
 		
 		$params [] = $this->ToolkitService->AddParameterPackDec ( 'out', 5, 0, 'datalen', 'datalen', $DataLen );
-		$params [] = $this->ToolkitService->AddParameterChar ( 'out', ( int ) $DataLen, 'datavalue', 'datavalue', $Data, 'on' );
+		$params [] = $this->ToolkitService->AddParameterChar ( 'out', ( int ) $DataLen, 'datavalue', 'datavalue', $Data);
+		
+		// Wait time: < 0 waits forever. 0 process immed. > 0 is number of seconds to wait.
 		$params [] = $this->ToolkitService->AddParameterPackDec ( 'in', 5, 0, 'waittime', 'waittime', $WaitTime );
 	
-		if ($KeyLength > 0) {
-			$params [] = $this->ToolkitService->AddParameterChar ( 'in', 2, 'keydataorder', 'keydataorder', $KeyOrder );
-			$params [] = $this->ToolkitService->AddParameterPackDec ( 'in', 3, 0, 'keydatalen', 'keydatalen', $KeyLength );
-			// TODO this is wrong. Key data varying should be "off".
-			$params [] = $this->ToolkitService->AddParameterChar ( 'both', ( int ) $KeyLength, 'keydata', 'keydata', $KeyData, 'on' );
+		if (!$KeyLength) {
+			// 0, make order, length and data also zero or blank, so thatthey'll be ignored by API. Must send them, though.
 			
-			$SenderInf = ' ';
+			// if an unkeyed queue, API still expects to receive key info, 
+			// but it must be blank and zero.
+			$KeyOrder = ''; // e.g. EQ, other operators, or blank
+			$KeyLength = 0; 
+			$KeyData = '';
 			
-			$params [] = $this->ToolkitService->AddParameterPackDec ( 'in', 3, 0, 'senderinflen', 'senderinflen', 44 );
-			$params [] = $this->ToolkitService->AddParameterChar ( 'out', 44, 'senderinf', 'senderinf', $SenderInf, 'on' );
+		} //(if !$keyLength)	
 			
-			if( $WithRemoveMsg == 'N')
-				$Remove= '*NO       ';
-			else 	
-				$Remove= '*YES      ';
+			
+		$params [] = $this->ToolkitService->AddParameterChar ( 'in', 2, 'keydataorder', 'keydataorder', $KeyOrder );
+		$params [] = $this->ToolkitService->AddParameterPackDec ( 'in', 3, 0, 'keydatalen', 'keydatalen', $KeyLength );
+		$params [] = $this->ToolkitService->AddParameterChar ( 'both', ( int ) $KeyLength, 'keydata', 'keydata', $KeyData );
+			
+		$params [] = $this->ToolkitService->AddParameterPackDec ( 'in', 3, 0, 'senderinflen', 'senderinflen', 44 );
+		// Sender info may contain packed data, so don't receive it till we can put it in a data structure.
+        // TODO use a data structure to receive sender info as defined in QRCVDTAQ spec.
+		$params [] = $this->ToolkitService->AddParameterHole ( 44, 'senderinf');
+
+		// whether to remove message from data queue
+		if( $WithRemoveMsg == 'N') {
+			$Remove= '*NO       ';
+		} else { 	
+			$Remove= '*YES      ';
+		}
 				
-	    $params [] = $this->ToolkitService->AddParameterChar ( 'in', 10, 'remove', 'remove',  $Remove );
-		$params [] = $this->ToolkitService->AddParameterPackDec ( 'in', 5, 0, 'receiver', 'receiver', 100);
-		//$params [] = array('ds'=>$this->ToolkitService->GenerateErrorParameter());
-		$ds =$this->ToolkitService->GenerateErrorParameter();
-		$params[] = ToolkitService::AddDataStruct($ds);	
-	    }
+	    $params[] = $this->ToolkitService->AddParameterChar ( 'in', 10, 'remove', 'remove',  $Remove );
+		$params[] = $this->ToolkitService->AddParameterPackDec ( 'in', 5, 0, 'size of data receiver', 'receiverSize', $DataLen);
+
+		$params[] =  $this->ToolkitService->AddErrorDataStructZeroBytes(); // so errors bubble up to joblog
 	    
 		$retPgmArr = $this->ToolkitService->PgmCall ( 'QRCVDTAQ', 'QSYS', $params);
 		if(isset($retPgmArr['io_param'])){
@@ -639,19 +667,23 @@ class DataQueue{
 	}
 	
 	public function SendDataQueue($DataLen, $Data, $KeyLength=0, $KeyData=''){
-		//QSNDDTAQ
+		// QSNDDTAQ API:
+		// http://publib.boulder.ibm.com/infocenter/iseries/v5r4/index.jsp?topic=%2Fapis%2Fqsnddtaq.htm
 				
 		$params[] = $this->ToolkitService->AddParameterChar('in', 10, 'dqname','dqname', $this->DataQueueName);
 		$params[] = $this->ToolkitService->AddParameterChar('in', 10, 'dqlib', 'dqlib',$this->DataQueueLib);
 		 
 		$params[] = $this->ToolkitService->AddParameterPackDec('in', 5,0,'datalen', 'datalen', $DataLen, null);
-		$params[] = $this->ToolkitService->AddParameterChar('in',$DataLen, 'datavalue','datavalue',  $Data, 'on');
+		$params[] = $this->ToolkitService->AddParameterChar('in',$DataLen, 'datavalue','datavalue',  $Data);
 		if($KeyLength > 0 ){
 	    	$params[] = $this->ToolkitService->AddParameterPackDec('in', 3, 0, 'keydatalen','keydatalen', $KeyLength, null);	    
-			$params[] = $this->ToolkitService->AddParameterChar('in', $KeyLength, 'keydata','keydata',  $KeyData, 'on');
+			$params[] = $this->ToolkitService->AddParameterChar('in', $KeyLength, 'keydata','keydata',  $KeyData);
 		}
-		$this->ToolkitService->PgmCall('QSNDDTAQ', 'QSYS', $params);
-	}
+		$ret = $this->ToolkitService->PgmCall('QSNDDTAQ', 'QSYS', $params);
+		
+		return $ret;
+		
+	} //(SendDataQueue)
 	
 	public function ClearDQ($KeyOrder= '', $KeyLength=0, $KeyData=''){
 		
@@ -661,7 +693,7 @@ class DataQueue{
 		if($KeyLength > 0){
 			$params[] = $this->ToolkitService->AddParameterChar('in', 2, 'keydataorder','keydataorder', $KeyOrder);
 			$params[] = $this->ToolkitService->AddParameterPackDec ( 'in', 3, 0, 'keydatalen', 'keydatalen', $KeyLength );
-			$params[] = $this->ToolkitService->AddParameterChar( 'in', ((int)$KeyLength), 'keydata', 'keydata', $KeyData, 'on');
+			$params[] = $this->ToolkitService->AddParameterChar( 'in', ((int)$KeyLength), 'keydata', 'keydata', $KeyData);
 			//$params[] = array('ds'=>$this->ToolkitService->GenerateErrorParameter());
 			$ds =$this->ToolkitService->GenerateErrorParameter(); 
 			$params[] = ToolkitService::AddDataStruct($ds);			
@@ -693,12 +725,9 @@ class SpooledFiles
 				$this->ToolkitSrvObj = $ToolkitSrvObj ;
 					
 		  // $this->old_plug = $this->ToolkitSrvObj->getToolkitServiceParam('plug');			
-			if($this->ToolkitSrvObj->isDb2())
-				$plugsize = "iPLUG1M";
-			else
-				$plugsize = "iPLUGR1M";//odbc has another stored procedure call
-				
-			$this->ToolkitSrvObj->setToolkitServiceParams(array('plug'=>$plugsize));	
+
+			// TODO do not assume a specific plug size.
+			$this->ToolkitSrvObj->setOptions(array('plugSize'=>'1M'));	
 		    				
 			$this->TMPFName = $this->ToolkitSrvObj->generate_name();
 			
@@ -850,12 +879,11 @@ class JobLogs {
 	
 	public function __construct( ToolkitService  $ToolkitSrvObj = null, $tmpUSLib = DFTLIB ){
 		if ($ToolkitSrvObj instanceof ToolkitService ) {
-			$this->ToolkitSrvObj = $ToolkitSrvObj ;
-			if($this->ToolkitSrvObj->isDb2())
-				$plugsize = "iPLUG1M";
-			else
-				$plugsize = "iPLUGR1M";//odbc has another stored procedure call
-			$this->ToolkitSrvObj->setToolkitServiceParams(array('plug'=>$plugsize));
+			$this->ToolkitSrvObj = $ToolkitSrvObj;
+
+			// TODO do not assume a specific plug size.
+			$this->ToolkitSrvObj->setOptions(array('plugSize'=>'1M'));	
+
 			//do not use a QTEMP as temporary library.
 			if(strcmp($tmpUSLib, "QGPL")){
 				$this->TmpLib = $tmpUSLib;
@@ -1085,6 +1113,7 @@ class SystemValues   {
 		return false;
 	}
     
+	// TODO Deprecate setConnection in future.
 	public function setConnection ($dbname , $user, $pass)
 	{
 		if( !$this->ToolkitSrvObj instanceof ToolkitService){
@@ -1092,16 +1121,12 @@ class SystemValues   {
 		}		
 	}
     
-	public function SystemValuesList() {
+	public function systemValuesList() {
 		
 	    if( !$this->ToolkitSrvObj instanceof ToolkitService ) 
 	       return false;
 		
-		if($this->ToolkitSrvObj->isDb2())
-				$plugsize = "iPLUG512K";
-			else
-				$plugsize = "iPLUGR512K";
-		$this->ToolkitSrvObj->setToolkitServiceParams ( array ('plug' => $plugsize ) );
+		
 		$tmparray = $this->ToolkitSrvObj->CLInteractiveCommand ( 'WRKSYSVAL OUTPUT(*PRINT)' );
 		if (isset ( $tmparray )) {
 			$i = 4;
@@ -1118,17 +1143,20 @@ class SystemValues   {
 			return $sysvals;
 		} else
 			return false;
-	}
+		
+	} //(systemValuesList)
 	
-	public function GetSystemValue($SysValueName) {
+	public function getSystemValue($sysValueName) {
 		
 		if( !$this->ToolkitSrvObj instanceof ToolkitService ) 
 	       return false;
 		
+		// TODO QWCRSVAL to work with 2 tiers while retaining good performance 
+
 		$Err = ' ';
 		$SysValue = ' ';
 		$params [] = $this->ToolkitSrvObj->AddParameterChar ( 'both',1, "ErrorCode", 'errorcode',$Err );
-		$params [] = $this->ToolkitSrvObj->AddParameterChar ( 'both',10, "SysValName",'sysvalname', $SysValueName);
+		$params [] = $this->ToolkitSrvObj->AddParameterChar ( 'both',10, "SysValName",'sysvalname', $sysValueName);
 		$params [] = $this->ToolkitSrvObj->AddParameterChar ( 'both',1024, "SysValue", 'sysval',$SysValue );		
 		$retArr =  $this->ToolkitSrvObj->PgmCall ( ZSTOOLKITPGM, ZSTOOLKITLIB, $params,NULL, array ('func' => 'RTVSYSVAL' ) );
 		if($retArr !== false  && isset($retArr['io_param'])){
@@ -1138,7 +1166,7 @@ class SystemValues   {
 			else		
 				$this->setError( $sysval['errorcode']);	
 	    }
-	}
+ 	} //(getSystemValue)
 	
 	public function getError(){
 	     return $this->ErrMessage;
@@ -1179,7 +1207,8 @@ class SystemValues   {
 	/*for *char data area. According to create other data area types 
 	 * use CL command */
  	public function createDataArea( $DataAreaName = '', 
-	                                $DataAreaLib = "*CURLIB", $size = 2000 )	                              
+	                                $DataAreaLib = "*CURLIB", // *CURLIB is correct, the default with CRTDTAARA. 
+ 			                        $size = 2000 )	                              
 	{	
 		if($DataAreaName !='' && $this->DataAreaName == NULL ){/*was not set before*/
 				$this->setDataAreaName( $DataAreaName , $DataAreaLib);
@@ -1204,48 +1233,155 @@ class SystemValues   {
 	
 	private function getAPIDataAreaName()
 	{ 	
-	  return  ( sprintf("%-10s%-10s", $this->DataAreaName, $this->DataAreaLib));	  
+		// "DATAAREA  LIBRARY"   
+	    return  ( sprintf("%-10s%-10s", $this->DataAreaName, $this->DataAreaLib));	  
     }
     
-	public function setDataAreaName( $DataAreaName , $DataAreaLib = "*CURLIB")
-	{		
-		if( $DataAreaName == '')
+    protected function getQualifiedDataAreaName() {
+    	// return dtaara name in lib/dtaara format.
+    	if ($this->DataAreaLib) {
+    		return "{$this->DataAreaLib}/{$this->DataAreaName}";
+    	} else {
+    		// no library (e.g. *LDA dtaara). Return only dtaara name.
+    		return $this->DataAreaName;
+    	}
+        	  
+    } //(protected function getQualifiedDataAreaName())
+    
+    // *LIBL to read/write data area. *CURLIB to create.
+	public function setDataAreaName( $dataAreaName , $dataAreaLib = "*LIBL")
+	{	
+        /* special values:
+         *LDA 	Local data area
+         *GDA 	Group data area
+         *PDA 	Program initialization parameter data area
+        */ 	
+		$dataAreaName = trim(strtoupper($dataAreaName));
+		
+		if( $dataAreaName == '')
 			throw new Exception("Data Area name parameter should be defined ");
-			
-		$this->DataAreaName = $DataAreaName;
-		$this->DataAreaLib = $DataAreaLib;
+
+		// no library allowed for these special values.
+		if (in_array($dataAreaName, array('*LDA', '*GDA', '*PDA'))) {
+			$dataAreaLib = '';
+		}
+		
+		$this->DataAreaName = $dataAreaName;
+		$this->DataAreaLib = $dataAreaLib;
 	}
 	
-	public function readDataArea( $fromPosition = 1 , $dataLen = 2000 )
+
+	public function readDataArea( $fromPosition = 1 , $dataLen = '*ALL' )
 	{	
-		//via QWCRDTAA		
 		if( !$this->ToolkitSrvObj instanceof ToolkitService ) 
 	       return false;
 		
 		$Err = ' ';
-		$Value = ' ';
-		if($fromPosition == 0)
-			$FromPosition = 1;
-		else 
-			$FromPosition = $fromPosition;		
-		// TODO NOTE: default of 2000 may not work for all data areas. Implement *ALL if no length specified.
-		$datalen = $dataLen;
-		
-		$params [] = $this->ToolkitSrvObj->AddParameterChar ( 'both',10,  "ErrorCode", "errorcode",$Err );
-		$params [] = $this->ToolkitSrvObj->AddParameterChar ( 'both',20,  "DataAreaName","DataAreaName", $this->getAPIDataAreaName());
-		$params [] = $this->ToolkitSrvObj->AddParameterChar ( 'both',2000,"Value", "Value", $Value );
-		$params [] = $this->ToolkitSrvObj->AddParameterChar ( 'both',4, "FromPosition", "FromPosition",$FromPosition );
-		$params [] = $this->ToolkitSrvObj->AddParameterChar ( 'both',4, "DataLen", "DataLen",$datalen);	
+		$value = '';
+		if($fromPosition == 0) {
+			$fromPosition = 1;
+		}
 
-		$retArr =  $this->ToolkitSrvObj->PgmCall ( ZSTOOLKITPGM, ZSTOOLKITLIB, $params, NULL, array ('func' => 'RTVDATAARA' ) );
-		if($retArr !== false  && isset($retArr['io_param'])){
-		   if( $retArr['io_param']['errorcode'] != '' )
-		  	   $this->setError( $retArr['io_param']['errorcode']);		       		
-		   else	 
-		    	return $retArr['io_param']['Value'];		      
-		}		
-		return false; 
-	}
+		$maxValueSize = 2000; // largest allowed data area size
+		
+		$adjustedStartRequested = $fromPosition;
+		$adjustedLengthRequested = $dataLen;
+		// if data len is *ALL, position and length receive special values..
+ 		if (strtoupper($dataLen) == '*ALL') { // either numeric or *ALL
+			$adjustedStartRequested = -1; // *ALL;
+			$adjustedLengthRequested = $maxValueSize; 
+ 		}  //(*all)		
+		$toolkit = $this->ToolkitSrvObj;
+		
+		// new way
+
+		/* 		Retrieve Data Area (QWCRDTAA) API
+		//http://publib.boulder.ibm.com/infocenter/iseries/v5r3/index.jsp?topic=%2Fapis%2Fqwcrdtaa.htm
+				
+		Required Parameter Group:
+		
+		1 	Receiver variable 	Output 	Char(*)
+		2 	Length of receiver variable 	Input 	Binary(4) Max length is 2000
+		3 	Qualified data area name 	Input 	Char(20)
+		4 	Starting position 	Input 	Binary(4)
+		5 	Length of data 	Input 	Binary(4)
+		6 	Error code 	I/O 	Char(*)
+		
+		*
+		*format of receiver variable
+		*0 	0 	BINARY(4) 	Bytes available (The length of all data available to return. All available data is returned if enough space is provided.)
+         4 	4 	BINARY(4) 	Bytes returned ( The length of all data actually returned)
+         8 	8 	CHAR(10) 	Type of value returned  (*CHAR, *DEC, *LGL)
+        18 	12 	CHAR(10) 	Library name (blank if *LDA et al.)
+        28 	1C 	BINARY(4) 	Length of value returned
+        32 	20 	BINARY(4) 	Number of decimal positions
+        36 	24 	CHAR(*) 	Value (contents of data area)
+		*/
+		
+        // TODO allow data structure in data area, if packed/binary allowed.		
+			
+		$receiverVar = array();
+		$receiverVar[] = $toolkit->AddParameterInt32 ( 'out', 'Bytes available: length of all data available to return', 'bytesAvail', $maxValueSize );
+		$receiverVar[] = $toolkit->AddParameterInt32 ( 'out', 'Length of all data returned, limited by size of receiver', 'bytesReturned', 0);
+		$receiverVar[] = $toolkit->AddParameterChar ( 'out', '10', 'Type of value returned (*CHAR, *DEC, *LGL)', 'Type', '' );
+		$receiverVar[] = $toolkit->AddParameterChar ( 'out', '10',  'Library where data area was found', 'Library', '');
+		$receiverVar[] = $toolkit->AddParameterInt32 ( 'out', 'Length of value returned', 'lengthReturned', 0);
+		$receiverVar[] = $toolkit->AddParameterInt32 ( 'out', 'Number of decimal positions', 'decimalPositions', 0);
+		$receiverVar[] = $toolkit->AddParameterChar ( 'out', $maxValueSize, 'Value returned', 'value', ''); // set length to $maxValueSize to be safe
+		
+		$receiverLength = $maxValueSize + 36; // 4 4-byte integers + 2 10-byte character strings = 36
+		
+        // "NAME      LIB       " no slash. Left-aligned.
+		$twentyCharQualifiedName = $this->getAPIDataAreaName();
+		
+		$toolkitParams = array();
+		$toolkitParams [] = $toolkit->AddDataStruct($receiverVar, 'receiver');
+		$toolkitParams [] = $toolkit->AddParameterInt32( 'in', 'Length of receiver variable', 'receiverLen', $receiverLength);
+		$toolkitParams [] = $toolkit->AddParameterChar ( 'in', 20,  'Data area name', 'DtaaraName', $twentyCharQualifiedName);
+		// Starting position: The first byte of the data area to be retrieved. A value of 1 will identify the first character in the data area. The maximum value allowed for the starting position is 2000. A value of -1 will return all the characters in the data area.
+		$toolkitParams [] = $toolkit->AddParameterInt32 ( 'in', 'Starting position requested', 'fromPosition',  $adjustedStartRequested);
+		$toolkitParams [] = $toolkit->AddParameterInt32 ( 'in', 'Data length requested', 'dataLength', $adjustedLengthRequested);
+		$toolkitParams [] = $toolkit->AddErrorDataStructZeroBytes(); // so errors bubble up to joblog
+		
+		
+		// we're using a data structure here so integrity must be on
+		// TODO pass as option on the program call
+		$dsIntegrity = $toolkit->getOption('dataStructureIntegrity'); // save original value
+		$toolkit->setOptions(array('dataStructureIntegrity'=>true)); 
+		
+		$retPgmArr = $toolkit->PgmCall ( 'QWCRDTAA', '', $toolkitParams);
+		
+		$toolkit->setOptions(array('dataStructureIntegrity'=>$dsIntegrity)); // restore original value
+		
+		// check for any errors
+		if ($toolkit->getErrorCode()) {
+			// an error
+			i5CpfError($toolkit->getErrorCode(), $toolkit->getErrorMsg());
+			return false;
+		} else { 			
+		    // extricate the data from the receiver variable ds wrapper
+			$value = $retPgmArr['io_param']['receiver']['value'];
+		}
+		
+		
+		// old way, which was much slower
+/* 		
+		$cmdString = "RTVDTAARA DTAARA($dataAreaName $positionParams) RTNVAR(?)";
+		
+		// Send the command; get output array of key/value pairs. Example: CURUSER=>FRED, ...
+		// In this case, RTNVAR=>abcde
+		$outputArray = $this->ToolkitSrvObj->ClCommandWithOutput($cmdString);
+
+		if ($outputArray && isset($outputArray['RTNVAR'])) {
+			$value = $outputArray['RTNVAR'];
+		} else{
+			logThis("Failed: $cmdString.");
+			$this->setError( "Failed: $cmdString");
+		} //(if value)
+ */
+		return ($value) ? $value : false;
+		
+	} //(public function readDataArea)
 	
 	private function setError( $msg){
 	  $this->ErrMessage = $msg;
@@ -1259,11 +1395,12 @@ class SystemValues   {
 	{	
 		$substring = ''; // init		
 		if($fromPosition > 0 ){
-			$substring = sprintf("( %d %d)", $fromPosition, $dataLen);
+			$substring = sprintf("(%d %d)", $fromPosition, $dataLen);
 		}
-		$cmd = sprintf("CHGDTAARA DTAARA(%s/%s $substring) VALUE($value)",
-		   				 $this->DataAreaLib,
-				         $this->DataAreaName);
+		
+		// TODO use API instead. Handle numeric and character data., *CHAR and *DEC as well.
+		$cmd = sprintf("CHGDTAARA DTAARA(%s $substring) VALUE($value)",
+		   			   $this->getQualifiedDataAreaName());
 				         
 		if( !$this->ToolkitSrvObj->CLCommand($cmd)){	
 			$this->ErrMessage =  "Write into Data Area failed.". $this->ToolkitSrvObj->getLastError();
@@ -1271,6 +1408,7 @@ class SystemValues   {
 		}			         
 		
     }
+    // requires explicit library
  	public function deleteDataArea($DataAreaName='', $DataAreaLib='')
 	{		
 		$cmd = sprintf("QSYS/DLTDTAARA DTAARA(%s/%s)", 

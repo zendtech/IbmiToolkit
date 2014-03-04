@@ -15,23 +15,7 @@ function d($dieOutput = 'x')
     }
     die($str);
 }
-// return value from toolkit config file,
-// or a default value, or false if not found.
-/*function getConfigValue($heading, $key, $default = null) {
-    // TODO store once in a registry or the like
-    
-    // true means use headings
-    $config = parse_ini_file(CONFIG_FILE, true);
-    if (isset($config[$heading][$key])) {
-        return $config[$heading][$key];
-    } elseif (isset($default)) {
-        return $default;
-    } else {
-        return false;
-    }
-    
-} //(getConfigValue)
-*/
+
 // create unique IPC code
 function makeIpc($user, $connNum = 0) {
     $ipcUser = ($user) ? $user : DB2_DEFAULT_USER;
@@ -45,16 +29,6 @@ function makeIpc($user, $connNum = 0) {
     return $ipc;
 } //(makeIpc)
 
-
-/*function logThis($msg) {
-    $logFile = getConfigValue('log','logfile');
-    if ($logFile) {
-        // it's configured so let's write to it. ("3" means write to a specific file)
-        $formattedMsg = "\n" . microDateTime() . ' ' . $msg;
-        error_log($formattedMsg, 3, $logFile);
-    }
-} //(logThis)
-*/
 
 function splitLibObj($objName, $defaultLib = '') {
     // given an object name that MAY be qualified by a library and slash and perhaps a function,
@@ -141,7 +115,7 @@ function i5CpfError($errMsg = '', $errDesc = '')
  */
 function noError()
 {
-    // Shortcut (fewer params) when have an IBM i (AS400) code and message.
+    // Clear any error information.
     i5ErrorActivity(I5_ERR_OK, 0, '', '');
     
 } //(noError)
@@ -284,18 +258,20 @@ function i5_connect($host='', $user='', $password='', $options=array()) {
     } //(if (isset($options[CW_EXISTING_TRANSPORT_CONN])))
     
 
+    
 	// check and store CW_TRANSPORT_TYPE, if given. It's optional.
 	$transportType = ''; // empty is ok.
-	if (isset( $options [CW_TRANSPORT_TYPE])) {
-		$validTransports = array ('ibm_db2', 'odbc');
-		if (!in_array($options[CW_TRANSPORT_TYPE], $validTransports)) {
+	$iniTransportType = isset( $options [CW_TRANSPORT_TYPE]) ? $options [CW_TRANSPORT_TYPE] : getConfigValue('transport', 'transportType', 'ibm_db2');
+	if ($iniTransportType) {
+		$validTransports = array ('ibm_db2', 'odbc', 'http');
+		if (!in_array($iniTransportType, $validTransports)) {
 			// invalid transport specified.
-			$errmsg = "Invalid CW_TRANSPORT_TYPE option ({$options[CW_TRANSPORT_TYPE]}). Omit or choose between " . explode(', ', $validTransports) . ".";
+			$errmsg = "Invalid CW_TRANSPORT_TYPE option ({$iniTransportType}). Omit or choose between " . explode(', ', $validTransports) . ".";
 			i5ErrorActivity ( I5_ERR_PHP_TYPEPARAM, I5_CAT_PHP, $errmsg, $errmsg );
 			return false;
 		} else {
 			// valid transport 
-			$transportType = $options [CW_TRANSPORT_TYPE];
+			$transportType = $iniTransportType;
 		} // (if (!is_resource))
 	} //(if (isset($options[CW_EXISTING_TRANSPORT_CONN])))
     
@@ -333,9 +309,10 @@ function i5_connect($host='', $user='', $password='', $options=array()) {
     	// user/pw rules
     	// TODO share these with i5_adopt_authority
     	
-        // forbid QSECOFR and usernames starting with *. (don’t want *CURRENT, etc.) 
+        // forbid QSECOFR and usernames starting with *. (don't want *CURRENT, etc.) 
+        // TODO Actually, not sure if QSECOFR and special profiles should be forbidden. Check again with old toolkit.
         if ((strtoupper($user) == 'QSECOFR') || (substr($user, 0, 1) == '*') || empty($password) || (substr($password, 0, 1) == '*')) {
-            i5ErrorActivity(I5_ERR_WRONGLOGIN, I5_CAT_PHP, 'Bad login user or password', 'Cannot adopt authority to QSECOFR or special profiles');
+            i5ErrorActivity(I5_ERR_WRONGLOGIN, I5_CAT_PHP, 'Bad login user or password', 'Cannot connect with QSECOFR, blank password, or special profiles');
             return false;
         } //(if QSECOFR)
 
@@ -352,6 +329,11 @@ function i5_connect($host='', $user='', $password='', $options=array()) {
     	    $tkit = ToolkitServiceCw::getInstance($dbname, $user, $password, $transportType, $isPersistent); 
     	 } //(if ($existingTransportResource))
          
+    	 // if getInstance() returned false (unlikely) 
+    	 if (!$tkit) {
+    	 	setError(I5_ERR_NOTCONNECTED, I5_CAT_PHP, 'Cannot get a connection', 'Cannot get a connection');
+    	 } //(if (!$tkit))
+    	 
      } catch (Exception $e) {
 
     // If user or password is wrong, give errNum I5_ERR_WRONGLOGIN with category I5_CAT_PHP.
@@ -380,6 +362,10 @@ function i5_connect($host='', $user='', $password='', $options=array()) {
         return false;
     }
     
+    // successfully instantiated toolkit connection and instance. Mark it as CW.
+    $tkit->setIsCw(true);
+    
+    
     // override toolkit settings if nec.
     $sbmjobParams = getConfigValue('system', 'sbmjob_params');
     $xmlServiceLib = getConfigValue('system', 'XMLServiceLib', 'ZENDSVR');
@@ -407,6 +393,7 @@ function i5_connect($host='', $user='', $password='', $options=array()) {
             $ipc = '';
             logThis("Running stateless; no IPC needed. CW version $cwVersion. Service library: $xmlServiceLib");
         } else {
+	        // TODO does this make sense? Not stateless but not private? Any purpose to stateless setting in INI file?
         	// Not stateless, so create an IPC
             // TODO this will change based on persistent/nonpersistent logic
     	    // IPC to use in separate toolkit job using just user id and unique additions in makeIpc
@@ -461,7 +448,7 @@ function i5_connect($host='', $user='', $password='', $options=array()) {
         
     // set IPC and other settings
     
-    $serviceParams = array('InternalKey'       => $ipc,
+    $serviceParams = array('internalKey'       => $ipc,
                            'stateless'         => $stateless);
 
     // additional settings
@@ -473,8 +460,11 @@ function i5_connect($host='', $user='', $password='', $options=array()) {
         $serviceParams['sbmjobParams'] = $sbmjobParams;
     }
 
-    // these will be in addition to / overriding any params set in toolkit service constructor.
-    $tkit->setToolkitServiceParams($serviceParams);
+    // CW always retains data structure hierarchy (integrity) in parameters.
+    $serviceParams['dataStructureIntegrity'] = true;
+
+    // these will be in addition to, or overriding, any params set in toolkit service constructor.
+    $tkit->setOptions($serviceParams);
     
     // initialize
     $cmdArray = array();
@@ -610,9 +600,10 @@ function i5_adopt_authority($user, $password, $connection = null)
     $user = strtoupper($user);
     $password = strtoupper($password);
 
+    
     // check that username and password vars are OK.
-    // forbid QSECOFR; and forbid usernames/pwds starting with *. (don’t want *CURRENT, etc.) 
-    if ((strtoupper($user) == 'QSECOFR') || (substr($user, 0, 1) == '*') || empty($password) || (substr($password, 0, 1) == '*')) {
+    // forbid QSECOFR and empty password (though special values such as *NOPWDCHK are OK) 
+    if ((strtoupper($user) == 'QSECOFR') || empty($password)) {
         i5ErrorActivity(I5_ERR_WRONGLOGIN, I5_CAT_PHP, 'Bad login user or password', '');
         return false;
     } //(if QSECOFR) 
@@ -635,13 +626,23 @@ function i5_adopt_authority($user, $password, $connection = null)
       <data var='handleOut' type='12b' comment='really binary data not character' />
     </parm>\n" .    
     // param number 4
-    ToolkitServiceCw::getErrorDataStructXml(4) . "\n" .
+    ToolkitServiceCw::getErrorDataStructXml(4) . "\n";
+
+    if (substr($password, 0, 1) != '*') {
+    	/* No asterisk at the start, so this is an attempt at a real password, 
+    	 * not a special pw value starting with an asterisk such as *NOPWD, *NOPWDCHK, or *NOPWDSTS.
+    	 * Therefore, include pw len and CCSID, which must be omitted if pw is a special "*" value.
+    	 */
+    	 $paramXml .= 
     "<parm io='both' comment='5. length of password. Must be equal to the actual pw length.	'>
       <data var='pwLen' type='10i0'>$pwLen</data>
     </parm>
     <parm io='in' comment='6. CCSID of password'>
       <data var='pwCcsid' type='10i0'>$pwCcsid</data>
     </parm>";
+         	
+    } // (if (substr($password, 0, 1) != '*'))
+     
   
            
     // In case of error, look for CPFs generated by specific other programs.
@@ -895,8 +896,9 @@ function i5_command($cmdString, $input = array(), $output = array(), $connection
 
     	// Use slower but improved "result" (REXX) technique
         $result = $connection->ClCommandWithOutput($finalCmdString);
-
+        
         if ($result) {
+        	
         	// Command succeeded. Set and export output variables.
             $exportedThem = $connection->setOutputVarsToExport($simpleParmVarArray, $result);
         } else {
@@ -2050,34 +2052,28 @@ function i5_data_area_read($name, $offsetOrConnection = null, $length = null, $c
         return false;
     }
     
+    
     // params OK at this point
+
+    // adjust length for "all"
+    $lengthToUse = $length;
+    if (!$length || ($length <= 0)) {
+    	// length not provided or 0 or -1: use *ALL
+    	$lengthToUse = '*ALL';
+    } //(length absent or <= 0)
+    
     
     // If a library (optional--slash delimited), separate it.
-    // use *CURLIB if no library specified
+    // use *LIBL if no library specified
     $name = strtoupper($name);
-    $libAndObj = splitLibObj($name, '*CURLIB');    
+    $libAndObj = splitLibObj($name, '*LIBL');     
     
     try {
-        if ($length) {
-        	
         	$dataAreaObj = new DataArea($connection);
             $dataAreaObj->setDataAreaName($libAndObj['obj'], $libAndObj['lib']);
         	
-            $value = $dataAreaObj->readDataArea($offset, $length);
-        } else {
-            // use cl command that can tolerate *ALL (full length) as an option
-            $cmdString = "RTVDTAARA DTAARA({$libAndObj['lib']}/{$libAndObj['obj']} *ALL)";
-            $input = array();
-            $output = array('rtnvar'=>'dataAreaValue');
-            
-            $commandSuccessful = i5_command($cmdString, $input, $output);
-            if ($commandSuccessful) {
+            $value = $dataAreaObj->readDataArea($offset, $lengthToUse);
 
-                extract(i5_output()); //creates $dataAreaValue
-                $value = $dataAreaValue;
-            }
-
-        }
     } catch (Exception $e) {
         i5CpfError('Error reading from data area', $e->getMessage());
         return false;
@@ -2144,9 +2140,9 @@ function i5_data_area_write($name, $value, $offsetOrConnection = null, $length =
     // (This could be left up to users, but it's easy for us to do. See how this goes.)
     $value = "'" . trim($value, "'") . "'";        
     
-    // Split library (use *CURLIB if no library specified) and program names
+    // Split library (use *LIBL if no library specified) and program names
     $name = strtoupper($name);
-    $libAndObj = splitLibObj($name, '*CURLIB');
+    $libAndObj = splitLibObj($name, '*LIBL');
     
     $dataAreaObj = new DataArea($connection);
     $dataAreaObj->setDataAreaName($libAndObj['obj'], $libAndObj['lib']);
@@ -2182,8 +2178,8 @@ function i5_data_area_delete($name, $connection = null)
     
     // params OK at this point
     
-    // Split library (use *CURLIB if no library specified) and program names
-    $libAndObj = splitLibObj($name, '*CURLIB');
+    // Split library (use *LIBL if no library specified) and program names
+    $libAndObj = splitLibObj($name, '*LIBL');
         
     $dataAreaObj = new DataArea($connection);
     try {
@@ -2596,13 +2592,17 @@ function i5_objects_list($library, $name = '*ALL', $type = '*ALL', $connection =
     // now call it!
     // pass param xml directly in.
         $retPgmArr = $connection->PgmCall($apiPgm, $apiLib, $paramXml);
-
+//var_dump($retPgmArr);
+//die;
+ // there's a problem parsing the output xml.
+        
+        
         if ($connection->getErrorCode()) {
             i5ErrorActivity(I5_ERR_PHP_AS400_MESSAGE, I5_CAT_PHP, $connection->getErrorCode(), $connection->getErrorMsg());
             return false;
         }
         
-        
+       
         $retArr = $retPgmArr['io_param']['listinfo']; // 'listinfo' defined in getListInfoApiXml()
         $totalRecords = $retArr['totalRecords'];
         $requestHandle = $retArr['requestHandle'];
@@ -2799,7 +2799,7 @@ function i5_objects_list_close(&$list)
  Return Values: Resource if OK, false if failed.
  Arguments:
  $name - The queue name
- $description - Data description in format defined by program¬_prepare. For more, see PHP Toolkit Data Description.
+ $description - Data description in format defined by program_prepare. For more, see PHP Toolkit Data Description.
  [$key - key size - for keyed DataQ (can be omitted)]
  [$connection - Connection - result of i5_connect]
 */
@@ -3565,9 +3565,9 @@ function i5_output() {
 
 
 /**
- * Return version number of CW
+ * Return version number of CW and PHP toolkit front-end.
  */
 function i5_version() {
-	return ToolkitServiceCw::getVersion();
+	return ToolkitService::getFrontEndVersion();
 }
 

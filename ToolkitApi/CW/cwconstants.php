@@ -1,14 +1,13 @@
-<?php 
+<?php
 
 // constants.php
 // Old toolkit constants plus a few new ones
 
-define('CW_VERSION', '1.2.4');
-define('CW_DOWNLOAD_SITE', 'http://www.youngiprofessionals.com/wiki/XMLSERVICE');
+define('CW_DOWNLOAD_SITE', 'http://www.youngiprofessionals.com/wiki/XMLSERVICE'); // TODO move to ToolkitService.php
 define('CW_PERSISTENT', 'persistent');
 define('CW_EXISTING_TRANSPORT_CONN', 'existingTransportConn'); // such as a database connection
 define('CW_EXISTING_TRANSPORT_I5_NAMING','existingTransportI5Naming' ); // naming mode of the transport (true/false)
-// transport types can be passed into i5_connect in options array. 
+// transport types can be passed into i5_connect in options array.
 define('CW_TRANSPORT_TYPE', 'transportType' ); // ibm_db2 is default transport. odbc can be used as well)
 
 define('I5_OPEN_READ', '1');
