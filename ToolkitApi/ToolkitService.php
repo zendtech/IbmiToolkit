@@ -1068,7 +1068,7 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
     		case 'QSH0005':
     			// get status code.
     			// String will be something like: QSH0005: Command ended normally with exit status 1.
-    			// But in German: Befehl wurde normal mit AusfËhrungsstatus &1 beendet.
+    			// But in German: Befehl wurde normal mit Ausfuehrungsstatus &1 beendet.
     			// look for a space (\b is word boundary), then the number, then a period OR another word boundary.
     			$pattern = '/\b([\d]+)[\b\.]/';
 		        // look for a match
