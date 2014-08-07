@@ -1132,7 +1132,7 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
     		case 'QSH0005':
     			/* get status code.
     			 * String will be something like QSH0005: Command ended normally with exit status 1.
-    			 * But in German, QSH0005: Befehl wurde normal mit AusfÀhrungsstatus 1 beendet.
+    			 * But in German, QSH0005: Befehl wurde normal mit Ausfuehrungsstatus 1 beendet.
     			 * Look for a number between two word boundaries (\b is word boundary).
     			 * The word boundary (\b) is zero-length, so only the digits will be captured by the regex.
     			 */
@@ -2076,7 +2076,7 @@ function getConfigValue($heading, $key, $default = null)
 function logThis($msg) {
 	$logFile = getConfigValue('log','logfile');
 	if ($logFile) {
-		// it's configured so let's write to it. (Åg3Åh means append to a specific file)
+		// it's configured so let's write to it. ("3" means append to a specific file)
 		$formattedMsg = "\n" . microDateTime() . ' ' . $msg;
 		error_log($formattedMsg, 3, $logFile);
 	}
@@ -2088,4 +2088,3 @@ function microDateTime()
 	list($microSec, $timeStamp) = explode(" ", microtime());
 	return date('j M Y H:i:', $timeStamp) . (date('s', $timeStamp) + $microSec);
 }
-
