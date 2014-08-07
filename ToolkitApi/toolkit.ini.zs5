@@ -1,20 +1,20 @@
 ; toolkit.ini for Zend/PHP Toolkit and Compatibility Wrapper (CW)
-; with default values appropriate for Zend Server 6/7
+; with default values appropriate for Zend Server 5
 
 [system]
 ; set library where XTOOLKIT lives, most likely XMLSERVICE (testing) or ZENDSVR (production)
-;XMLServiceLib = "ZENDSVR" ; production Zend Server 5.x
-XMLServiceLib = "ZENDSVR6" ; production Zend Server 6.x/7.x
+XMLServiceLib = "ZENDSVR" ; production Zend Server 5.x
+;XMLServiceLib = "ZENDSVR6" ; production Zend Server 6.x/7.x
 ;XMLServiceLib = "XMLSERVICE" ; for testing new XMLSERVICE packages
 
 ; Location of ZSXMLSRV "helper" service program. Overrides ToolkitServiceSet's ZSTOOLKITLIB constant 
-HelperLib = "ZENDSVR6" ; library of ZS "helper" service program. ZENDSVR or ZENDSVR6
+HelperLib = "ZENDSVR" ; library of ZS "helper" service program. ZENDSVR or ZENDSVR6
 
 ; debug sets PHP toolkit's debug mode on or off (true/false).
 ; Default log file: /usr/local/zendsvr(6/7)/var/log/tkit_debug.log
 ; This log will grow large, so leave this false when you do not need to log everything.
 debug = false
-debugLogFile = "/usr/local/zendsvr6/var/log/tkit_debug.log"
+debugLogFile = "/usr/local/zendsvr/var/log/tkit_debug.log"
 
 ; Enable internal, low-level XMLSERVICE trace into table XMLSERVLOG/LOG
 ; (New in PHP tkit 1.3.1, requiring XMLSERVICE 1.7.1)
@@ -38,9 +38,9 @@ encoding = "ISO-8859-1"
 
 ; Optionally provide submit options here
 ; Format: JOBDLIB/JOBD/JOBNAME.  If not specified, will be ZENDSVR6/ZSVR_JOBD/XTOOLKIT
-;sbmjob_params = "ZENDSVR6/ZSVR_JOBD/XTOOLKIT"
+;sbmjob_params = "ZENDSVR/ZSVR_JOBD/XTOOLKIT"
 ; Or specify another sbmjob combination, such as QSYS/QSRVJOB/XTOOLKIT,
-; if ZENDSVR6 library isn't present on the system or LPAR.
+; if ZENDSVR library isn't present on the system or LPAR.
 ;sbmjob_params = "QSYS/QSRVJOB/XTOOLKIT"
 
 ; If you plan to connect to v5r4 IBM i systems from this toolkit installation, set v5r4=true.
@@ -54,11 +54,11 @@ v5r4 = false
 ; or to ignore DSes, flattening out all data elements to a single level (dataStructureIntegrity = false)
 ; Starting in Zend Server 6, the default here is true.
 ; For backward compatibility with pre-1.4.0 behavior, change one or both to false.
-dataStructureIntegrity = true
+dataStructureIntegrity = false
 ; Array Integrity
 ; Allow true array parameters with better functionality. 
 ; For backward compatibility with pre-1.4.0, set to false.
-arrayIntegrity = true
+arrayIntegrity = false
 
 ; CW only: stateless mode is default for i5_connect (though automatically overridden if private conns are used)
 stateless = true
@@ -75,7 +75,7 @@ stateless = true
 
 [log]
 ; Both CW and regular toolkit: warnings and errors will be written to the logfile (CW and regular toolkit).
-logfile = "/usr/local/zendsvr6/var/log/toolkit.log"
+logfile = "/usr/local/zendsvr/var/log/toolkit.log"
 
 ; CW only: If logCwConnect = true then CW connection events will be written to the logfile.
 ; This log will grow large, so set logCwConnects=false in production. 

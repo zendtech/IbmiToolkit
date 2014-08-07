@@ -50,8 +50,7 @@ class ProgramParameter
         $this->labelLen        = $labelLen;
         $this->_ccsidBefore    = $ccsidBefore;
         $this->_ccsidAfter     = $ccsidAfter;
-        $this->_useHex         = $useHex;
-        
+        $this->_useHex         = $useHex;    
         
 	} //(constructor)
 
@@ -140,7 +139,6 @@ class ProgramParameter
 	    // This works better than in the original new toolkit, where the var(n) only was applied if 'var was not set as a variable at all.
 	    // whereas often there's a 'var' attribute but it's empty.	
 	    $varName =  'var' . self::$_fallbackNameSequence++;
-	    error_log($varName);
 	    return $varName;
 	
     } //(function getFallbackVarName() )
@@ -265,7 +263,12 @@ class ProgramParameter
 		return $this; // fluent interface
     } //(setParamComment)
 	
-	
+    public function setParamIo($io = 'both')
+    {
+        	$this->io = $io;
+    	    return $this; // fluent interface
+    } //(setParamIo)
+    
 	public function isDS(){
 		if($this->type == "ds") {
 		    return true;
@@ -290,17 +293,18 @@ class ProgramParameter
 	// Note: no return value. The first parameter, $arrayParams, gets updated.
 	static function UpdateParameterValues(&$arrParams, array $arrValues){
 
-		// added the params part
+		// if either argument is not an array, leave.
 		if(!is_array($arrValues) || !is_array($arrParams)) {
 			return false;
 	    }
 
         // loop through all values passed in
 	    foreach($arrValues as $varName =>$newData){
-
+	    	
 	    	// for each value, loop through all params at this level to see if the names match.
+	    	// find a param matching value passed in.
 			foreach($arrParams as $single)
-			{
+			{   
                 // if a data structure, get inner array and call self recursively.
 				if( is_object($single) && $single->isDS()){
 					$arr = $single->getParamValue();
@@ -400,14 +404,10 @@ class ProgramParameter
 class DataStructure extends ProgramParameter {
 
 	// v1.4.0 added $comment as arg 5, in place of the obsolete $isReturnParam argument. Data structure return values didn't work properly before 1.4.0 anyway.
-	function __construct( $paramsArray , $struct_name ="DataStruct", $dim=0 , $comment = '', $by='', $isArray=false, $labelLen = null ){
-		parent::__construct( "ds",  "both", $comment, $struct_name, $paramsArray , 'off', $dim, $by, $isArray, null, $labelLen );
+	function __construct( $paramsArray , $struct_name ="DataStruct", $dim=0 , $comment = '', $by='', $isArray=false, $labelLen = null, $io = 'both' ){
+		parent::__construct( "ds",  $io, $comment, $struct_name, $paramsArray , 'off', $dim, $by, $isArray, null, $labelLen );
 	}
 }
-
-
-//function __construct( $type,  $io, $comment='', $varName = '', $value, $varying = 'off', $dimension = 0, $by = 'ref', $isArray = false, $labelSetLen = null, $labelLen = null,
-//		$ccsidBefore = '', $ccsidAfter = '', $useHex = false)
 
 
 class CharParam extends ProgramParameter{

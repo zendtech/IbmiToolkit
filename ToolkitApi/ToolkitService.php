@@ -7,7 +7,7 @@ define('CONFIG_FILE', 'toolkit.ini');
 
 class ToolkitService {
 	
-	const VERSION = '1.5.0'; // version number for front-end PHP toolkit
+	const VERSION =  "1.6.0"; // version number for front-end PHP toolkit
 	
 	/* TODO use inputXml and outputXml to make this class more flexibly OO-like. Fewer strings copied around.
 	 * Better would be to use a Request object that has a connection. 
@@ -19,14 +19,15 @@ class ToolkitService {
 	
 	// TODO create methods to set (separately and all at once) and get errors, akin to what was done for DB module.
 	// Test ability to retrieve program errors and text.
-	protected $error = '';
-	protected $cpfErr = '';
-	protected $errorText = '';
+	protected $error = ''; // ambiguous usage (itÅfs here for backward compat.) but mainly 7-char error code 
+	protected $cpfErr = ''; // 7-char error code
+	protected $errorText = ''; // error text/msg
 
+	// $db2 variable may not be needed. Consider deprecating in future.
 	protected $db2 = false;
-	protected $db = null;
+	protected $db = null; // contains class for db connections
 
-	protected $_i5NamingFlag = 0; // default with value of 0. Other value is DB2_I5_NAMING_ON. 
+	protected $_i5NamingFlag = 0; // same as DB2_I5_NAMING_OFF; // Other value could be 1 (DB2_I5_NAMING_ON). 
 	protected $_schemaSep = '.'; // schema separator. A dot or slash
     protected $_validSeparators = array('.', '/');
 
@@ -36,6 +37,7 @@ class ToolkitService {
 	protected $_isCw = false; // whether the CW is used for this instance.
 	
 	static protected $_config; // config options from INI file. Accessed by static method getConfigValue(); 
+    static protected $_os; // operating system
 	
 	// brought over from CW
 	protected $joblog = '';
@@ -47,19 +49,20 @@ class ToolkitService {
 	protected $_cpfMapping = array('QSYRUSRI' => array('QLIROHDL'),
 			'QSYGETPH' => array('QSYPHDL'));
 	
-
+	
     // options that can be set at any time
     // Set them with setOptions or setToolkitServiceParams
     // Get them with getOption or getToolkitServiceParam	
     protected $_options = array('plug'           => 'iPLUG512K', //for ibm_db2. for  odbc $plug='iPLUGR512K'.  consider 4K with small data
 					            'plugSize'       => '512K',  // 4K, 32K, 512K, 65K, 512K, 1M, 5M, 10M, 15M
 					            'plugPrefix'     => 'iPLUG', // iPLUG (ibm_db2) or iPLUGR (odbc)
-								'XMLServiceLib'  => XMLSERVICELIB,
+								'XMLServiceLib'  => XMLSERVICELIB, // library containing XMLSERVICE
+								'HelperLib'      => ZSTOOLKITLIB,  // library containing Zend Server's RPG service program (ZSXMLSRV by default) that handles some of the toolkit's duties.
 								'v5r4'           => false, // whether to ask XMLSERVICE to carefully use features that v5r4 can handle
-								'sbmjobParams'   => 'ZENDSVR6/ZSVR_JOBD/XTOOLKIT', // in test mode, use QSYS/QSRVJOB/XTOOLKIT. Also see PLUGCONF1 and 2
+								'sbmjobParams'   => '', // XMLSERVICE itself will provide good defaults in most cases (in production ZENDSVR(6)/ZSVR_JOBD/XTOOLKIT. In test mode, QSYS/QSRVJOB/XTOOLKIT). See PLUGCONF1 and 2
 								'debug'          => false,
 								'debugLogFile'   => '/usr/local/zendsvr6/var/log/debug.log',
-								// CCSID/Hex at a global/request level. These properties are also defined at a parameter object level.
+    		                 // CCSID/Hex at a global/request level. These properties are also defined at a parameter object level.
 								'ccsidBefore'    => '',     
 								'ccsidAfter'     => '',
 								'useHex'         => false,
@@ -79,7 +82,6 @@ class ToolkitService {
 										         => 1,  // 1-9 debug level when in parseOnly mode
 								'license'        => false, // true to receive license/version information
 								'transport'      => false, // check proc call speed (no XML calls)
-								'performance'    => false, // get performance of previous call
 								'dataStructureIntegrity'    
 								                 => false, // New in 1.4.0. Specify true to preserve integrity of data structures. If false (default), explode inner values out of the ds.
 								'arrayIntegrity' => false, // New in 1.4.0. Specify true to preserve integrity of arrays (to create true named arrays, not merely sequentially numbered elements). 
@@ -87,6 +89,7 @@ class ToolkitService {
 								'transportType'  => 'ibm_db2', // can override in getInstance constructor as well
 								'httpTransportUrl'
 								                 => '', // for HTTP REST transport 
+								'timeReport'      => false, // *fly or *nofly; if true, return tick counts instead of data.            
     );
 
     // plug size to bytes cross-reference
@@ -123,11 +126,12 @@ class ToolkitService {
 
 	
 	public function __destruct(){
-	/* call to disconnect()  function to down connection */
-		if($this->conn == null)
+		
+		// if no transport then remove toolkit instance as well.
+		if(!isset($this->conn) || $this->conn == null)
 			self::$instance = NULL;
 
-	}
+	} //(public function __destruct(){
 
 
 	/**
@@ -170,6 +174,7 @@ class ToolkitService {
 		// get settings from INI file
 		// TODO change getConfigValue to get many at one time 
         $xmlServiceLib = $this->getConfigValue('system', 'XMLServiceLib', 'ZENDSVR6');
+        $helperLib = $this->getConfigValue('system', 'HelperLib', 'ZENDSVR6');
         $debug = $this->getConfigValue('system', 'debug', false);
         $debugLogFile = $this->getConfigValue('system', 'debugLogFile', false);
         $encoding = $this->getConfigValue('system', 'encoding', 'ISO-8859-1'); // XML encoding
@@ -181,6 +186,7 @@ class ToolkitService {
         // set service parameters to use in object.
         // Here are the params that will always be present.
 		$serviceParams = array('XMLServiceLib'     => $xmlServiceLib,
+		                       'HelperLib'         => $helperLib,
 				               'debug'             => $debug,
                                'debugLogFile'      => $debugLogFile,
                                'encoding'          => $encoding,
@@ -270,7 +276,8 @@ catch (Exception $e)
 		  
 		  } else {
 		  		
-              // A DB transport, yet a resource was not passed. Create a new db connection.
+              // A DB transport was requested without providing an existing resource.
+              // Create a new db connection.
 		      $databaseName = $databaseNameOrResource;
 		      $user = $userOrI5NamingFlag;
 		      if ($this->isDebug()) {
@@ -305,7 +312,7 @@ catch (Exception $e)
 
 				$this->debugLog("\nFailed to connect. sqlState: $sqlState. error: $this->error");
 				// added sqlstate
-				throw new Exception($this->error, $sqlState);
+				throw new Exception($this->error, (int)$sqlState);
 		  }
 		$this->conn = $conn;
 
@@ -482,6 +489,14 @@ catch (Exception $e)
 	    return $this->getToolkitServiceParam($optionName);
     } //(getOption)
 
+    // retrieve full toolkit option array
+    public function getOptions()
+    {
+    	    return $this->_options;
+    	
+    } //(getOption)
+    
+    
     // shorthand for setToolkitServiceParams()
     public function setOptions($options = array()) 
     {
@@ -513,12 +528,18 @@ catch (Exception $e)
    // end job if private job (internal key set); end DB transport if not persistent.
 	public function disconnect()
 	{
-		$this->PgmCall("OFF", NULL);
+		// if stateful connection, end the toolkit job.
+		if (!$this->isStateless()) {
+		    $this->PgmCall("OFF", NULL);
+		}    
 
+		// if transport is a db, end the db connection.
 		if (isset($this->db) && $this->db) {
 		    $this->db->disconnect($this->conn);
 		}    
-    	$this->conn = null;
+    	
+		$this->conn = null;
+	
 	} //(public function disconnect())
 
 	// same as disconnect but also really close persistent database connection.
@@ -543,6 +564,7 @@ catch (Exception $e)
     } //(debugLog)
 
 
+    // isDb2 and setDb2 may not be needed. Deprecate in future.
 	public function isDb2()
 	{
 	   return $this->db2;
@@ -703,6 +725,16 @@ catch (Exception $e)
 		return $this->cpfErr;
 	}
 
+	public function setErrorMsg($msg) {
+		$this->errorText = $msg;
+	}
+	
+	public function setErrorCode($code) {
+		$this->cpfErr = $code;
+	}
+	
+	
+	
 	public function getOutputParam(array $OutputArray)
 	{
 		if( !is_array($OutputArray))
@@ -770,10 +802,9 @@ catch (Exception $e)
 				$start = microtime(true);
 			} //(if debug)
 					
-			
 			// can return false if prepare or exec failed.
 			$outputXml = $this->db->execXMLStoredProcedure( $this->conn, $sql, $bindArray );
-			
+		
 		} else {
 			// Not a DB transport. At this time, assume HTTP transport (which doesn't use a plug, by the way. uses outbytesize)
 			$transport = $this->getTransport();
@@ -788,7 +819,7 @@ catch (Exception $e)
 
 			// if debug mode, log control key, and input XML.
 			if( $this->isDebug() ) {
-				$this->debugLog ( "\nExec start: " . date("Y-m-d H:i:s") . "\nVersion of toolkit front end: " . self::getFrontEndVersion() ."\nIPC: '" . $this->getInternalKey() . "'. Control key: $controlKeyString\nHost URL: $url\nExpected output size (plugSize): $plugSize or $outByteSize bytes\nInput XML: $inputXml\n");
+				$this->debugLog( "\nExec start: " . date("Y-m-d H:i:s") . "\nVersion of toolkit front end: " . self::getFrontEndVersion() ."\nIPC: '" . $this->getInternalKey() . "'. Control key: $controlKeyString\nHost URL: $url\nExpected output size (plugSize): $plugSize or $outByteSize bytes\nInput XML: $inputXml\n");
 				$start = microtime(true);
 			} //(if debug)
 					
@@ -800,7 +831,7 @@ catch (Exception $e)
 		if ($this->isDebug()  && $outputXml) {
 			$end = microtime(true);
 			$elapsed = $end - $start;
-			$this->debugLog ("Output XML: $outputXml\nExec end: " .  date("Y-m-d H:i:s") . ". Seconds to execute: $elapsed.\n\n");
+			$this->debugLog("Output XML: $outputXml\nExec end: " .  date("Y-m-d H:i:s") . ". Seconds to execute: $elapsed.\n\n");
 		} //(if debug and there's some output XML)
 
 		// if false returned, was a database error (stored proc prepare or execute error)
@@ -813,10 +844,14 @@ catch (Exception $e)
 			$this->error = $this->db->getErrorMsg();
 			
 			$serviceLibrary = $this->getOption('XMLServiceLib');
-            if ($this->cpfErr == 22003) {
+            if ($this->cpfErr == 22001) {
+                //22001 = On db2_execute, plug was too small to get input XML.
+                $plug = $this->getOption('plug');
+                $errorReason = "Error: XML input was too large for the current plug size, '$plugSize'. Set a larger plugSize.";
+            } elseif ($this->cpfErr == 22003) {
                 //22003 = On db2_execute, plug was too small to get output XML.
                 $plug = $this->getOption('plug');
-                $errorReason = "Error: Most likely, XML was too large for the current plug size. Plug: '$plug'.";
+                $errorReason = "Error: XML output was too large for the current plug size, '$plugSize'. Set a larger plugSize.";
             } elseif ($this->cpfErr == 22501) {
             	//22501 = Probably missing the LOB DB2 PTF. Get the latest DB2 Group PTF or CUME.
             	// or individual PTF: 
@@ -837,9 +872,12 @@ catch (Exception $e)
             } elseif ($this->cpfErr == 58004) {
                 //58004 = The qualified object name is inconsistent with the naming option.
                 $errorReason = "Error:  Message: {$this->error}. SQLState 58004. If SQLCode is -901, check previous messages in joblog. Could mean an incorrect library in library list or another previous error in database job.";
+            } elseif ($this->cpfErr == '' || $this->cpfErr == 'HY017') {
+                // no SQLSTATE or HY017: The DB2 QSQSRVR job no longer exists.
+            	    $errorReason = "Error: SQLSTATE='{$this->cpfErr}' and Message: '{$this->error}', indicating that this PHP job's associated database job is no longer running.";
             } else {
-			    $errorReason = "Toolkit request failed. Possible reason: a CCSID not matching that of system, or updated PTFs may be required.";
-	            $errorReason .= " Database code (if any): {$this->cpfErr}. Message: {$this->error}";
+			    $errorReason = "Toolkit request failed. Review the database code and message.";
+	            $errorReason .= " Database code (if any): '{$this->cpfErr}'. Message: {$this->error}";
             } //(if error == 42704)
 
             // other codes: SQLState 38501: error in stored procedure. Possibly trace=true but library XMLSERVLOG doesn't exist.            
@@ -954,16 +992,42 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
     // return version number of XMLSERVICE. Not static because must connect to back-end to get the version number.
     public function getBackEndVersion() {
     	
-    	$diag = $this->getDiagnostics();
+        	$diag = $this->getDiagnostics();
     	
-    	if (isset($diag['version'])) {
-    		return $diag['version'];
-    	} else {
-    		return false;
-    	} //(if (isset($diag['version'])))
+        if (isset($diag['version'])) {
+    		    return $diag['version'];
+    	    } else {
+    		    return false;
+        	} //(if (isset($diag['version'])))
     	
     } //(public function getBackendVersion())
     
+    /**
+     * Return version number of the local installation of XMLSERVICE, if available.
+     * Static because don't have to connect or instantiate toolkit object.
+     * Uses 'exec' command to retrieve local version number.
+     * Requires 1.8.0+ of XMLSERVICE and new program introduced with it: xmlver.pgm.
+     * @return string  Version number (e.g. '1.8.0')
+     */
+    static function getLocalBackEndVersion($library) {
+
+        $cmd = "qsh -c /qsys.lib/$library.lib/xmlver.pgm";
+        	
+        // will return false on error, or the version number if successful.
+        // Note: the web server user must have permissions to the XMLVER program. 
+        $version = exec($cmd); // exec() returns last line of output from command
+    	 
+    	    // if unable to get version
+        if (!$version) { // false or empty
+        	    return "Cannot get version number for XMLSERVICE in library '$library' using program XMLVER. Check the library, permissions of the web server user, and that XMLSERVICE is at least v1.8.0+, when XMLVER was introduced.";
+        } //(if (!$version))
+        
+        return $version;
+           	 
+    } //(public function getLocalBackendVersion())
+    
+	
+	
 	// exec could be 'pase', 'pasecmd', 'system,' 'rexx', or 'cmd'
 	// $command can be a string or an array of multiple commands
 	public function CLCommand($command, $exec = '') {
@@ -1041,10 +1105,10 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
     	// TODO consider doubling user-supplied single quotes to escape them in QSH
 
     	$qshCommand = "QSH CMD('$command')";
-
+    	 
     	// will return an array of results.
     	$resultArray = $this->CLInteractiveCommand($qshCommand);
-
+    	 
     	if (empty($resultArray) || !is_array($resultArray)) {
     		logThis("Result of QSH command $qshCommand is empty or not an array.");
     		return false;
@@ -1064,15 +1128,18 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
     	$qshCode = substr($firstLine, 0, 7);
 
     	switch ($qshCode) {
-
+ 
     		case 'QSH0005':
-    			// get status code.
-    			// String will be something like: QSH0005: Command ended normally with exit status 1.
-    			// But in German: Befehl wurde normal mit AusfÀhrungsstatus &1 beendet.
-    			// look for a space (\b is word boundary), then the number, then a period OR another word boundary.
-    			$pattern = '/\b([\d]+)[\b\.]/';
-		        // look for a match
-		        $numMatches = preg_match($pattern, $firstLine, $matches);
+    			/* get status code.
+    			 * String will be something like QSH0005: Command ended normally with exit status 1.
+    			 * But in German, QSH0005: Befehl wurde normal mit AusfÀhrungsstatus 1 beendet.
+    			 * Look for a number between two word boundaries (\b is word boundary).
+    			 * The word boundary (\b) is zero-length, so only the digits will be captured by the regex.
+    			 */
+    			$pattern = '/(\b[\d]+\b)/';
+	        // look for a match
+	        $numMatches = preg_match($pattern, $firstLine, $matches);
+
     			if ($numMatches) {
     			    $exitStatus = $matches[1]; // replacement parenthetical bit, i.e. the number.
     			} else {
@@ -1145,7 +1212,7 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 
 
 
-	static function AddParameter($type, $io, $comment, $varName = '', $value, $varying = 'off', $dimension = 0) {
+	static function AddParameter($type, $io, $comment, $varName = '', $value = '', $varying = 'off', $dimension = 0) {
 		return array ('type' => $type,       // storage
 					  'io' => $io,           // in/out/both
 					  'comment' => $comment, // comment
@@ -1155,62 +1222,62 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 					  'dim' =>   $dimension);// number of array elements
 	}
 
-    static function AddParameterChar( $io, $size , $comment,  $varName = '', $value , $varying = 'off',$dimension = 0,
+    static function AddParameterChar( $io, $size , $comment,  $varName = '', $value= '', $varying = 'off',$dimension = 0,
     		                          $by='', $isArray = false, $ccsidBefore = '', $ccsidAfter = '', $useHex = false) {
-    		return ( new CharParam( $io, $size , $comment,  $varName, $value , $varying ,$dimension, 
-    				                $isArray, $ccsidBefore, $ccsidAfter, $useHex));
+    		return new CharParam( $io, $size , $comment,  $varName, $value , $varying ,$dimension, 
+    				                $isArray, $ccsidBefore, $ccsidAfter, $useHex);
    	}
 
-	static function AddParameterInt32( $io,  $comment,  $varName = '', $value, $dimension = 0 ) {
-		return(new Int32Param ($io, $comment, $varName, $value, $dimension));
+	static function AddParameterInt32( $io,  $comment,  $varName = '', $value = ÅeÅf, $dimension = 0 ) {
+		return new Int32Param ($io, $comment, $varName, $value, $dimension);
 	}
     //Size ($comment,  $varName = '', $labelFindLen = null) {
 	static function AddParameterSize($comment,  $varName = '', $labelFindLen ) {
-		return(new SizeParam ($comment, $varName, $labelFindLen));
+		return new SizeParam ($comment, $varName, $labelFindLen);
 	}
 
 	//SizePack5 ($comment,  $varName = '', $labelFindLen = null) {
 	static function AddParameterSizePack($comment,  $varName = '', $labelFindLen ) {
-		return(new SizePackParam ($comment, $varName, $labelFindLen));
+		return new SizePackParam ($comment, $varName, $labelFindLen);
 	}
 
 
-	static function AddParameterInt64( $io,  $comment,  $varName = '', $value, $dimension = 0 ) {
-		return(new Int64Param( $io, $comment, $varName, $value, $dimension));
+	static function AddParameterInt64( $io,  $comment,  $varName = '', $value = '', $dimension = 0 ) {
+		return new Int64Param( $io, $comment, $varName, $value, $dimension);
 	}
 
-	static function AddParameterUInt32( $io,  $comment,  $varName = '', $value ,$dimension =0) {
-		return ( new  UInt32Param ($io, $comment, $varName, $value, $dimension)) ; // removed erroneous "off"
+	static function AddParameterUInt32( $io,  $comment,  $varName = '', $value = '', $dimension =0) {
+		return new  UInt32Param ($io, $comment, $varName, $value, $dimension) ; // removed erroneous "off"
 	}
 	
-	static function AddParameterUInt64( $io,  $comment,  $varName = '', $value,$dimension=0 ) {
-		return ( new UInt64Param($io, $comment, $varName, $value, $dimension));
+	static function AddParameterUInt64( $io,  $comment,  $varName = '', $value='', $dimension=0 ) {
+		return new UInt64Param($io, $comment, $varName, $value, $dimension);
 
 	}
-	static function AddParameterFloat( $io,  $comment,  $varName = '', $value,$dimension=0 ) {
+	static function AddParameterFloat( $io,  $comment,  $varName = '', $value='', $dimension=0 ) {
 		return( new FloatParam($io, $comment, $varName, $value, $dimension));
 	}
 
-	static function AddParameterReal( $io,  $comment,  $varName = '', $value,$dimension=0 ) {
-		return  ( new RealParam($io, $comment, $varName, $value, $dimension));
+	static function AddParameterReal( $io,  $comment,  $varName = '', $value='', $dimension=0 ) {
+		return new RealParam($io, $comment, $varName, $value, $dimension);
  	}
 
-    static function AddParameterPackDec( $io, $length ,$scale , $comment,  $varName = '', $value, $dimension=0) {
-    	return (new PackedDecParam($io, $length ,$scale , $comment,  $varName, $value, $dimension));
+    static function AddParameterPackDec( $io, $length ,$scale , $comment,  $varName = '', $value='', $dimension=0) {
+    	return new PackedDecParam($io, $length ,$scale , $comment,  $varName, $value, $dimension);
 	}
 
-    static function AddParameterZoned( $io, $length ,$scale , $comment,  $varName = '', $value, $dimension=0) {
-    	return (new ZonedParam($io, $length ,$scale , $comment,  $varName , $value, $dimension));
+    static function AddParameterZoned( $io, $length ,$scale , $comment,  $varName = '', $value='', $dimension=0) {
+    	return new ZonedParam($io, $length ,$scale , $comment,  $varName , $value, $dimension);
 	}
 
 	// "hole" paramter is for data to ignore
 	static function AddParameterHole( $size , $comment='hole') {
-    		return ( new HoleParam( $size, $comment));
+    		return new HoleParam( $size, $comment);
    	}
 
 
-    static function AddParameterBin( $io, $size , $comment,  $varName = '', $value,$dimension =0) {
-    	return (new BinParam($io, $size , $comment,  $varName, $value,$dimension));
+    static function AddParameterBin( $io, $size , $comment,  $varName = '', $value='',$dimension =0) {
+    	return new BinParam($io, $size , $comment,  $varName, $value,$dimension);
 	}
 	static function AddParameterArray($array){
 		foreach ($array as $element)
@@ -1226,20 +1293,20 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 		return $params;
 	}
 
-	static function AddDataStruct(array $parameters, $name='struct_name', $dim=0, $by='', $isArray=false, $labelLen = null, $comment = ''){
-		return (new DataStructure($parameters, $name, $dim, $comment, $by, $isArray, $labelLen));
+	static function AddDataStruct(array $parameters, $name='struct_name', $dim=0, $by='', $isArray=false, $labelLen = null, $comment = '', $io = 'both'){
+		return new DataStructure($parameters, $name, $dim, $comment, $by, $isArray, $labelLen, $io);
 	}
 
 	// added.
 	static function AddErrorDataStruct(){
-		return (new DataStructure(self::GenerateErrorParameter(), 'errorDs', 0));
+		return new DataStructure(self::GenerateErrorParameter(), 'errorDs', 0);
 	}
 
 	// use this one when you need a zero-byte error structure,
 	// which is useful to force errors to bubble up to joblog,
 	// where you can get more information than in the structure.
 	static function AddErrorDataStructZeroBytes(){
-		return (new DataStructure(self::GenerateErrorParameterZeroBytes(), 'errorDs', 0));
+		return new DataStructure(self::GenerateErrorParameterZeroBytes(), 'errorDs', 0);
 	}
 
 
@@ -1254,7 +1321,7 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
                    <data var='err_bytes_avail' type='10i0' comment='if non-zero, an error occurred' />
                    <data var='exceptId' type='7A' varying='off' comment='CPF code'>0000000</data>
                    <data var='reserved' type='1h' varying='off' />
-                   <data var='excData' type='128a' varying='off' comment='replacement data. Not sure we want it. Causes problems in XML.' />
+                   <data var='excData' type='128a' varying='off' comment='replacement data. Not sure we want it.  Causes problems in XML (binary data in there?).' />
                  </ds>
               </parm>";
 	}
@@ -1270,7 +1337,21 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
               </parm>";
 	}
 
-
+	// This version will provide the error code in output rather than forcing errors to bubble up to joblog.
+	// Since XMLSERVICE is slow at getting job log, it's faster to get the code in the API DS if available.
+	// Pass in $paramNum to get a numeric parameter number for the comment.
+	static function getErrorDataStructXmlWithCode($paramNum = 0) {
+	    $paramNumStr = ($paramNum) ? ($paramNum . '.') : '';
+	    return "<parm io='both' comment='$paramNumStr Error code structure'>
+	<ds var='errorDs'>
+	<data var='errbytes' type='10i0' comment='Size of DS'>16</data>
+	<data var='err_bytes_avail' type='10i0' comment='if non-zero, an error occurred' />
+	<data var='exceptId' type='7A' comment='CPF code'>0000000</data>
+	<data var='reserved' type='1h' />
+	</ds>
+	</parm>";
+	} //(getErrorDataStructXmlWithCode)
+	
 
 	// this DS is common to many IBM i APIs.
 	static function getListInfoApiXml($paramNum = 0)
@@ -1439,17 +1520,21 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 			$key .= " *rpt";
 		} //($this->getOption('performance'))
 		
-
+		// *fly is number of ticks of each operation. *nofly is the default
+		if ($this->getOption('timeReport')) {
+			$key .= " *fly";
+		} //($this->getOption(ÅetimeReport'))
+		
+		
 		// PASE CCSID for <sh> type of functions such as WRKACTJOB ('system' command in PASE)
 		if ($paseCcsid = $this->getOption('paseCcsid')) {
 			$key .= " *pase($paseCcsid)";
 		} //($this->getOption('performance'))
 		
-		
 		// allow custom control keys
 		if ($this->getOption('customControl')) {
 			$key .= " {$this->getOption('customControl')}";
-		} //($this->getOption('performance'))
+		} //($this->getOption('customControl'))
 		
 		return trim($key); // trim off any extra blanks on beginning or end
 
@@ -1483,7 +1568,7 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 
     // Ensures that an IPC has been set. If not, generate one
 	protected function verifyInternalKey(){
-            // if we are running in stateless mode, there's no need for an IPC key.
+        // if we are running in stateless mode, there's no need for an IPC key.
 	    if ($this->isStateless()) {
 	    	$this->setInternalKey('');
   	        return;
@@ -1613,7 +1698,7 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
   	   		$this->cpfErr = $this->db->getErrorCode();
   	   		$this->error = $this->db->getErrorMsg();
   	   	
-  	   		throw new Exception($this->error, $this->cpfErr);
+  	   		throw new Exception($this->error, (int)$this->cpfErr);
   	 }
      return $Txt;
   }
@@ -1914,6 +1999,7 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 	// return value from toolkit config file,
 	// or a default value, or
 	// false if not found.
+	// method is static so that it can retain its value from call to call.
 	static function getConfigValue($heading, $key, $default = null) {
 		// TODO store in Zend Data Cache to avoid reading during each request
 	
@@ -1933,7 +2019,44 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 		}
 	
 	} //(getConfigValue)
+
+	// get operating system that PHP is running on
+	// static method so we don't have to connect to IBM i to find out
+	// and to retain value from call to call
+	static function getPhpOperatingSystem() {
+
+		if (!isset(self::$_os)) {
+			self::$_os = php_uname('s');
+		} //(if (!isset(self::$_os)))
+		
+		return self::$_os;
+		
+	} //(static function getPhpOperatingSystem())
 	
+	// return true if PHP is running directly on IBM i, false if not.
+	static function isPhpRunningOnIbmI() {
+		
+		return (self::getPhpOperatingSystem() == 'OS400'); 
+		
+	} //(static function isPhpRunningOnIbmI())
+	
+	// return the CCSID of PHP, whether defined in fastcgi or in PASE (php-cli).
+	// if none defined then return false.
+	static function getPhpCcsid() {
+		if (isset($_SERVER['CCSID'])) {
+			// web/fastcgi
+			return $_SERVER['CCSID'];
+		} elseif (isset($_SERVER['QIBM_PASE_CCSID'])) {
+			// cli/pase
+			return $_SERVER['QIBM_PASE_CCSID'];
+		} else {
+			return false;
+		} //(if (isset($_SERVER['CCSID']))
+			
+	} //(static function getPhpCcsid())
+	
+	// TODO these static functions would be better placed in a separate "environment" or utility class than here
+	// because they are not concerned with a particular connection.
 	
 } //(class ToolkitService)
 
@@ -1948,10 +2071,12 @@ function getConfigValue($heading, $key, $default = null)
     
 } //(function getConfigValue())
 
+// non-OO logging function ported from CW
+// For CW logging.
 function logThis($msg) {
 	$logFile = getConfigValue('log','logfile');
 	if ($logFile) {
-		// it's configured so let's write to it. ("3" means write to a specific file)
+		// it's configured so let's write to it. (Åg3Åh means append to a specific file)
 		$formattedMsg = "\n" . microDateTime() . ' ' . $msg;
 		error_log($formattedMsg, 3, $logFile);
 	}

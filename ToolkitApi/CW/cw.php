@@ -128,7 +128,7 @@ function noError()
 // if CW_EXISTING_TRANSPORT_RESOURCE passed in options, use it as database conn.
 function i5_connect($host='', $user='', $password='', $options=array()) {
     
-
+		
     // ****** special warning. We do not support proprietary codepagefile.
     if (isset($options[I5_OPTIONS_CODEPAGEFILE])) {
         logThis ("Instead of using I5_OPTIONS_CODEPAGEFILE, please use a combination of I5_OPTIONS_RMTCCSID and I5_OPTIONS_LOCALCP as appropriate.");
@@ -319,14 +319,20 @@ function i5_connect($host='', $user='', $password='', $options=array()) {
       
     } //(if !$user)
 
-        // get instance of toolkit (singleton)
+    
+    // Check if INI file has asked us to always close previous connection before initiating new one within a single PHP request/script run. 
+    // For compatibility with old toolkit behavior where a new connection would reset library lists and the like.
+    // It's false by default for backward compatibility with older releases of CW.
+    $forceNew = getConfigValue('cw', 'fullDbClose', false);
+    
+    // get instance of toolkit (singleton)
     try {
     	 if ($existingTransportResource) {
     	 	// use existing resource
-    	 	$tkit = ToolkitServiceCw::getInstance($existingTransportResource, $existingTransportI5NamingFlag, '', '', $isPersistent);
+    	 	$tkit = ToolkitServiceCw::getInstance($existingTransportResource, $existingTransportI5NamingFlag, '', '', $isPersistent, $forceNew);
     	 } else {
     	    // specify dbname, user, and password, transport type to create new transport
-    	    $tkit = ToolkitServiceCw::getInstance($dbname, $user, $password, $transportType, $isPersistent); 
+    	    $tkit = ToolkitServiceCw::getInstance($dbname, $user, $password, $transportType, $isPersistent, $forceNew); 
     	 } //(if ($existingTransportResource))
          
     	 // if getInstance() returned false (unlikely) 
@@ -361,7 +367,7 @@ function i5_connect($host='', $user='', $password='', $options=array()) {
         i5ErrorActivity($errNum, I5_CAT_PHP,$code, $msg);
         return false;
     }
-    
+
     // successfully instantiated toolkit connection and instance. Mark it as CW.
     $tkit->setIsCw(true);
     
@@ -376,12 +382,13 @@ function i5_connect($host='', $user='', $password='', $options=array()) {
     $cwVersion = i5_version();
     
     // If we have a private conn, create an IPC based on it.
+    $connectionMsg = '';
     if (isset($privateConnNum) && $privateConnNum) {
         $ipc = makeIpc($user, $privateConnNum);
         // save private conn number. Can be retrieved later with getPrivateConnNum
         $tkit->setPrivateConnNum($privateConnNum);
         $tkit->setIsNewConn($isNewConn);
-		logThis ( "Running statefully with IPC '$ipc', private connection '$privateConnNum'. CW version $cwVersion. Service library: $xmlServiceLib" );
+		$connectionMsg = "Running statefully with IPC '$ipc', private connection '$privateConnNum'. CW version $cwVersion. Service library: $xmlServiceLib";
         
     } else {
     	
@@ -391,21 +398,27 @@ function i5_connect($host='', $user='', $password='', $options=array()) {
         if ($stateless) {
             // don't need IPC if stateless, running in QSQ job.
             $ipc = '';
-            logThis("Running stateless; no IPC needed. CW version $cwVersion. Service library: $xmlServiceLib");
+            $connectionMsg = "Running stateless; no IPC needed. CW version $cwVersion. Service library: $xmlServiceLib";
         } else {
 	        // TODO does this make sense? Not stateless but not private? Any purpose to stateless setting in INI file?
         	// Not stateless, so create an IPC
             // TODO this will change based on persistent/nonpersistent logic
     	    // IPC to use in separate toolkit job using just user id and unique additions in makeIpc
             $ipc = makeIpc($user);
-			logThis ( "Not private but not stateless; running with IPC '$ipc'. CW version $cwVersion. Service library: $xmlServiceLib" );
+			$connectionMsg =  "Not private but not stateless; running with IPC '$ipc'. CW version $cwVersion. Service library: $xmlServiceLib";
         } //(if stateless)
     } //(privateconn and other options for generating IPC)
         
     
-    // handle connection options (e.g. encoding). for those options we don't support, write to log.
-    
+    // If INI file tells us to log CW's connection messages, do so.
+    $logConnectionMsg = getConfigValue('log', 'logCwConnect', true);
+    if ($logConnectionMsg) {
+        logThis($connectionMsg);
+    } //(if ($logConnectionMsg))
 
+    
+    // handle connection options (e.g. encoding). for those options we don't support, write to log.
+       
 
     if ($jobName) {
         // override any values for the last parm of $sbmjobParams
@@ -498,8 +511,8 @@ function i5_connect($host='', $user='', $password='', $options=array()) {
     	// We COULD write a message to the log, at best.
         $success = $tkit->ClCommandWithCpf($cmdArray);
     } //(if count($cmdArray))
+
     
-        
     // return toolkit object for other functions to use
     return $tkit;
     
@@ -554,10 +567,17 @@ function i5_close(&$connection = null) {
     // if conn not passed in, get instance of toolkit. If can't be obtained, return false.
     if (!$connection = verifyConnection($connection)) {
         return false;
-    }    
+    }      
+
+    // or explicitly asked to close by INI file.
+    $fullDbClose = getConfigValue('cw', 'fullDbClose', false);
+    if ($fullDbClose) {
+        $connection->disconnect(); // disconnects database/transport
+    } 
     
     $connection->__destruct();
     $connection = null;
+    
     // TODO try/catch. if fail return false
     return true;
     
@@ -1037,8 +1057,8 @@ function i5_program_call(DataDescription $program, $params, $retvals = array()) 
 
     if ($success) {
         if ($retvals && is_array($retvals)) {
-            // TODO check that retvals is an array, etc.
-            $pgmOutput = $program->getPgmOutput();
+
+        	  $pgmOutput = $program->getPgmOutput();
             $exportedThem = $program->getConnection()->setOutputVarsToExport($retvals, $pgmOutput);
             //$exportedThem = exportPgmOutputVars($retvals, $pgmOutput);
             if (!$exportedThem) {
@@ -1478,19 +1498,18 @@ function i5_jobLog_list_close(&$list = null)
 // Check that we have an instance of the toolkit object, either passed in or available from the toolkit.
 // Return that instance, or false.
 function verifyConnection($connection = null) {
-    // if conn passed but it's bad
+    // if conn passed and non-null but it's bad
     if ($connection && !is_a($connection, 'ToolkitService')) {
         i5ErrorActivity(I5_ERR_PHP_HDLCONN, I5_CAT_PHP, 'Connection handle invalid', 'Connection handle invalid');
         return false;
         
     } elseif (!$connection) {
-        // not passed in.
+        // not passed in or null.
     	
         // Check if a connection was started. User should start a connection before trying to use it.
         if (!ToolkitServiceCw::hasInstance()) {
-
-        	i5ErrorActivity(I5_ERR_PHP_HDLDFT, I5_CAT_PHP, 'No default connection found.', 'Connection has not been initialized. Please connect before using this function.');
-        	return false;
+            i5ErrorActivity(I5_ERR_PHP_HDLDFT, I5_CAT_PHP, 'No default connection found.', 'Connection has not been initialized. Please connect before using this function.');
+            return false;
         } 
         
         // if we thought we had a connection but it's empty.
@@ -2425,7 +2444,7 @@ function i5_spool_list_close($list = null)
 
 /*string i5_spool_get_data(string spool_name, string jobname, string username, integer job_number, integer spool_id [,string filename])
 Description: Get the data from the spool file.
-Return Values: String if no file name passed as parameter, false if function failes
+Return Values: If no filename passed as parameter, a string on success, false on failure. If filename passed, return true on success, false on failure.
 Arguments:
  spool_name - The spool file name
  job_name - The name of the job that created the file
@@ -2447,52 +2466,130 @@ function i5_spool_get_data($spoolName, $jobName, $userName, $jobNumber, $spoolNu
         $spoolNumber = 1;
     }
     
-    $cmdString = "catsplf -j {$jobNumber}/{$userName}/{$jobName} {$spoolName} {$spoolNumber}";
-    
-    //full command will look like "QSH CMD('catsplf -j {$jobNumber}/{$userName}/{$jobName} {$spoolName} {$spoolNumber}')";
-    $result = $connection->qshellCommand($cmdString);
-    
-    // if no error, we expect an array.
-    if (is_array($result)) {
-        // consolidate into a string with 0D0A separators
-        $resultString = trim(implode("\r\n", $result));
+    //  2< /dev/null means to send STDERR messages to the bit bucket (delete). 
+    // We do this to avoid bogus warnings such as 
+    // "CPC2206:  Ownership of object QZSHSYSTEM in QTEMP type *USRSPC changed"
+    // and the generation of extra spool files containing that warning.
+    $cmdString = "catsplf -j {$jobNumber}/{$userName}/{$jobName} {$spoolName} {$spoolNumber}  2> /dev/null ";
 
-        // if fileName provided, try to write data to the IFS file (return true if successful or false).
-        // otherwise simply return the string.
-        if ($fileName) {
-            
-            $bytesWritten = file_put_contents($fileName, $resultString);
-            if ($bytesWritten) {
-                // good! Wrote OK
-                return true;
-            } else {
-                // bad! Could not write file. Old toolkit used CPF9898 so let's also use it.
-                i5CpfError('CPF9898', "Could not write to file '$fileName'.");
-                return false;    
-            } //(if bytesWritten)
-            
-            
-        } else {
-            // no IFS filename provided. Return string to caller.
-            return $resultString;
-        } //(if $fileName)
-        
+    
+    // TODO Would be better if Qshellcommand or interactive could get contents of txt file to avoid giving permissions to QTMHHTTP web user, and to work in 2-tier setups.
+    // XMLSERVICE may provide this feature in the future.
+    
+    // if a filename was given, ask QSH to copy the data directly into that file.
+    // Currently this only works when run directly on an IBM i.
+    if ($fileName && $connection->isPhpRunningOnIbmI()) {
+    	
+    	    // create file if it does not exist.
+    	    // In case it did exist, change its CCSID to the one used by PHP.
+    	    // QIBM_PASE_CCSID=819
+    	    		
+    	    $ccsid = $connection->getPhpCcsid();
+    	    	    
+    	    // command to set up IFS file with proper CCSID
+    	    // Qshell allows multiple commands separated by semicolon
+    	    $ccsidCommand = "touch -C $ccsid $fileName;setccsid $ccsid $fileName";
+    	    $result = $connection->qshellCommand($ccsidCommand);
+
+    	    if ($result === false) {
+    	        
+    	    	        	// error writing file, possibly.
+    	    	    
+    	    	        	// if get this then it's a file problem:
+    	    	    	    //<row><![CDATA[QSH0005: Command ended normally with exit status 2.]]></row>
+    	    	    	    //<row><![CDATA[qsh: 001-0055 Error found creating file /tmpxyz/alanspool14.txt. No such path or directory.]]></row>
+    	    	    
+    	    	    	    $errMsg = $connection->getErrorMsg();
+    	    	    	    $errCode = $connection->getErrorCode();
+    	    	    	    // bad! Could not write file. Old toolkit used CPF9898 so let's also use it.
+    	    	    	    i5CpfError('CPF9898', "Could not get spool file and write to '$fileName'. Reason: $errCode");
+    	    	    	    return false;
+    	    } //(false)
+
+    	    // Redirect output to file we created/specified. Can't single quotes around file name in case it contains spaces because CMD(' already has single quotes
+    	    // Avoid paths containing spaces!
+    	    $cmdString .= " > $fileName";
+
+    	    $result = $connection->qshellCommand($cmdString);
+    	    	    
+    	    if ($result === false) {
+
+    	    	    // error writing data to file, possibly.
+    	    	    
+    	    	    // if get this then it's a file problem:
+    	    	    //<row><![CDATA[QSH0005: Command ended normally with exit status 2.]]></row>
+    	    	    //<row><![CDATA[qsh: 001-0055 Error found creating file /tmpxyz/alanspool14.txt. No such path or directory.]]></row>
+    	    	    
+    	    	    // or: Reason: catsplf: 001-2373 Job 956066/CP40B/APRTCHK was not found." }
+    	    	    $errMsg = $connection->getErrorMsg();
+    	    	    $errCode = $connection->getErrorCode();
+    	    	    // bad! Could not write file. Old toolkit used CPF9898 so let's also use it.
+    	    	    i5CpfError('CPF9898', "Could not get spool file and write to '$fileName'. Reason: $errCode");
+    	    	    return false;
+
+    	    } else {
+    	    	    // successfully wrote to IBM i file
+    	    	    return true;
+    	    }//(if ($result === false))
+    	    	    
     } else {
-        // not an array. Probably a "false."
-        // Report the error.
-        $errMsg = $connection->getErrorMsg();
-        if (empty($errMsg)) {
-            $errMsg = 'Could not read spooled file. Check user permissions or see error code for details.';
-        }
-        i5CpfError($connection->getErrorCode(), $errMsg);
-        return false;
-    } //(if is_array)
+    	
+    	    // either no filename supplied or not on IBM i.
+    	    // need to get the data either way.
+        $result = $connection->qshellCommand($cmdString);
+    	
+        // if got here, and no error, we expect an array.
+    	    if (!is_array($result)) {
+       	    // not an array. Probably a "false."
+    		    // Report the error.
+    		    $errMsg = $connection->getErrorMsg();
+    		    if (empty($errMsg)) {
+    			    $errMsg = 'Could not read spooled file. Check user permissions or see error code for details.';
+    		    } //(if (empty($errMsg)))
+    		 
+    		    i5CpfError($connection->getErrorCode(), $errMsg);
+    		    return false;
+    	    } //(if is_array)
+
+    	    // We got data successfully.
+    	    // consolidate into a string with 0D0A separators
+    	    $resultString = trim(implode("\r\n", $result));
+    	    	
+    	    // if we're to write data to a local file (non-IBM i), do it.
+    	    if ($fileName) {
+    	    	
+    	        	/*
+    	    	     * Not IBM i but filename was supplied
+    	    	     * Since PHP not running on IBM i, PHP won't be able to a retrieve file from IFS later.
+    	    	     * So write to local file system instead.
+    	    	     * In the future, if XMLSERVICE can retrieve an IBM i IFS file,
+    	    	     * PHP will be able to read the file back and this behavior can change.
+    	    	     * Note: we're keeping backward compatibility with original CW behavior here, not wanting to break anyone's application.
+    	    	     */
+    	    	     $bytesWritten = file_put_contents($fileName, $resultString);
+    	    	     if ($bytesWritten) {
+    	    	     	 // successfully wrote to file
+    	    	         return true;
+    	    	     } else {
+    	    		     // bad! Could not write file locally. Old toolkit used CPF9898 so let's also use it.
+    	    		     i5CpfError('CPF9898', "Could not write to file '$fileName'.");
+    	    		     return false;
+    	    		     
+    	    	     } //(if !$bytesWritten)
+
+    	    } else {
+    	    	    
+    	    	    // no file name supplied.     
+    	    	    // Return string to caller.
+    	    	    return $resultString;
+    	    	
+    	    } //(if $fileName)
+    			
+     	    
+    } //(if ($fileName))
     
     
 } //(i5_spool_get_data)
-
-
-
 
 
 // Object listings
@@ -3554,7 +3651,7 @@ function i5_open() {
 function i5_output() {
 
 	// get connection
-	if (!$connection = verifyConnection(null)) {
+	if (!$connection = verifyConnection()) {
         return false;
     }    
 	

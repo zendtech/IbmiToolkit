@@ -15,7 +15,7 @@ public function connect($database, $user, $password, $options = null){
 Throw new Exception( "Fail execute ($sql) ".db2_stmt_errormsg(),db2_stmt_error());
 ... and retrieve via try/catch + Exception methods.
 	 */
-
+	
 	// check for blank password with non-blank user. If so, throw the same error that wrong password would generate.
 	// Compensate for older ibm_db2 driver that may not do this check.
 	if ($user && empty($password)) {
@@ -36,10 +36,9 @@ Throw new Exception( "Fail execute ($sql) ".db2_stmt_errormsg(),db2_stmt_error()
 	} //($options)
 	
 	// could be connect or pconnect
-	
     $conn = $connectFunc ( $database, $user, $password );
 
-    if(is_resource($conn)) { 
+    if(is_resource($conn)) {
 	    return $conn;
     }
   
@@ -108,7 +107,7 @@ protected function setErrorMsg($errorMsg) {
 /* this function used for special stored procedure call only  */
 public function execXMLStoredProcedure( $conn, $sql, $bindArray )										
 {
-
+	
 	$internalKey= $bindArray['internalKey'];
 	$controlKey = $bindArray['controlKey'];
 	$inputXml   = $bindArray['inputXml'];
@@ -154,7 +153,7 @@ public function execXMLStoredProcedure( $conn, $sql, $bindArray )
     	$this->setStmtError($crsr); // set error and exit
 		return false;
 	} //(if(!$ret) {)
-		
+	
 	return $outputXml;
 		
 } //(public function execXMLStoredProcedure)

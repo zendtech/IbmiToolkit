@@ -26,22 +26,29 @@ class ToolkitServiceCw extends ToolkitService
     } //(__construct())
 
     // need to define this so we get Cw object and not parent object
-    static function getInstance($databaseNameOrResource = '*LOCAL', $userOrI5NamingFlag = '', $password = '', $extensionPrefix = '', $isPersistent = false)
+    static function getInstance($databaseNameOrResource = '*LOCAL', $userOrI5NamingFlag = '', $password = '', $extensionPrefix = '', $isPersistent = false, $forceNew = false)
 	{
-	    // if instance hasn't been created yet, create one
-		if(self::$instance == NULL){
+		
+		// if we're forcing a new instance, close db conn first if exists.
+		if ($forceNew && self::hasInstance() && isset(self::$instance->conn)) {
+			self::$instance->disconnect();
+		}
+		
+	    // if we're forcing a new instance, or an instance hasn't been created yet, create one
+		if(($forceNew || self::$instance == NULL)){
 			$toolkitService = __CLASS__;
 			self::$instance=new $toolkitService($databaseNameOrResource, $userOrI5NamingFlag, $password, $extensionPrefix, $isPersistent);
 		}
         if (self::$instance) {
-        	// instance exists
-        	return self::$instance;
+            // instance exists
+        	    return self::$instance;
         } else {
-        	// some problem
-        	return false;
+        	    // some problem
+        	    return false;
         } //(if (parent::$instance))
 	} //(getInstance)
 
+	
 	/**
 	 * Return true if an instance of this object has already been created.
 	 * Return false if no instance has been instantiated.
@@ -87,15 +94,26 @@ class ToolkitServiceCw extends ToolkitService
     // when script ends, non-persistent connection should close
     public function __destruct()
     {
-	/* call to disconnect()  function to down connection */
+	    /* call to disconnect()  function to down connection */
 
-    	// CW only: if connection is in a separate job and nonpersistent, end job (mimicking behavior of old toolkit)
+    	    $disconnect = false;
+    	
+    	    // CW only: if connection is in a separate job and nonpersistent, end job (mimicking behavior of old toolkit)
         if (!$this->isStateless() && !$this->getIsPersistent()) {
-        	$this->disconnect();
+        	    $disconnect = true;
+        } //(if (!$this->isStateless() && !$this->getIsPersistent()))
+
+        if ($disconnect) {
+        	    $this->disconnect();
         }
         // parent destruct clears the object
         parent::__destruct();
 
+        // need to clear extended cwclasses instance as well.
+        if ($disconnect) {
+            self::$instance = null;
+        }
+        
 	} //(__destruct)
 
 
@@ -253,9 +271,10 @@ class DataDescription
                                I5_TYPE_FLOAT   => "4f",
                                // data structure
                                I5_TYPE_STRUCT  => "ds",
-                               // int32, 4 bytes
-                               I5_TYPE_INT     => "10i0",
-                               I5_TYPE_SHORT   => "5i0",
+			                     // int16, 2 bytes
+                               I5_TYPE_SHORT   => "5i0", 
+			                     // int32, 4 bytes
+			                     I5_TYPE_INT     => "10i0",
                                I5_TYPE_ZONED   => "%ss%s",
                                // TODO not sure if byte really maps to binary. No one knows what BYTE really does
                                I5_TYPE_BYTE    => "%sb",
@@ -377,7 +396,7 @@ class DataDescription
 
 	/**
 	 * Return toolkit object that was passed in
-	 * @return ServiceToolkit
+	 * @return ToolkitService
 	 */
 	public function getConnection() {
 	    return $this->_connection;
@@ -653,17 +672,19 @@ return: array of new or, if a problem, false.
 
             } else {
 
+            	   // default values not requested.
+            	       
                 // For this parameter that's a data structure,
                 // Look up its value (could be another data structure or a single value)
                 // in the input array, based on data structure name.
-	            $dsData = $this->findValueInArray($dsName, $inputValues);
+	             $dsData = $this->findValueInArray($dsName, $inputValues);
 
-            	if (!$dsData) {
-    		    // ds has no description to match value!
-        	    i5ErrorActivity(I5_ERR_PARAMNOTFOUND, I5_CAT_PHP, "Requested parameter $name does not exist in the description", "Requested parameter $name does not exist in the description");
-                    return false;
-	            }
-            } //(if useDefaultValues / else)
+               	if (!$dsData) {
+    		           // ds has no description to match value!
+        	           i5ErrorActivity(I5_ERR_PARAMNOTFOUND, I5_CAT_PHP, "Requested parameter '$dsName' does not exist in the input data", "Requested parameter $dsName does not exist in the input data");
+                     return false;
+	            } //(!$dsData)
+	         } //(if useDefaultValues / else)
 
            /*
             * dim > 1
@@ -1082,7 +1103,6 @@ class DataDescriptionPcml extends DataDescription
 
 		// Convert PCML from ANSI format (which old toolkit required) to UTF-8 (which SimpleXML requires).
 
-		//TODO this could possibly be done more efficiently, reading the ini-File again is suboptimal
 		$encoding = getConfigValue('system', 'encoding', 'ISO-8859-1'); // XML encoding
 
 		/*
@@ -1131,7 +1151,6 @@ class DataDescriptionPcml extends DataDescription
 </program>*/
 
         // let's focus on name, path, and entrypoint, the only attributes likely to be used here.
-        $givenPgmName = (isset($pgmAttrs['name'])) ? $pgmAttrs['name'] : '';
         $path = (isset($pgmAttrs['path'])) ? $pgmAttrs['path'] : '';
         $entrypoint = (isset($pgmAttrs['entrypoint'])) ? $pgmAttrs['entrypoint'] : '';
 
@@ -1168,15 +1187,14 @@ class DataDescriptionPcml extends DataDescription
 	} //(__construct)
 
 
-	// array of simple types, PCML to old toolkit
+	// array of simple types, PCML to old toolkit. Used in singlePcmlToArray().
 	protected $_pcmlTypeMap = array('char'          => I5_TYPE_CHAR,
                                 'packed'        => I5_TYPE_PACKED,
                                // 4 byte float
                                 'float'         => I5_TYPE_FLOAT,
                                // data structure
                                 'struct'        => I5_TYPE_STRUCT,
-                               // int32, 4 bytes
-                                'int'           => I5_TYPE_INT,
+       // omit INT from type map because we'll need program logic to determine if short or regular int.
                                 'zoned'         => I5_TYPE_ZONED,
                                // TODO not sure if byte really maps to binary. No one knows what BYTE really does
                                 'byte'          => I5_TYPE_BYTE,
@@ -1293,8 +1311,26 @@ class DataDescriptionPcml extends DataDescription
 
 			//$struct = (isset($attrs['struct'])) ? (string) $attrs['struct'] : ''; // if this is pointing to a struct name
 
-			$newType = (isset($this->_pcmlTypeMap[$type])) ? (string) $this->_pcmlTypeMap[$type] : '';
-
+			// find CW data type equivalent of PCML data type
+			if (isset($this->_pcmlTypeMap[$type])) {
+				// a simple type mapping
+				$newType = (string) $this->_pcmlTypeMap[$type];
+			} elseif ($type == 'int') {
+				// one of the integer types. Need to use length to determine which one.
+				if ($length == '2') {
+					$newType = I5_TYPE_SHORT;
+				} elseif ($length == '4') {
+					$newType = I5_TYPE_INT;
+				} else {
+					$newType = ''; // no match
+				} //(length == 2, et al.)
+				
+			} else {
+				$newtype = '';	
+				
+			} //(if (isset($this->_pcmlTypeMap[$type])))
+			             
+			
 			$newInout = (isset($this->_pcmlInoutMap[$usage])) ? (string) $this->_pcmlInoutMap[$usage] : '';
 
 

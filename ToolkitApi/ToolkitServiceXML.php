@@ -135,9 +135,9 @@ class XMLWrapper {
 		 
 		$pgmtag = ''; // what we'll return
 		 
-		// specify opm mode if specified
+		// specify opm mode if given
 		$opmString = ($this->getOption('v5r4')) ? " mode='opm'" : "";
-		 
+		
 		// get encoded pgm/lib/func names
 		$propArray = array();
 		$this->processParamProps($propArray);
@@ -797,6 +797,11 @@ stuff
 				
 		$xmlobj = simplexml_load_string ( $xml );
 
+		// note: outer, ignored node name will be <script> (if successful call)
+		//                                     or <report> (if unsuccessful)
+		// Outer node is discarded in parsed XML objects.
+	
+		
 		if (! $xmlobj instanceof SimpleXMLElement) {
 			$badXmlLog = '/tmp/bad.xml';
 			$this->error = "Unable to parse output XML, which has been logged in $badXmlLog. Possible problems: CCSID, encoding, binary data in an alpha field (use binary/BYTE type instead); if < or > are the problem, consider using CDATA tags.";
@@ -881,15 +886,15 @@ stuff
     	$this->processParamProps($propArray);
     	    	
     	$ccsidHexStr = "{$propArray['ccsidStr']}{$propArray['hexStr']}"; 
-
-    	// if a string, make a single-item array from it.
+    	    	
+      // if a string, make a single-item array from it.
     	if (is_string($cmd)) {
     		$cmdArray = array($cmd);
     	} else {
     		// already multiple.
     		$cmdArray = $cmd;
     	}
-
+     
     	foreach ($cmdArray as $oneCmd) {
 
 
@@ -897,10 +902,11 @@ stuff
     		// We call this an "interactive" command because it can return output from DSP* interactive commands.
     		// Use double quotes around $cmd so that $cmd can safely contain single quotes.
     		if ($exec == 'pase') {
+    			// -i is nice. TODO test speed
     		    $oneCmd = '/QOpenSys/usr/bin/system "' . $oneCmd . '"';
     		}
-
-    		// if need to convert to hex, do so.
+ 
+   		// if need to convert to hex, do so.
     		$encodedCmd = $this->encodeString($oneCmd);
     		
     		// with pase and pasecmd is <sh, not <cmd.    		

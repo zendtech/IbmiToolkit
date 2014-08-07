@@ -69,7 +69,7 @@ class ListFromApi
 	
 	public function __construct($requestHandle, $totalRecords, $receiverDs, $lengthOfReceiverVariable, ToolkitService $ToolkitSrvObj = null){
 		if ($ToolkitSrvObj instanceof ToolkitService ) {
-			$this->ToolkitSrvObj = $ToolkitSrvObj ;
+			$this->ToolkitSrvObj = $ToolkitSrvObj;
 		}	    		
 		
 		$this->_requestHandle = $requestHandle;
@@ -93,7 +93,7 @@ class ListFromApi
 
 		$apiPgm = 'QGYGTLE';
 		$apiLib = 'QSYS';
-
+		
 		$receiverDs = $this->_receiverDs;
 		$requestHandle = $this->_requestHandle; 
 		$lengthOfReceiverVariable = $this->_receiverSize;
@@ -120,14 +120,28 @@ class ListFromApi
   </parm>
   <parm io='in' comment='6. Starting record' >
      <data var='startingRecordNum' comment='First entry number to put in receiver var. If getting one record at a time, increment this each time.' type='10i0'>$nextRecordToRequest</data>
-  </parm>\n" .  ToolkitService::getErrorDataStructXml(7); // param number 7
-  
-      
+  </parm>\n" .  
+  ToolkitService::getErrorDataStructXmlWithCode(7); // param number 7
+  // was getErrorDataStructXml
 		// pass param xml directly in.
 		$retPgmArr = $this->ToolkitSrvObj->PgmCall($apiPgm, $apiLib, $paramXml);
 
-		if($this->ToolkitSrvObj->getErrorCode())
-		   return false;
+		
+		if ($this->ToolkitSrvObj->getErrorCode()) {
+		    return false;
+		}  
+
+		/* Even when no error reported by XMLSERVICE (->error),
+		 * we may get a GUI0006 in DS error structure exeption code, since we
+		 * supplied a full error data structure above (getErrorDataStructXmlWithCode).
+		 */
+		$apiErrCode = $retPgmArr['io_param']['errorDs']['exceptId'];
+		
+		if ($apiErrCode != '0000000') {
+			// Note: caller can check for GUI0006 and GUI0001 (expected when go past last record) vs. any other error (not expected)
+			$this->ToolkitSrvObj->setErrorCode($apiErrCode);
+			return false;
+		} //(if ($apiErrCode))
 		
 		$retArr = $retPgmArr['io_param'][$outputVarname];
 					
@@ -607,12 +621,12 @@ class DataQueue{
 		$params [] = $this->ToolkitService->AddParameterChar ( 'in', 10, 'dqname', 'dqname', $this->DataQueueName );
 		$params [] = $this->ToolkitService->AddParameterChar ( 'in', 10, 'dqlib', 'dqlib', $this->DataQueueLib );
 		
-		// TODO do not hard-code data size. Use system of labels as allowed by XMLSERVICE.
+		// TODO do not hard-code data size. Use system of labels as allowed by XMLSERVICE (as done in CW's i5_dtaq_receive).
 		$DataLen = 300;
 		$Data = ' ';
 		
-		$params [] = $this->ToolkitService->AddParameterPackDec ( 'out', 5, 0, 'datalen', 'datalen', $DataLen );
-		$params [] = $this->ToolkitService->AddParameterChar ( 'out', ( int ) $DataLen, 'datavalue', 'datavalue', $Data);
+		$params [] = $this->ToolkitService->AddParameterPackDec ( 'out', 5, 0, 'datalen', 'datalen', $DataLen ); // TODO this is output only so no need to specify a value
+		$params [] = $this->ToolkitService->AddParameterChar ( 'out', ( int ) $DataLen, 'datavalue', 'datavalue', $Data); // TODO this is output only so no need to specify a value.
 		
 		// Wait time: < 0 waits forever. 0 process immed. > 0 is number of seconds to wait.
 		$params [] = $this->ToolkitService->AddParameterPackDec ( 'in', 5, 0, 'waittime', 'waittime', $WaitTime );
@@ -646,6 +660,7 @@ class DataQueue{
 		}
 				
 	    $params[] = $this->ToolkitService->AddParameterChar ( 'in', 10, 'remove', 'remove',  $Remove );
+	    // TODO note from API manual: If this parameter is not specified, the entire message will be copied into the receiver variable.
 		$params[] = $this->ToolkitService->AddParameterPackDec ( 'in', 5, 0, 'size of data receiver', 'receiverSize', $DataLen);
 
 		$params[] =  $this->ToolkitService->AddErrorDataStructZeroBytes(); // so errors bubble up to joblog
@@ -718,20 +733,18 @@ class SpooledFiles
 	private $TmpUserSpace;      /*LISTSPLF function filles this object by the spool file list information*/
 	private $ErrMessage;	
     //private $old_plug;         /* spool file and list of spoll files 
-    							 /*	may return a huge xml output. Use 'plug'=>"iPLUG1M"	*/
+    							 /*	may return huge xml output. Use 'plug'=>"iPLUG1M" or 10M or 15M	*/
 	 
 	public function __construct( ToolkitService $ToolkitSrvObj = NULL, $UserLib = NULL ){
 		if ($ToolkitSrvObj instanceof ToolkitService ) {
 				$this->ToolkitSrvObj = $ToolkitSrvObj ;
 					
-		  // $this->old_plug = $this->ToolkitSrvObj->getToolkitServiceParam('plug');			
-
 			// TODO do not assume a specific plug size.
 			$this->ToolkitSrvObj->setOptions(array('plugSize'=>'1M'));	
 		    				
 			$this->TMPFName = $this->ToolkitSrvObj->generate_name();
 			
-			//do not use a QTEMP as temporary library.
+			//do not use a QTEMP as temporary library. [not sure why not--A.S.]
 			if($UserLib != NULL && strcmp($UserLib, "QGPL")){
 				$this->TmpLib = $UserLib;
 			}
@@ -740,7 +753,6 @@ class SpooledFiles
 		return false;
 	}
 	public function __destructor(){
-		//$this->ToolkitSrvObj->setToolkitServiceParams(array('plug'=>$old_plug));
 	}
 	
 	public function getError()
@@ -761,7 +773,7 @@ class SpooledFiles
 		//$retval[]= $this->ToolkitSrvObj->AddReturnParameter('10i0','retval',0);
 		$retval[]= $this->ToolkitSrvObj->AddParameterInt32('out','retval','retval', 0);
 		
-        $this->ToolkitSrvObj->PgmCall ( ZSTOOLKITPGM, ZSTOOLKITLIB, 
+        $this->ToolkitSrvObj->PgmCall ( ZSTOOLKITPGM, $this->ToolkitSrvObj->getOption('HelperLib'), 
         									   $params, $retval,
         									   array ('func' => 'LISTSPLF' ) );
 		       								   
@@ -815,10 +827,10 @@ class SpooledFiles
 
 	 $this->clearError();
 	 if($TMPFName != '')
-	 	$this->TMPFName = $TMPFName;
+	 $this->TMPFName = $TMPFName;
 	 	
-	  /*TODO under the flag for current Object???*/	
-	  $crtf   = "CRTDUPOBJ OBJ(ZSF255) FROMLIB(".ZSTOOLKITLIB.") OBJTYPE(*FILE) TOLIB($this->TmpLib) NEWOBJ($this->TMPFName)";
+	  /*TODO under the flag for current Object???*/
+	  $crtf = "CRTDUPOBJ OBJ(ZSF255) FROMLIB(".$this->ToolkitSrvObj->getOption('HelperLib').") OBJTYPE(*FILE) TOLIB($this->TmpLib) NEWOBJ($this->TMPFName)";
       $this->ToolkitSrvObj->ClCommandWithCpf($crtf); // was ClCommand          
 
       // clear the temp file
@@ -844,7 +856,8 @@ class SpooledFiles
 	private function ReadSPLFData()
 	{
 	    $Txt='';
-		$stmt = "SELECT ZSF255 FROM $this->TmpLib.$this->TMPFName FOR FETCH ONLY";
+	    $schemaSep = $this->ToolkitSrvObj->getOption('schemaSep'); // . or /
+		$stmt = "SELECT ZSF255 FROM {$this->TmpLib}{$schemaSep}{$this->TMPFName} FOR FETCH ONLY";
 
 		try{
 			$Txt = $this->ToolkitSrvObj->executeQuery( $stmt );		
@@ -913,7 +926,7 @@ class JobLogs {
         $params[]=$this->ToolkitSrvObj->AddParameterChar('input',10,'USER NAME', 'username',$ForUser);
         $params[]=$this->ToolkitSrvObj->AddParameterChar('input',10,'Job status', 'jobstatus',$JobStatus);
 	
-        $ret = $this->ToolkitSrvObj->PgmCall ( ZSTOOLKITPGM, ZSTOOLKITLIB, $params,NULL, array ('func' => 'JOBLIST'));
+        $ret = $this->ToolkitSrvObj->PgmCall ( ZSTOOLKITPGM, $this->ToolkitSrvObj->getOption('HelperLib'), $params,NULL, array ('func' => 'JOBLIST'));
 		 sleep(1);	
 		$JobList  = $this->TmpUserSpace->ReadUserSpace (1, $this->TmpUserSpace->RetrieveUserSpaceSize());	
 		
@@ -969,7 +982,7 @@ class JobLogs {
         $ret_code ='0';
         $InputArray[]=$this->ToolkitSrvObj->AddParameterChar( 'both', 1, 'retcode','retcode',$ret_code);
             
- 		$OutputArray = $this->ToolkitSrvObj->PgmCall( ZSTOOLKITPGM, ZSTOOLKITLIB, $InputArray, NULL, array('func'=>'JOBLOGINFO'));
+ 		$OutputArray = $this->ToolkitSrvObj->PgmCall( ZSTOOLKITPGM, $this->ToolkitSrvObj->getOption('HelperLib'), $InputArray, NULL, array('func'=>'JOBLOGINFO'));
  		if(isset($OutputArray['io_param']['retcode'])){
  			if($OutputArray['io_param']['retcode'] == '1')//may be authorization probelm
  			//No data created in US. 
@@ -1004,7 +1017,7 @@ class JobLogs {
 		$receiverSize = 1000; // 200		
 		$params[] =  ToolkitService::AddParameterChar ('input', 26, "QualifiedJobName", 'JobName',trim($jobName26));		
 		$params[] =  ToolkitService::AddParameterChar ('both', $receiverSize, "reciever", 'reciever', $reciever);	    	    	    		
-		$ret = $this->ToolkitSrvObj->PgmCall( ZSTOOLKITPGM, ZSTOOLKITLIB, $params, NULL, array('func'=>'GETJOBINFO'));
+		$ret = $this->ToolkitSrvObj->PgmCall( ZSTOOLKITPGM, $this->ToolkitSrvObj->getOption('HelperLib'), $params, NULL, array('func'=>'GETJOBINFO'));
 		if($ret && trim($ret['io_param']['reciever'])!='' )
 			return ($this->parseJobInfString( $ret['io_param']['reciever']));		 
 		return false;					
@@ -1083,7 +1096,7 @@ class ObjectLists
 		$params[] = $this->ToolkitSrvObj->AddParameterChar ('in', 10, "Object name", 'objectname',$ObjName );
 		$params[] = $this->ToolkitSrvObj->AddParameterChar ('in', 10, "Object library",'objectlib', $ObjLib );
 		$params[] = $this->ToolkitSrvObj->AddParameterChar ('in', 10, "Object Type", 'objecttype', $ObjType );
-		$this->ToolkitSrvObj->PgmCall ( ZSTOOLKITPGM, ZSTOOLKITLIB, $params, NULL, array ('func' => 'OBJLST' ) );
+		$this->ToolkitSrvObj->PgmCall ( ZSTOOLKITPGM, $this->ToolkitSrvObj->getOption('HelperLib'), $params, NULL, array ('func' => 'OBJLST' ) );
         
 		$ObjList ='';
        	$ObjList  = $this->TmpUserSpace->ReadUserSpace (1, $this->TmpUserSpace->RetrieveUserSpaceSize());       	           
@@ -1158,7 +1171,7 @@ class SystemValues   {
 		$params [] = $this->ToolkitSrvObj->AddParameterChar ( 'both',1, "ErrorCode", 'errorcode',$Err );
 		$params [] = $this->ToolkitSrvObj->AddParameterChar ( 'both',10, "SysValName",'sysvalname', $sysValueName);
 		$params [] = $this->ToolkitSrvObj->AddParameterChar ( 'both',1024, "SysValue", 'sysval',$SysValue );		
-		$retArr =  $this->ToolkitSrvObj->PgmCall ( ZSTOOLKITPGM, ZSTOOLKITLIB, $params,NULL, array ('func' => 'RTVSYSVAL' ) );
+		$retArr =  $this->ToolkitSrvObj->PgmCall ( ZSTOOLKITPGM, $this->ToolkitSrvObj->getOption('HelperLib'), $params,NULL, array ('func' => 'RTVSYSVAL' ) );
 		if($retArr !== false  && isset($retArr['io_param'])){
 			$sysval = $retArr['io_param'];			
 			if(isset($sysval['sysvalname']) )
@@ -1356,29 +1369,12 @@ class SystemValues   {
 		// check for any errors
 		if ($toolkit->getErrorCode()) {
 			// an error
-			i5CpfError($toolkit->getErrorCode(), $toolkit->getErrorMsg());
 			return false;
 		} else { 			
 		    // extricate the data from the receiver variable ds wrapper
 			$value = $retPgmArr['io_param']['receiver']['value'];
 		}
 		
-		
-		// old way, which was much slower
-/* 		
-		$cmdString = "RTVDTAARA DTAARA($dataAreaName $positionParams) RTNVAR(?)";
-		
-		// Send the command; get output array of key/value pairs. Example: CURUSER=>FRED, ...
-		// In this case, RTNVAR=>abcde
-		$outputArray = $this->ToolkitSrvObj->ClCommandWithOutput($cmdString);
-
-		if ($outputArray && isset($outputArray['RTNVAR'])) {
-			$value = $outputArray['RTNVAR'];
-		} else{
-			logThis("Failed: $cmdString.");
-			$this->setError( "Failed: $cmdString");
-		} //(if value)
- */
 		return ($value) ? $value : false;
 		
 	} //(public function readDataArea)
@@ -1399,6 +1395,7 @@ class SystemValues   {
 		}
 		
 		// TODO use API instead. Handle numeric and character data., *CHAR and *DEC as well.
+		//      and/or quote the string. Needs to be case-sensitive and handle numeric input.
 		$cmd = sprintf("CHGDTAARA DTAARA(%s $substring) VALUE($value)",
 		   			   $this->getQualifiedDataAreaName());
 				         

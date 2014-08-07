@@ -99,12 +99,12 @@ public function execXMLStoredProcedure( $conn, $stmt, $bindArray )
 		if(!$ret){
 			$this->setError($conn);
 				
-			return "ODBC error code: " . $this->getErrorCode() . ' msg: ' . $this->getErrorMessage();
+			return "ODBC error code: " . $this->getErrorCode() . ' msg: ' . $this->getErrorMsg();
 		}
 	
 	//disconnect operation cause crush in fetch ,
 	//nothing appears as sql script.
-	 $row='';	
+	 $row='';
 	 $outputXML = '';
 	 if(!$disconnect){			
         while( odbc_fetch_row($crsr)) {
