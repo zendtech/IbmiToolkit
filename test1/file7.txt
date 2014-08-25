@@ -1,3 +1,0 @@
-Line added by Alan in EditPad and merged via TortoiseGit.
-
-new file created from Win Explorer - aka TortoiseGit
