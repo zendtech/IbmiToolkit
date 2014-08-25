@@ -19,7 +19,7 @@ class ToolkitService {
 	
 	// TODO create methods to set (separately and all at once) and get errors, akin to what was done for DB module.
 	// Test ability to retrieve program errors and text.
-	protected $error = ''; // ambiguous usage (itfs here for backward compat.) but mainly 7-char error code 
+	protected $error = ''; // ambiguous usage (it's here for backward compat.) but mainly 7-char error code 
 	protected $cpfErr = ''; // 7-char error code
 	protected $errorText = ''; // error text/msg
 
@@ -1228,7 +1228,7 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
     				                $isArray, $ccsidBefore, $ccsidAfter, $useHex);
    	}
 
-	static function AddParameterInt32( $io,  $comment,  $varName = '', $value = ef, $dimension = 0 ) {
+	static function AddParameterInt32( $io,  $comment,  $varName = '', $value = 'ef', $dimension = 0 ) {
 		return new Int32Param ($io, $comment, $varName, $value, $dimension);
 	}
     //Size ($comment,  $varName = '', $labelFindLen = null) {
@@ -1523,7 +1523,7 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 		// *fly is number of ticks of each operation. *nofly is the default
 		if ($this->getOption('timeReport')) {
 			$key .= " *fly";
-		} //($this->getOption(etimeReport'))
+		} //($this->getOption('timeReport'))
 		
 		
 		// PASE CCSID for <sh> type of functions such as WRKACTJOB ('system' command in PASE)
