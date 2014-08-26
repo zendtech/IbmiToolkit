@@ -2,7 +2,7 @@
     "name": "zendtech/ibmitoolkit",
     "description": "PHP frontend to XMLSERVICE for IBMi development.",
     "keywords": ["zend","ibmitoolkit","ibmxmltoolkit","XMLSERVICE","IBMi"],
-    "license": "BSD-3",
+    "license": "BSD-3-Clause",
     "authors": [
         {
             "name": "Alan Seiden",
