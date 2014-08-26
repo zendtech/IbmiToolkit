@@ -1228,7 +1228,7 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
     				                $isArray, $ccsidBefore, $ccsidAfter, $useHex);
    	}
 
-	static function AddParameterInt32( $io,  $comment,  $varName = '', $value = 'ef', $dimension = 0 ) {
+	static function AddParameterInt32( $io,  $comment,  $varName = '', $value = '', $dimension = 0 ) {
 		return new Int32Param ($io, $comment, $varName, $value, $dimension);
 	}
     //Size ($comment,  $varName = '', $labelFindLen = null) {
