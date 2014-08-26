@@ -8,3 +8,4 @@ nbproject
 .settings
 .vagrant
 composer.lock
+composer.phar
