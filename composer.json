@@ -3,6 +3,18 @@
     "description": "PHP frontend to XMLSERVICE for IBMi development.",
     "keywords": ["zend","ibmitoolkit","ibmxmltoolkit","XMLSERVICE","IBMi"],
     "license": "BSD-3",
+    "authors": [
+        {
+            "name": "Alan Seiden",
+            "email": "alan@alanseiden.com",
+            "homepage": "http://alanseiden.com"
+        },
+        {
+            "name": "Adam Culp",
+            "email": "adamculp@uws.net",
+            "homepage": "http://geekyboy.com"
+        }
+    ],
     "require": {
         "php": ">=5.3.3"
     },
