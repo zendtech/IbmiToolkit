@@ -2,7 +2,7 @@ IbmiToolkit
 ==========
 
 This project was originally hosted at https://code.google.com/p/zend-ibmi-tk-cw/ 
-where older versions still reside, but it is now maintained here going forward.
+where older versions still reside. As of Mar. 3, 2014 it is now maintained here.
 
 This toolkit is a PHP-based front end to XMLSERVICE (http://www.youngiprofessionals.com/wiki/XMLSERVICE). 
 Both parts of the toolkit are shipped with Zend Server. Being open source, they 

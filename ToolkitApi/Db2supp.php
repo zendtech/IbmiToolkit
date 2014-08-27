@@ -1,4 +1,6 @@
-<?php 
+<?php
+namespace ToolkitApi;
+
 class db2supp {
 
 // TODO define common transport class/interface extended/implemented by all transports 	

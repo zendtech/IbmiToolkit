@@ -1,4 +1,6 @@
-<?php 
+<?php
+namespace ToolkitApi;
+
 class odbcsupp {
 
 private $last_errorcode = ''; // SQL State

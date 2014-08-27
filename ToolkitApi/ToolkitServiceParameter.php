@@ -1,4 +1,6 @@
 <?php
+namespace ToolkitApi;
+
 class ProgramParameter
 {
 

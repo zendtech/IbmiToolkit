@@ -1,4 +1,5 @@
-<?php 
+<?php
+namespace ToolkitApi;
 
 require_once 'ToolkitService.php';
 require_once 'ToolkitServiceParameter.php';

@@ -1,4 +1,5 @@
-<?php 
+<?php
+namespace ToolkitApi;
 
 // httpsupp is an experimental class (not supported by Zend at this time)
 // that provides an 'http' driverless transport.

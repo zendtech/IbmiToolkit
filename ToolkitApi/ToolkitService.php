@@ -1,4 +1,6 @@
 <?php
+namespace ToolkitApi;
+
 include_once 'ToolkitServiceSet.php';
 include_once 'ToolkitServiceXML.php';
 include_once 'ToolkitServiceParameter.php';
