@@ -38,15 +38,15 @@ versions did not use Composer.
     
 3. Run Composer install to gain PSR-4 autoloading, for using the toolkit.
     
-```console
-$ php composer.phar install
-```
+    ```console
+    $ php composer.phar install
+    ```
 
 4. Include the Composer generated autoloader in your application.
     
-```php
-require 'vendor/autoload.php';
-```
+    ```php
+    require 'vendor/autoload.php';
+    ```
 
 5. Now the toolkit may be used via namespaces, and as outlined at http://files.zend.com/help/Zend-Server-6-IBMi/zend-server.htm#php_toolkit_xml_service_functions.htm
 
@@ -58,9 +58,9 @@ require 'vendor/autoload.php';
     
 3. Run Composer update, or install if things are fresh.
     
-```console
-$ php composer.phar update
-```
+    ```console
+    $ php composer.phar update
+    ```
 
 4. Now the toolkit may be used via namespaces, and as outlined at http://files.zend.com/help/Zend-Server-6-IBMi/zend-server.htm#php_toolkit_xml_service_functions.htm
 
