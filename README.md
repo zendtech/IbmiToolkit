@@ -1,10 +1,14 @@
 IbmiToolkit
 ==========
 
-This project was originally hosted at https://code.google.com/p/zend-ibmi-tk-cw/ and is now in its new home here.
+This project was originally hosted at https://code.google.com/p/zend-ibmi-tk-cw/ 
+where older versions still reside, but it is now maintained here going forward.
 
-This toolkit is a PHP-based front end to XMLSERVICE (www.youngiprofessionals.com/wiki/XMLSERVICE). Both parts of the toolkit are shipped with Zend Server. Being open source, they can also be downloaded, installed, and upgraded separately.
+This toolkit is a PHP-based front end to XMLSERVICE (http://www.youngiprofessionals.com/wiki/XMLSERVICE). 
+Both parts of the toolkit are shipped with Zend Server. Being open source, they 
+can also be downloaded, installed, and upgraded separately.
 
-NOTE: Composer files and settings have been added, as well as PHPUnit, however these are not fully implemented yet.
+NOTE: Composer files and settings have been added to the master branch, as well 
+as PHPUnit, however these are not fully implemented yet.
 
-For the latest stable version please see release tags.
+For the latest, or a previous, release please see [releases](https://github.com/zendtech/IbmiToolkit/releases).
