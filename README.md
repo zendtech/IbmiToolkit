@@ -32,35 +32,35 @@ versions did not use Composer.
 
 ### Standalone
 
-    1. Download the toolkit from one of the stables [releases](https://github.com/zendtech/IbmiToolkit/releases).
+1. Download the toolkit from one of the stables [releases](https://github.com/zendtech/IbmiToolkit/releases).
 
-    2. Install Composer as outlined at https://getcomposer.org/download
+2. Install Composer as outlined at https://getcomposer.org/download
     
-    3. Run Composer install to gain PSR-4 autoloading, for using the toolkit.
+3. Run Composer install to gain PSR-4 autoloading, for using the toolkit.
     
 ```console
 $ php composer.phar install
 ```
 
-    4. Include the Composer generated autoloader in your application.
+4. Include the Composer generated autoloader in your application.
     
 ```php
 require 'vendor/autoload.php';
 ```
 
-    5. Now the toolkit may be used via namespaces, and as outlined at http://files.zend.com/help/Zend-Server-6-IBMi/zend-server.htm#php_toolkit_xml_service_functions.htm
+5. Now the toolkit may be used via namespaces, and as outlined at http://files.zend.com/help/Zend-Server-6-IBMi/zend-server.htm#php_toolkit_xml_service_functions.htm
 
 ### Integrated
 
-    1. If your app already uses Composer you simply need to update the composer.json as specified at https://packagist.org/packages/zendtech/ibmitoolkit
+1. If your app already uses Composer you simply need to update the composer.json as specified at https://packagist.org/packages/zendtech/ibmitoolkit
     
-    2. If you do not have Composer in your project you will need to add it. More info can be found at https://getcomposer.org
+2. If you do not have Composer in your project you will need to add it. More info can be found at https://getcomposer.org
     
-    3. Run Composer update, or install if things are fresh.
+3. Run Composer update, or install if things are fresh.
     
 ```console
 $ php composer.phar update
 ```
 
-    4. Now the toolkit may be used via namespaces, and as outlined at http://files.zend.com/help/Zend-Server-6-IBMi/zend-server.htm#php_toolkit_xml_service_functions.htm
+4. Now the toolkit may be used via namespaces, and as outlined at http://files.zend.com/help/Zend-Server-6-IBMi/zend-server.htm#php_toolkit_xml_service_functions.htm
 
