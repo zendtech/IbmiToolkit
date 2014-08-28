@@ -1,4 +1,5 @@
 <?php
+namespace ToolkitApi\CW;
 
 // cwclasses.php: classes for Compatibility Wrapper for IBM i Toolkit for PHP
 

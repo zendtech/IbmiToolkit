@@ -1,4 +1,5 @@
 <?php
+namespace ToolkitApi;
 
 class db2supp {
 
