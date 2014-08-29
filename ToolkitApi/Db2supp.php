@@ -180,7 +180,7 @@ public function executeQuery($conn, $sql )
 	 } else {
 	  	 //$err = db2_stmt_error();
 	     $this->setStmtError();
-	     Throw new Exception( "Failure executing SQL: ($sql) ".db2_stmt_errormsg(), db2_stmt_error()); 
+	     Throw new \Exception( "Failure executing SQL: ($sql) ".db2_stmt_errormsg(), db2_stmt_error()); 
 	 } //(if is resource)
 	  	
 	  return $Txt;
