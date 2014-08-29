@@ -5,10 +5,11 @@ namespace ToolkitApi\CW;
 
 // toolkit path should be defined in PHP.INI. Default: /usr/local/zendsvr/share/ToolkitApi
 
-require_once 'ToolkitService.php';
-require_once 'iToolkitService.php';
-require_once 'ToolkitServiceParameter.php';
 require_once 'CW/cwconstants.php';
+
+use ToolkitApi\ToolkitService;
+use ToolkitApi\DataStructure;
+use ToolkitApi\ProgramParameter;
 
 /**
  * ToolkitServiceCw extends the standard Zend/PHP wrapper
@@ -438,7 +439,7 @@ class DataDescription
 	    $path = str_replace(array('.PGM', '.SRVPGM','.LIB'), array('', '', ''), $path);
 
 	    if(!$path) {
-			throw new Exception("PCML program path is required.");
+			throw new \Exception("PCML program path is required.");
 		}
 
 		$result = array('lib'=>'', 'obj'=>'');
@@ -446,7 +447,7 @@ class DataDescription
 		$numParts = count($parts);
 
 		if($numParts > 3) {
-			throw new Exception("PCML program path should not have more than 3 slash-delimited parts.");
+			throw new \Exception("PCML program path should not have more than 3 slash-delimited parts.");
 		}
 
 		switch ($numParts) {
@@ -468,7 +469,7 @@ class DataDescription
 			    break;
 
 			default:
-			    throw new Exception("PCML program path has invalid number of parts (<1 or >3).");
+			    throw new \Exception("PCML program path has invalid number of parts (<1 or >3).");
 				break;
 
 		} //(switch)
@@ -1123,18 +1124,18 @@ class DataDescriptionPcml extends DataDescription
 		}
 
         //program name is stored as: /pcml/program name="/qsys.lib/eacdemo.lib/teststruc.pgm"
-        $xmlObj = new SimpleXMLElement($pcml);
+        $xmlObj = new \SimpleXMLElement($pcml);
 
         // get root node and make sure it's named 'pcml'
         if(!isset($xmlObj[0]) || ($xmlObj[0]->getName() != 'pcml')) {
-        	throw new Exception("PCML file must contain pcml tag");
+        	throw new \Exception("PCML file must contain pcml tag");
         }
 
         $pcmlObj = $xmlObj[0];
 
         // get program name, path, etc.
         if(!isset($pcmlObj->program) || (!$pcmlObj->program)) {
-        	throw new Exception("PCML file must contain program tag");
+        	throw new \Exception("PCML file must contain program tag");
         }
         $programNode = $pcmlObj->program;
 
