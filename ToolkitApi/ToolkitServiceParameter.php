@@ -169,7 +169,7 @@ class ProgramParameter
                 $value = $ds;
 
 			} else {
-				throw new Exception("Empty array passed as value for {$varName}");
+				throw new \Exception("Empty array passed as value for {$varName}");
 			} //(if count)
 
 		} //(is array)
