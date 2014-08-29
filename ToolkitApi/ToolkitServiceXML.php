@@ -1,6 +1,8 @@
 <?php
 namespace ToolkitApi;
 
+use ToolkitApi\DateTimeApi;
+
 class XMLWrapper {
 
 	protected $encoding ='';
