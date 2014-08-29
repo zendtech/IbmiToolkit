@@ -1,7 +1,8 @@
 <?php
 namespace ToolkitApi;
 
-include_once 'ToolkitService.php';
+use ToolkitApi\ToolkitService;
+use ToolkitApi\TmpUserSpace;
 
 class DateTimeApi
 {
@@ -367,7 +368,7 @@ class UserSpace{
     // CW version. $param must be an array of ProgramParameter objects or a single ProgramParameter object.
     public function WriteUserSpaceCw($startPos = 1, ProgramParameter $param){
     /*	if (!is_object($param) && !is_array($param)) {
-    		throw new Exception('Parameter passed to WriteUserSpaceCw must be an array or ProgramParameter object.');
+    		throw new \Exception('Parameter passed to WriteUserSpaceCw must be an array or ProgramParameter object.');
     	} 
     */
 
@@ -411,7 +412,7 @@ class UserSpace{
 			
 			// must be a ProgramParameter
 			if (!is_object($receiveStructure)) {
-				throw new Exception('Parameter 3 passed to ReadUserSpace must be a ProgramParameter object.');
+				throw new \Exception('Parameter 3 passed to ReadUserSpace must be a ProgramParameter object.');
 			} 
 			$labelForSizeOfInputData = 'dssize';
 //
@@ -501,7 +502,7 @@ class TmpUserSpace extends UserSpace {
 		parent::__construct($ToolkitService);
 		
 		if( !$this->CreateUserSpace($this->generate_name(), $UsLib, $DftUsSize)){			
-			throw new Exception($this->getError());
+			throw new \Exception($this->getError());
 		}
 		else 	
 			$this->TMPUSName  = sprintf("%-10s%-10s", $this->getUSName(), $UsLib);
@@ -582,7 +583,7 @@ class DataQueue{
 			 
 		if( !$this->ToolkitService->CLCommand($cmd)){	
 			$this->ErrMessage =  "Create Data Queue failed.". $this->ToolkitService->getLastError();
-			throw new Exception($this->ErrMessage);         
+			throw new \Exception($this->ErrMessage);         
        		
        		 
 		}
@@ -598,7 +599,7 @@ class DataQueue{
 				       
 		if( !$this->ToolkitService->CLCommand($cmd)){
 			$this->ErrMessage =  "Delete Data Queue failed.". $this->ToolkitService->getLastError();
-			throw new Exception($this->ErrMessage);		              
+			throw new \Exception($this->ErrMessage);		              
        		
 		}
 		
@@ -1241,7 +1242,7 @@ class SystemValues   {
 	    // TODO get CPF code
 		if( !$this->ToolkitSrvObj->CLCommand($cmd)){	
 			$this->ErrMessage =  "Create Data Area failed.". $this->ToolkitSrvObj->getLastError();
-			throw new Exception($this->ErrMessage);        
+			throw new \Exception($this->ErrMessage);        
 		}
 		return true;	     
 	}
@@ -1274,7 +1275,7 @@ class SystemValues   {
 		$dataAreaName = trim(strtoupper($dataAreaName));
 		
 		if( $dataAreaName == '')
-			throw new Exception("Data Area name parameter should be defined ");
+			throw new \Exception("Data Area name parameter should be defined ");
 
 		// no library allowed for these special values.
 		if (in_array($dataAreaName, array('*LDA', '*GDA', '*PDA'))) {
@@ -1403,7 +1404,7 @@ class SystemValues   {
 				         
 		if( !$this->ToolkitSrvObj->CLCommand($cmd)){	
 			$this->ErrMessage =  "Write into Data Area failed.". $this->ToolkitSrvObj->getLastError();
-			throw new Exception($this->ErrMessage);        
+			throw new \Exception($this->ErrMessage);        
 		}			         
 		
     }
@@ -1416,7 +1417,7 @@ class SystemValues   {
 	
 		if( !$this->ToolkitSrvObj->CLCommand($cmd)){	
 			$this->ErrMessage =  "Delete Data Area failed.". $this->ToolkitSrvObj->getLastError();
-			throw new Exception($this->ErrMessage);        
+			throw new \Exception($this->ErrMessage);        
 		}		    
 	}
 	
