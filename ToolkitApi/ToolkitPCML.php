@@ -1,8 +1,8 @@
 <?php
 namespace ToolkitApi;
 
-require_once 'ToolkitService.php';
-require_once 'ToolkitServiceParameter.php';
+use ToolkitApi\ToolkitService;
+use ToolkitApi\ProgramParameter;
 
 /*
  * Functionality for parsing PCML
@@ -66,18 +66,18 @@ class ToolkitPcml
 		}
 
         //program name is stored as: /pcml/program name="/qsys.lib/eacdemo.lib/teststruc.pgm"
-        $xmlObj = new SimpleXMLElement($pcml);
+        $xmlObj = new \SimpleXMLElement($pcml);
 
         // get root node and make sure it's named 'pcml'
         if(!isset($xmlObj[0]) || ($xmlObj[0]->getName() != 'pcml')) {
-        	throw new Exception("PCML file must contain pcml tag");
+        	throw new \Exception("PCML file must contain pcml tag");
         }
 
         $pcmlObj = $xmlObj[0];
 
         // get program name, path, etc.
         if(!isset($pcmlObj->program) || (!$pcmlObj->program)) {
-        	throw new Exception("PCML file must contain program tag");
+        	throw new \Exception("PCML file must contain program tag");
         }
         $programNode = $pcmlObj->program;
 
@@ -198,7 +198,7 @@ class ToolkitPcml
 		$path = str_replace(array('.PGM', '.SRVPGM','.LIB'), array('', '', ''), $path);
 	
 		if(!$path) {
-		throw new Exception("PCML program path is required.");
+		throw new \Exception("PCML program path is required.");
 		}
 	
 		$result = array('lib'=>'', 'obj'=>'');
@@ -206,7 +206,7 @@ class ToolkitPcml
 			$numParts = count($parts);
 	
 		if($numParts > 3) {
-		throw new Exception("PCML program path should not have more than 3 slash-delimited parts.");
+		throw new \Exception("PCML program path should not have more than 3 slash-delimited parts.");
 		}
 	
 		switch ($numParts) {
@@ -228,7 +228,7 @@ class ToolkitPcml
 			break;
 	
 			default:
-			throw new Exception("PCML program path has invalid number of parts (<1 or >3).");
+			throw new \Exception("PCML program path has invalid number of parts (<1 or >3).");
 			break;
 	
 		} //(switch)
@@ -239,7 +239,7 @@ class ToolkitPcml
 	
 
     // given a single ->data or ->struct element, return a parameter object in the new toolkit style.
-    public function singlePcmlToParam(SimpleXmlElement $dataElement)
+    public function singlePcmlToParam(\SimpleXmlElement $dataElement)
     {
     
     	$tagName = $dataElement->getName();
