@@ -2,8 +2,27 @@
 namespace ToolkitApi;
 
 include_once 'ToolkitServiceSet.php';
-include_once 'ToolkitServiceXML.php';
-include_once 'ToolkitServiceParameter.php';
+
+use ToolkitApi\XMLWrapper;
+use ToolkitApi\ProgramParameter;
+use ToolkitApi\httpsupp;
+use ToolkitApi\db2supp;
+use ToolkitApi\odbcsupp;
+
+use ToolkitApi\CharParam; // part of ToolkitServiceParameter.php
+use ToolkitApi\Int32Param; // part of ToolkitServiceParameter.php
+use ToolkitApi\SizeParam; // part of ToolkitServiceParameter.php
+use ToolkitApi\SizePackParam; // part of ToolkitServiceParameter.php
+use ToolkitApi\Int64Param; // part of ToolkitServiceParameter.php
+use ToolkitApi\UInt32Param; // part of ToolkitServiceParameter.php
+use ToolkitApi\UInt64Param; // part of ToolkitServiceParameter.php
+use ToolkitApi\FloatParam; // part of ToolkitServiceParameter.php
+use ToolkitApi\RealParam; // part of ToolkitServiceParameter.php
+use ToolkitApi\PackedDecParam; // part of ToolkitServiceParameter.php
+use ToolkitApi\ZonedParam; // part of ToolkitServiceParameter.php
+use ToolkitApi\HoleParam; // part of ToolkitServiceParameter.php
+use ToolkitApi\BinParam; // part of ToolkitServiceParameter.php
+use ToolkitApi\DataStructure; // part of ToolkitServiceParameter.php
 
 define('CONFIG_FILE', 'toolkit.ini');
 
@@ -314,7 +333,7 @@ catch (Exception $e)
 
 				$this->debugLog("\nFailed to connect. sqlState: $sqlState. error: $this->error");
 				// added sqlstate
-				throw new Exception($this->error, (int)$sqlState);
+				throw new \Exception($this->error, (int)$sqlState);
 		  }
 		$this->conn = $conn;
 
@@ -323,7 +342,7 @@ catch (Exception $e)
 	} //(protected function __construct)
 
 	public function __clone ()	{
-		throw new Exception(" Use getInstance() function according to create a new ToolkitService object");
+		throw new \Exception(" Use getInstance() function according to create a new ToolkitService object");
 	}
 
 	// whether we're using CW (compatibility wrapper) or not
@@ -357,7 +376,7 @@ catch (Exception $e)
 			return $this->_dataSize[$plugSize];
 		}
 		
-		throw new Exception("plugSize '$plugSize' is not valid. Try one of these: " . $this->validPlugSizeList);
+		throw new \Exception("plugSize '$plugSize' is not valid. Try one of these: " . $this->validPlugSizeList);
 
 	} //(protected function plugSizeToBytes($size) )
 	
@@ -374,7 +393,6 @@ catch (Exception $e)
 	protected function chooseTransport($transportName = '') {
 		
 		if ($transportName == 'http') {
-			include_once 'httpsupp.php';
 			$transport =  new httpsupp();
 			$this->setTransport($transport);
 			
@@ -395,7 +413,7 @@ catch (Exception $e)
 		$extensionName = ($transportType) ? $transportType : DBPROTOCOL; 
 
 		if (!extension_loaded($extensionName)) {
-			throw new Exception("Extension $extensionName not loaded.");
+			throw new \Exception("Extension $extensionName not loaded.");
 		}
 		
 		// extension is loaded. Set up db transport objects.
@@ -403,7 +421,6 @@ catch (Exception $e)
 		if ( $extensionName === 'ibm_db2') {
 
 			    $this->setOptions(array('plugPrefix' => 'iPLUG'));
-		 	    include_once 'Db2supp.php';
 		        $this->db  = new db2supp();
 		        
 		        $this->setDb2(); // not used in toolkit anymore but keep for backwards compat.
@@ -413,7 +430,6 @@ catch (Exception $e)
 			
 			    //for odbc will be different default stored procedure call
 			    $this->setOptions(array('plugPrefix' => 'iPLUGR')); // "R" = "result set" which is how ODBC driver returns param results
-			    include_once 'Odbcsupp.php';
 			    $this->db =  new odbcsupp();
 
 		} //(extension name)
@@ -523,7 +539,7 @@ catch (Exception $e)
         } //(if (array_key_exists($optionName, $this->_options))    
 
     	// nothing matched
-        Throw new Exception("Invalid option requested: $optionName");
+        Throw new \Exception("Invalid option requested: $optionName");
     	
 	} //(public function getToolkitServiceParam( $paramName ))
 
@@ -1700,7 +1716,7 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
   	   		$this->cpfErr = $this->db->getErrorCode();
   	   		$this->error = $this->db->getErrorMsg();
   	   	
-  	   		throw new Exception($this->error, (int)$this->cpfErr);
+  	   		throw new \Exception($this->error, (int)$this->cpfErr);
   	 }
      return $Txt;
   }
@@ -1710,7 +1726,7 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 		if (is_bool($isPersistent)) {
 			$this->_isPersistent = $isPersistent;
 		} else {
-			throw new Exception("setIsPersistent: boolean expected");
+			throw new \Exception("setIsPersistent: boolean expected");
 		}
 	} //(setIsPersistent)
 
