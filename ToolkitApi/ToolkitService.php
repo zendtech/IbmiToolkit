@@ -26,6 +26,11 @@ use ToolkitApi\DataStructure; // part of ToolkitServiceParameter.php
 
 define('CONFIG_FILE', 'toolkit.ini');
 
+/**
+ * Class ToolkitService
+ *
+ * @package ToolkitApi
+ */
 class ToolkitService {
 	
 	const VERSION =  "1.6.0"; // version number for front-end PHP toolkit
