@@ -3,8 +3,8 @@ namespace ToolkitApi;
 
 class db2supp {
 
-    // TODO define common transport class/interface extended/implemented by all transports 	
-    // They have a lot in common.	
+    // @todo define common transport class/interface extended/implemented by all transports 
+    // They have a lot in common.
         
     private $last_errorcode = ''; // SQL State
     private $last_errormsg = ''; // SQL Code with message
@@ -14,7 +14,7 @@ class db2supp {
     {
     
         /*
-         * TODO Throw in your "transport/adapter" framework for a real OO look and feel ....
+         * @todo Throw in your "transport/adapter" framework for a real OO look and feel ....
     Throw new Exception( "Fail execute ($sql) ".db2_stmt_errormsg(),db2_stmt_error());
     ... and retrieve via try/catch + Exception methods.
          */
@@ -80,7 +80,7 @@ class db2supp {
     {
         // set error code and message based on last db2 prepare or execute error.
         
-        // TODO: consider using GET DIAGNOSTICS for even more message text:
+        // @todo: consider using GET DIAGNOSTICS for even more message text:
         // http://publib.boulder.ibm.com/infocenter/iseries/v5r4/index.jsp?topic=%2Frzala%2Frzalafinder.htm
         if ($stmt) {
             // specific statement resource was provided
@@ -89,7 +89,7 @@ class db2supp {
         } else {
             // no specific statemtent. Get last error
             $this->setErrorCode(db2_stmt_error());
-            $this->setErrorMsg(db2_stmt_errormsg());	
+            $this->setErrorMsg(db2_stmt_errormsg());
         } //(if ($stmt))
         
     }
@@ -114,14 +114,14 @@ class db2supp {
      * 
      * @todo this function seems strange, needs cleaned up
      */
-    public function execXMLStoredProcedure( $conn, $sql, $bindArray )										
+    public function execXMLStoredProcedure( $conn, $sql, $bindArray )
     {
         $internalKey = $bindArray['internalKey'];
         $controlKey = $bindArray['controlKey'];
         $inputXml   = $bindArray['inputXml'];
         $outputXml  = $bindArray['outputXml'];
         
-        // TODO error doesn't properly bubble up to top level.
+        // @todo error doesn't properly bubble up to top level.
         // But added some error handling in ToolkitService.php, ExecuteProgram, looking at error code.
         $crsr = @db2_prepare ( $conn, $sql);
         
@@ -144,7 +144,7 @@ class db2supp {
             
             $ret = db2_bind_param ( $crsr, $param['position'], $param['name'], $param['inout'] );
             if (!$ret) {
-                // unable to bind a param. Set error and exit	
+                // unable to bind a param. Set error and exit
                 $this->setStmtError($crsr);
                 return false;
             }
@@ -165,27 +165,26 @@ class db2supp {
     
     /*returns a first column from sql stmt result set*/
     // used in one place: iToolkitService's ReadSPLFData().
-    // TODO eliminate this method if possible.
+    // @todo eliminate this method if possible.
     public function executeQuery($conn, $sql )
     {
-         $Txt ='';
-         $stmt = db2_exec($conn, $sql, array('cursor' => DB2_SCROLLABLE));	  
-         if(is_resource($stmt )) {	  	
-              while (true) {  		  		
-                $row = db2_fetch_row( $stmt );	  		
-                if(!$row) 
-                   break;  		   	
+        $Txt ='';
+        $stmt = db2_exec($conn, $sql, array('cursor' => DB2_SCROLLABLE));
+        if(is_resource($stmt )) {
+            while (true) {
+                $row = db2_fetch_row( $stmt );
+                if(!$row)
+                   break;
             
                 $column = db2_result($stmt, 0);
                 $Txt[] = $column;
-                 
-              }
-         } else {
-             //$err = db2_stmt_error();
-             $this->setStmtError();
-             Throw new \Exception( "Failure executing SQL: ($sql) ".db2_stmt_errormsg(), db2_stmt_error()); 
-         }
-            
-          return $Txt;
+            }
+        } else {
+            //$err = db2_stmt_error();
+            $this->setStmtError();
+            Throw new \Exception( "Failure executing SQL: ($sql) ".db2_stmt_errormsg(), db2_stmt_error()); 
+        }
+         
+        return $Txt;
     }
 }
