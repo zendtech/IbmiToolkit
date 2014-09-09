@@ -37,7 +37,7 @@ versions did not use Composer.
 [releases](https://github.com/zendtech/IbmiToolkit/releases). Save downloaded file 
 to desired location. (Ex.- /var/www/html or /usr/local/zend/var/apps/http/{sitename}/80/_docroot_/0/)
 
-2. Unzip the content to desired location. (Example path used below will vary.)
+2. Unzip the content to desired location via terminal. (Example path used below will vary.)
 
     ```console
     $ cd /var/www/html/myproject/
@@ -47,13 +47,13 @@ to desired location. (Ex.- /var/www/html or /usr/local/zend/var/apps/http/{siten
 3. Install Composer (add composer.phar) to project location, along side the file 
 composer.json, as outlined at https://getcomposer.org/download
     
-4. Run Composer install to gain classmap autoloading.
+4. Run Composer install via terminal to gain classmap autoloading.
     
     ```console
     $ php composer.phar install
     ```
 
-5. Include the Composer generated autoloader in application.
+5. Include the Composer generated autoloader into PHP application.
     
     ```php
     require 'vendor/autoload.php';
