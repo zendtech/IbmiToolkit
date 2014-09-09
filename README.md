@@ -33,23 +33,32 @@ versions did not use Composer.
 
 ### Standalone
 
-1. Download the toolkit from one of the stables [releases](https://github.com/zendtech/IbmiToolkit/releases).
+1. Download the toolkit (tar.gz or zip) from one of the stables 
+[releases](https://github.com/zendtech/IbmiToolkit/releases). Save downloaded file 
+to desired location. (Ex.- /var/www/html or /usr/local/zend/var/apps/http/{sitename}/80/_docroot_/0/)
 
-2. Install Composer as outlined at https://getcomposer.org/download
+2. Unzip the content to desired location.
+
+    ```console
+    $ cd /var/www/html/
+    $ tar -xzvf 1.6.0.tar.gz
+    ```
+
+3. Install Composer (composer.phar) in project location, along side the file composer.json, as outlined at https://getcomposer.org/download
     
-3. Run Composer install to gain classmap autoloading.
+4. Run Composer install to gain classmap autoloading.
     
     ```console
     $ php composer.phar install
     ```
 
-4. Include the Composer generated autoloader in your application.
+5. Include the Composer generated autoloader in your application.
     
     ```php
     require 'vendor/autoload.php';
     ```
 
-5. Now the toolkit may be used via classmap, and as outlined at 
+6. Now the toolkit may be used as outlined at 
 http://files.zend.com/help/Zend-Server-6-IBMi/zend-server.htm#php_toolkit_xml_service_functions.htm
 
 ### Integrated
@@ -57,13 +66,19 @@ http://files.zend.com/help/Zend-Server-6-IBMi/zend-server.htm#php_toolkit_xml_se
 1. If your app already uses Composer you simply need to update the composer.json 
 as specified at https://packagist.org/packages/zendtech/ibmitoolkit
     
-2. If you do not have Composer in your project you will need to add it. More info 
+2. If you do not have Composer in your project you will need to add it as with number 3 above. More info 
 can be found at https://getcomposer.org
     
-3. Run Composer update, or install if things are fresh.
+3. Run Composer update if your project already has a composer.lock generated, or install if things are fresh.
     
     ```console
     $ php composer.phar update
+    ```
+
+    or
+
+    ```console
+    $ php composer.phar install
     ```
 
 4. Now the toolkit may be used via namespaces, and as outlined at 
