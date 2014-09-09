@@ -1,41 +1,40 @@
-IbmiToolkit
+IBMiToolkit
 ==========
 
-travis-ci status coming soon!
+travis-ci status coming soon, which will indicate stability of the master branch!
 
-Introduction
-------------
-
-For production systems please do not use the master branch.  For the latest, or 
-a previous, stable releases please see [releases](https://github.com/zendtech/IbmiToolkit/releases).
+For production systems please do not use the master branch.  Instead use the latest 
+[stable release](https://github.com/zendtech/IbmiToolkit/releases/latest).
 
 This project was originally hosted at https://code.google.com/p/zend-ibmi-tk-cw/ 
 where older versions still reside. As of Mar. 3, 2014 it is now maintained here.
 
-This toolkit is a PHP-based front end to XMLSERVICE (http://www.youngiprofessionals.com/wiki/XMLSERVICE). 
-Both parts of the toolkit are shipped with Zend Server. Being open source, they 
-can also be downloaded, installed, and upgraded separately.
+Introduction
+------------
+
+This IBMiToolkit is a PHP-based front end to [XMLSERVICE](http://www.youngiprofessionals.com/wiki/XMLSERVICE).
 
 Zend Server
 -----------
 
-The toolkit is already pre-installed with Zend Server, so installation may not be 
-needed for that environment.
+XMLSERVICE and the IBMiToolkit are already shipped with Zend Server. But being 
+open source they can also be downloaded, installed, and upgraded separately.
 
 Autoloading
 -----------
 
-Versions larger than 1.6 use a classmap to perform autoloading.  Therefore it may 
-be used standalone, or can be pulled into a projects using Composer.
+Versions larger than 1.6 use a classmap (a way to map classes to files for easier finding) 
+to perform [autoloading](http://php.net/manual/en/language.oop5.autoload.php) so 
+the user no longer needs to do it.  Therefore the IBMiToolkit may be used standalone, 
+or may be pulled into a projects using [Composer](https://getcomposer.org/).
 
 NOTE: The installation methods below are for versions greater than 1.6. Prior 
 versions did not use Composer.
 
 #### Standalone Method
 
-1. Download the toolkit (tar.gz or zip) from one of the stables 
-[releases](https://github.com/zendtech/IbmiToolkit/releases). Save downloaded file 
-to desired location. (Ex.- /var/www/html or /usr/local/zend/var/apps/http/{sitename}/80/_docroot_/0/)
+1. Download the IBMiToolkit (tar.gz or zip) [stable release](https://github.com/zendtech/IbmiToolkit/releases/latest). 
+Save downloaded file to desired location. (Ex.- /var/www/html or /usr/local/zend/var/apps/http/{sitename}/80/_docroot_/0/)
 
 2. Unzip the content to desired location via terminal. (Example path used below will vary.)
 
@@ -59,7 +58,7 @@ composer.json, as outlined at https://getcomposer.org/download
     require 'vendor/autoload.php';
     ```
 
-6. Toolkit may now be used via namespaces, and as outlined at 
+6. IBMiToolkit may now be used via namespaces, and as outlined at 
 http://files.zend.com/help/Zend-Server-6-IBMi/zend-server.htm#php_toolkit_xml_service_functions.htm
 
 #### Integrated Method
@@ -82,5 +81,5 @@ found at https://getcomposer.org
     $ php composer.phar install
     ```
 
-4. Toolkit may now be used via namespaces, and as outlined at 
+4. IBMiToolkit may now be used via namespaces, and as outlined at 
 http://files.zend.com/help/Zend-Server-6-IBMi/zend-server.htm#php_toolkit_xml_service_functions.htm
