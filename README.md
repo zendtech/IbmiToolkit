@@ -37,14 +37,15 @@ versions did not use Composer.
 [releases](https://github.com/zendtech/IbmiToolkit/releases). Save downloaded file 
 to desired location. (Ex.- /var/www/html or /usr/local/zend/var/apps/http/{sitename}/80/_docroot_/0/)
 
-2. Unzip the content to desired location.
+2. Unzip the content to desired location. (Example path used below will vary.)
 
     ```console
-    $ cd /var/www/html/
+    $ cd /var/www/html/myproject/
     $ tar -xzvf 1.6.0.tar.gz
     ```
 
-3. Install Composer (composer.phar) in project location, along side the file composer.json, as outlined at https://getcomposer.org/download
+3. Install Composer (add composer.phar) to project location, along side the file 
+composer.json, as outlined at https://getcomposer.org/download
     
 4. Run Composer install to gain classmap autoloading.
     
@@ -52,13 +53,13 @@ to desired location. (Ex.- /var/www/html or /usr/local/zend/var/apps/http/{siten
     $ php composer.phar install
     ```
 
-5. Include the Composer generated autoloader in an application.
+5. Include the Composer generated autoloader in application.
     
     ```php
     require 'vendor/autoload.php';
     ```
 
-6. Now the toolkit may be used as outlined at 
+6. Toolkit may now be used via namespaces, and as outlined at 
 http://files.zend.com/help/Zend-Server-6-IBMi/zend-server.htm#php_toolkit_xml_service_functions.htm
 
 #### Integrated Method
@@ -81,6 +82,5 @@ found at https://getcomposer.org
     $ php composer.phar install
     ```
 
-4. Now the toolkit may be used via namespaces, and as outlined at 
+4. Toolkit may now be used via namespaces, and as outlined at 
 http://files.zend.com/help/Zend-Server-6-IBMi/zend-server.htm#php_toolkit_xml_service_functions.htm
-
