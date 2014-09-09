@@ -20,18 +20,18 @@ Zend Server
 -----------
 
 The toolkit is already pre-installed with Zend Server, so installation may not be 
-needed for your environment.
+needed for that environment.
 
 Autoloading
-------------
+-----------
 
 Versions larger than 1.6 use a classmap to perform autoloading.  Therefore it may 
-be used standalone, or can be pulled into your current projects using Composer.
+be used standalone, or can be pulled into a projects using Composer.
 
 NOTE: The installation methods below are for versions greater than 1.6. Prior 
 versions did not use Composer.
 
-### Standalone
+#### Standalone Method
 
 1. Download the toolkit (tar.gz or zip) from one of the stables 
 [releases](https://github.com/zendtech/IbmiToolkit/releases). Save downloaded file 
@@ -52,7 +52,7 @@ to desired location. (Ex.- /var/www/html or /usr/local/zend/var/apps/http/{siten
     $ php composer.phar install
     ```
 
-5. Include the Composer generated autoloader in your application.
+5. Include the Composer generated autoloader in an application.
     
     ```php
     require 'vendor/autoload.php';
@@ -61,15 +61,15 @@ to desired location. (Ex.- /var/www/html or /usr/local/zend/var/apps/http/{siten
 6. Now the toolkit may be used as outlined at 
 http://files.zend.com/help/Zend-Server-6-IBMi/zend-server.htm#php_toolkit_xml_service_functions.htm
 
-### Integrated
+#### Integrated Method
 
-1. If your app already uses Composer you simply need to update the composer.json 
+1. If an app already uses Composer simply update the composer.json 
 as specified at https://packagist.org/packages/zendtech/ibmitoolkit
     
-2. If you do not have Composer in your project you will need to add it as with number 3 above. More info 
-can be found at https://getcomposer.org
+2. If Composer is not used in a project add it as with 3 above. More info can be 
+found at https://getcomposer.org
     
-3. Run Composer update if your project already has a composer.lock generated, or install if things are fresh.
+3. Run Composer update if a project already has a composer.lock generated, or install if things are fresh.
     
     ```console
     $ php composer.phar update
