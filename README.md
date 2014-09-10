@@ -1,7 +1,7 @@
 IBMiToolkit
 ==========
 
-[![Build Status](https://travis-ci.org/adamculp/api-consumer.svg?branch=master)](https://travis-ci.org/adamculp/api-consumer)
+[![Build Status](https://travis-ci.org/zendtech/ibmiToolkit.svg?branch=master)](https://travis-ci.org/zendtech/ibmiToolkit)
 
 For production systems please do not use the master branch.  Instead use the latest 
 [stable release](https://github.com/zendtech/IbmiToolkit/releases/latest).
