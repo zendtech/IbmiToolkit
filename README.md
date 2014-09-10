@@ -1,7 +1,7 @@
 IBMiToolkit
 ==========
 
-travis-ci status coming soon, which will indicate stability of the master branch!
+[![Build Status](https://travis-ci.org/adamculp/api-consumer.svg?branch=master)](https://travis-ci.org/adamculp/api-consumer)
 
 For production systems please do not use the master branch.  Instead use the latest 
 [stable release](https://github.com/zendtech/IbmiToolkit/releases/latest).
@@ -31,9 +31,16 @@ or may be pulled into a projects using [Composer](https://getcomposer.org/).
 NOTE: The installation methods below are for versions greater than 1.6. Prior 
 versions did not use Composer.
 
+Installation
+------------
+
+The methods outlined below are intended for Development environments, and possibly 
+Testing and/or Staging environments. However, it is recommended to deploy a prepared 
+package to a Production environment rather than use Composer.
+
 #### Standalone Method
 
-1. Download the IBMiToolkit (tar.gz or zip) [stable release](https://github.com/zendtech/IbmiToolkit/releases/latest). 
+1. Download a IBMiToolkit (tar.gz or zip) [stable release](https://github.com/zendtech/IbmiToolkit/releases/latest). 
 Save downloaded file to desired location. (Ex.- /var/www/html or /usr/local/zend/var/apps/http/{sitename}/80/_docroot_/0/)
 
 2. Unzip the content to desired location via terminal. (Example path used below will vary.)
