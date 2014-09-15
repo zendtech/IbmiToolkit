@@ -23,24 +23,21 @@ namespace ToolkitApi;
  *      Options +ExecCGI
  * </Directory>
  * 
+ * @todo define common transport class/interface extended/implemented by all transports. They have much in common.
+ * 
  * @package ToolkitApi
  */
 class httpsupp
 {
-    // @todo define common transport class/interface extended/implemented by all transports 
-    // They have much in common.
-        
-    protected $last_errorcode = ''; // SQL State
-    protected $last_errormsg = ''; // SQL Code with message
-    
-    protected $_ipc = null;
-    protected $_ctl = null;
-    protected $_url = null;
-    protected $_db = null;
-    protected $_user = null;
-    protected $_pw = null;
-    
-    protected $_debug = null; // @todo see what for
+    protected $last_errorcode;
+    protected $last_errormsg;
+    protected $_ipc;
+    protected $_ctl;
+    protected $_url;
+    protected $_db;
+    protected $_user;
+    protected $_pw;
+    protected $_debug;
     
     // parms [$ipc, $ctl, $i5rest, $debug]:
     //   $ipc - route to XMLSERVICE job (/tmp/xmlibmdb2)
@@ -53,12 +50,19 @@ class httpsupp
     //     *all - dump XML input/output
     public function __construct($ipc='/tmp/xmldb2', $ctl='*sbmjob', $url='http://example.com/cgi-bin/xmlcgi.pgm', $debug='*none')
     {
-        // empty
+        $this->setIpc($ipc);
+        $this->setCtl($ctl);
+        $this->setUrl($url);
+        $this->_debug = $debug;
     }
-    
-    public function send($xmlIn,$outSize)
+
+    /**
+     * @param $xmlIn
+     * @param $outSize
+     * @return string
+     */
+    public function send($xmlIn, $outSize)
     {
-        // http POST parms
         $clobIn  = $xmlIn;
         $clobOut = $outSize;
         $postdata = http_build_query(
@@ -102,69 +106,104 @@ class httpsupp
         
         return $clobOut;
     }
-    
+
+    /**
+     * @return string
+     */
     public function getErrorCode()
     {
-    
         return $this->last_errorcode;
     }
-    
+
+    /**
+     * @return string
+     */
     public function getErrorMsg()
     {
-    
         return $this->last_errormsg;
     }
-    
+
+    /**
+     * @param $errorCode
+     */
     protected function setErrorCode($errorCode)
     {
         $this->last_errorcode = $errorCode;
     }
-    
+
+    /**
+     * @param $errorMsg
+     */
     protected function setErrorMsg($errorMsg)
     {
         $this->last_errormsg = $errorMsg;
     }
-    
+
+    /**
+     * @param $ipc
+     */
     public function setIpc($ipc)
     {
         $this->_ipc = $ipc;
     }
-    
+
+    /**
+     * @return null
+     */
     public function getIpc()
     {
         return $this->_ipc;
     }
-    
+
+    /**
+     * @param string $ctl
+     */
     public function setCtl($ctl = '')
     {
         $this->_ctl = $ctl;
     }
-    
+
+    /**
+     * @return null
+     */
     public function getCtl()
     {
         return $this->_ctl;
     }
-    
+
+    /**
+     * @param string $url\
+     */
     public function setUrl($url = '')
     {
         $this->_url = $url;
     }
-    
+
+    /**
+     * @return null
+     */
     public function getUrl()
     {
         return $this->_url;
     }
     
-    // @todo shared transport method
+    /**
+     * 
+     * @todo shared transport method
+     * 
+     * @param $xml
+     * @return string
+     */
     public function driverJunkAway($xml)
     {
         // trim blanks
         $clobOut = trim($xml);
-        if (! $clobOut) return $clobOut;
+        if (!$clobOut) return $clobOut;
     
         // result set has extra data (junk)
         $fixme = '</script>';
         $pos = strpos($clobOut,$fixme);
+        
         if ($pos > -1) {
             $clobOut = substr($clobOut,0,$pos+strlen($fixme));
         } else { // maybe error/performance report
@@ -175,38 +214,58 @@ class httpsupp
                 $clobOut = substr($clobOut,0,$pos+strlen($fixme));
             }
         }
+        
         return $clobOut;
     }
-    
+
+    /**
+     * @param string $db
+     * @param $user
+     * @param $pw
+     * @param array $options
+     * @return $this
+     */
     public function http_connect($db = '*LOCAL', $user, $pw, $options=array())
     {
-        if (!$db) {
-            $db = '*LOCAL';
-        }
-        
         $this->_db = $db;
         $this->_user = $user;
         $this->_pw = $pw;
         
         return $this;
     }
-    
+
+    /**
+     * @param string $database
+     * @param $user
+     * @param $password
+     * @param null $options
+     * @return httpsupp
+     */
     public function connect($database = '*LOCAL', $user, $password, $options = null)
     {
         return $this->http_connect($database, $user, $password, $options = array());
     
     }
-    
+
+    /**
+     * @return null
+     */
     protected function getUser()
     {
         return $this->_user;
     }
-    
+
+    /**
+     * @return null
+     */
     protected function getPw()
     {
         return $this->_pw;
     }
-    
+
+    /**
+     * @return null
+     */
     protected function getDb()
     {
         return $this->_db;
