@@ -1,104 +1,128 @@
 <?php
 namespace ToolkitApi;
 
-class db2supp {
+/**
+ * Class db2supp
+ * 
+ * @todo define common transport class/interface extended/implemented by all transports
+ *
+ * @package ToolkitApi
+ */
+class db2supp
+{
+    private $last_errorcode;
+    private $last_errormsg;
 
-    // @todo define common transport class/interface extended/implemented by all transports 
-    // They have a lot in common.
-        
-    private $last_errorcode = ''; // SQL State
-    private $last_errormsg = ''; // SQL Code with message
-    
-    // 'persistent' is one option
+    /**
+     * 
+     * 
+     * @todo Throw in your "transport/adapter" framework for a real OO look and feel ....
+     * Throw new Exception("Fail execute ($sql) ".db2_stmt_errormsg(),db2_stmt_error());
+     * ... and retrieve via try/catch + Exception methods.
+     * 
+     * @param $database
+     * @param $user
+     * @param $password
+     * @param null $options 'persistent' is one option
+     * @return bool
+     */
     public function connect($database, $user, $password, $options = null)
     {
-    
-        /*
-         * @todo Throw in your "transport/adapter" framework for a real OO look and feel ....
-    Throw new Exception( "Fail execute ($sql) ".db2_stmt_errormsg(),db2_stmt_error());
-    ... and retrieve via try/catch + Exception methods.
-         */
-        
-        // check for blank password with non-blank user. If so, throw the same error that wrong password would generate.
         // Compensate for older ibm_db2 driver that may not do this check.
         if ($user && empty($password)) {
-            
             $this->setErrorCode('08001');
             $this->setErrorMsg('Authorization failure on distributed database connection attempt. SQLCODE=-30082');
             
             return false;
         }
         
-        $connectFunc = 'db2_connect'; // default
         if ($options) {
             if ((isset($options['persistent'])) && $options['persistent']) {
-                $connectFunc = 'db2_pconnect';
+                $conn = db2_pconnect($database, $user, $password);
+            } else {
+                $conn = db2_connect($database, $user, $password);
+            }
+            
+            if (is_resource($conn)) {
+                return $conn;
             }
         }
         
-        // could be connect or pconnect
-        $conn = $connectFunc ( $database, $user, $password );
-    
-        if(is_resource($conn)) {
-            return $conn;
-        }
-      
-        // error  
         $this->setErrorCode(db2_conn_error());
         $this->setErrorMsg(db2_conn_errormsg());
           
         return false;
     }
-    
-    public function disconnect( $conn )
+
+    /**
+     * @param $conn
+     */
+    public function disconnect($conn)
     {
-        if(is_resource($conn)) {
+        if (is_resource($conn)) {
             db2_close($conn);
         }
     }
     
-    // disconnect, truly close, a persistent connection.
-    public function disconnectPersistent( $conn )
+    /**
+     * disconnect, truly close, a persistent connection.
+     * 
+     * @param $conn
+     */
+    public function disconnectPersistent($conn)
     {
-        if(is_resource($conn)) {
+        if (is_resource($conn)) {
             db2_pclose($conn);
         }
     }
-    
+
+    /**
+     * @return string
+     */
     public function getErrorCode()
     {
         return $this->last_errorcode;
     }
-    
-    // added
+
+    /**
+     * @return string
+     */
     public function getErrorMsg()
     {
         return $this->last_errormsg;
     }
-    
+
+    /**
+     * set error code and message based on last db2 prepare or execute error.
+     * 
+     * @todo: consider using GET DIAGNOSTICS for even more message text:
+     * http://publib.boulder.ibm.com/infocenter/iseries/v5r4/index.jsp?topic=%2Frzala%2Frzalafinder.htm
+     * 
+     * @param null $stmt
+     */
     protected function setStmtError($stmt = null)
     {
-        // set error code and message based on last db2 prepare or execute error.
-        
-        // @todo: consider using GET DIAGNOSTICS for even more message text:
-        // http://publib.boulder.ibm.com/infocenter/iseries/v5r4/index.jsp?topic=%2Frzala%2Frzalafinder.htm
+        // is statement resource provided, or do we get last error?
         if ($stmt) {
-            // specific statement resource was provided
             $this->setErrorCode(db2_stmt_error($stmt));
             $this->setErrorMsg(db2_stmt_errormsg($stmt));
         } else {
-            // no specific statemtent. Get last error
             $this->setErrorCode(db2_stmt_error());
             $this->setErrorMsg(db2_stmt_errormsg());
-        } //(if ($stmt))
-        
+        }
     }
-    
+
+    /**
+     * @param $errorCode
+     */
     protected function setErrorCode($errorCode)
     {
         $this->last_errorcode = $errorCode;
     }
-    
+
+    /**
+     * @param $errorMsg
+     */
     protected function setErrorMsg($errorMsg)
     {
         $this->last_errormsg = $errorMsg;
@@ -107,26 +131,21 @@ class db2supp {
     /**
      * this function used for special stored procedure call only
      * 
+     * @todo the end result of this function is actually passed into the function. Why do the return?
+     * 
      * @param $conn
      * @param $sql
      * @param $bindArray
      * @return bool
-     * 
-     * @todo this function seems strange, needs cleaned up
      */
-    public function execXMLStoredProcedure( $conn, $sql, $bindArray )
+    public function execXMLStoredProcedure($conn, $sql, $bindArray)
     {
-        $internalKey = $bindArray['internalKey'];
-        $controlKey = $bindArray['controlKey'];
-        $inputXml   = $bindArray['inputXml'];
-        $outputXml  = $bindArray['outputXml'];
-        
-        // @todo error doesn't properly bubble up to top level.
+        // @todo see why error doesn't properly bubble up to top level.
         // But added some error handling in ToolkitService.php, ExecuteProgram, looking at error code.
-        $crsr = @db2_prepare ( $conn, $sql);
+        $crsr = @db2_prepare($conn, $sql);
         
         // if the prepare failed
-        if( !$crsr ) {
+        if (!$crsr) {
             $this->setStmtError();
             return false;
         }
@@ -141,50 +160,47 @@ class db2supp {
         
         // bind the four parameters
         foreach ($params as $param) {
-            
-            $ret = db2_bind_param ( $crsr, $param['position'], $param['name'], $param['inout'] );
-            if (!$ret) {
+            if (!db2_bind_param($crsr, $param['position'], $param['name'], $param['inout'])) {
                 // unable to bind a param. Set error and exit
                 $this->setStmtError($crsr);
                 return false;
             }
         }
     
-        // execute the stored procedure.
-        // @ hides any warnings. Deal with !$ret on next line.
-        $ret = @db2_execute ( $crsr ); 
-    
-        if(!$ret) {
-            // execution of XMLSERVICE stored procedure failed.
-            $this->setStmtError($crsr); // set error and exit
+        if (!@db2_execute($crsr)) {
+            $this->setStmtError($crsr);
             return false;
         }
         
-        return $outputXml;
+        return $bindArray['outputXml'];
     }
-    
-    /*returns a first column from sql stmt result set*/
-    // used in one place: iToolkitService's ReadSPLFData().
-    // @todo eliminate this method if possible.
-    public function executeQuery($conn, $sql )
+
+    /**
+     * returns a first column from sql stmt result set
+     *
+     * used in one place: iToolkitService's ReadSPLFData().
+     *
+     * @todo eliminate this method if possible.
+     *
+     * @param $conn
+     * @param $sql
+     * @throws \Exception
+     * @return array
+     */
+    public function executeQuery($conn, $sql)
     {
-        $Txt ='';
+        $txt = array();
         $stmt = db2_exec($conn, $sql, array('cursor' => DB2_SCROLLABLE));
-        if(is_resource($stmt )) {
-            while (true) {
-                $row = db2_fetch_row( $stmt );
-                if(!$row)
-                   break;
-            
+        if (is_resource($stmt)) {
+            if (db2_fetch_row($stmt)) {
                 $column = db2_result($stmt, 0);
-                $Txt[] = $column;
+                $txt[] = $column;
             }
         } else {
-            //$err = db2_stmt_error();
             $this->setStmtError();
-            Throw new \Exception( "Failure executing SQL: ($sql) ".db2_stmt_errormsg(), db2_stmt_error()); 
+            Throw new \Exception("Failure executing SQL: ($sql) " . db2_stmt_errormsg(), db2_stmt_error()); 
         }
          
-        return $Txt;
+        return $txt;
     }
 }
