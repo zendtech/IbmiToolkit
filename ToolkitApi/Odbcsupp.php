@@ -1,122 +1,147 @@
 <?php
 namespace ToolkitApi;
 
+/**
+ * Class odbcsupp
+ *
+ * @package ToolkitApi
+ */
 class odbcsupp
 {
-    private $last_errorcode = ''; // SQL State
-    private $last_errormsg = ''; // SQL Code with message
-        
-    // 'persistent' is one option
+    private $last_errorcode = '';
+    private $last_errormsg = '';
+
+    /**
+     * 
+     * @todo should perhaps handle this method differently if $options are not passed
+     * 
+     * @param $database
+     * @param $user
+     * @param $password
+     * @param null $options
+     * @return bool|resource
+     */
     public function connect($database, $user, $password, $options = null)
     {
-        $connectFunc = 'odbc_connect'; // default
         if ($options) {
             if ((isset($options['persistent'])) && $options['persistent']) {
-                $connectFunc = 'odbc_pconnect';
+                $conn = odbc_pconnect($database, $user, $password);
+            } else {
+                $conn = odbc_connect($database, $user, $password);
+            }
+
+            if (is_resource($conn)) {
+                return $conn;
             }
         }
         
-      // could be connect or pconnect
-      $conn = $connectFunc ( $database, $user, $password );
-      
-      if (is_resource($conn)) {
-          return $conn;
-      } else {
         $this->setError();
         return false;
-      }
     }
-    
-    public function disconnect( $conn )
+
+    /**
+     * @param $conn
+     */
+    public function disconnect($conn)
     {
-        if(is_resource($conn)) {
+        if (is_resource($conn)) {
             odbc_close($conn);
         }
     }
-    
+
+    /**
+     * set error code and message based on last odbc connection/prepare/execute error.
+     * 
+     * @todo: consider using GET DIAGNOSTICS for even more message text:
+     * http://publib.boulder.ibm.com/infocenter/iseries/v5r4/index.jsp?topic=%2Frzala%2Frzalafinder.htm
+     * 
+     * @param null $conn
+     */
+    protected function setError($conn = null)
+    {
+        // is conn resource provided, or do we get last error?
+        if ($conn) {
+            $this->setErrorCode(odbc_error($conn));
+            $this->setErrorMsg(odbc_errormsg($conn));
+        } else {
+            $this->setErrorCode(odbc_error());
+            $this->setErrorMsg(odbc_errormsg());
+        }
+    }
+
+    /**
+     * @param $errorCode
+     */
+    protected function setErrorCode($errorCode)
+    {
+        $this->last_errorcode = $errorCode;
+    }
+
+    /**
+     * @return string
+     */
     public function getErrorCode()
     {
         return $this->last_errorcode;
     }
-    
-    // added
+
+    /**
+     * @param $errorMsg
+     */
+    protected function setErrorMsg($errorMsg)
+    {
+        $this->last_errormsg = $errorMsg;
+    }
+
+    /**
+     * @return string
+     */
     public function getErrorMsg()
     {
         return $this->last_errormsg;
     }
     
-    protected function setError($conn = null)
+    /**
+     * this function used for special stored procedure call only
+     * 
+     * @param $conn
+     * @param $stmt
+     * @param $bindArray
+     * @return string
+     */
+    public function execXMLStoredProcedure($conn, $stmt, $bindArray)
     {
-        // set error code and message based on last odbc connection/prepare/execute error.
-    
-        // @todo: consider using GET DIAGNOSTICS for even more message text:
-        // http://publib.boulder.ibm.com/infocenter/iseries/v5r4/index.jsp?topic=%2Frzala%2Frzalafinder.htm
-    
-        if ($conn) {
-            // specific connection resource was provided
-            $this->setErrorCode(odbc_error($conn));
-            $this->setErrorMsg(odbc_errormsg($conn));
-        } else {
-            // no specific statemtent. Get last error
-            $this->setErrorCode(odbc_error());
-            $this->setErrorMsg(odbc_errormsg());
-        }
-    }
-    
-    protected function setErrorCode($errorCode)
-    {
-        $this->last_errorcode = $errorCode;
-    }
-    
-    protected function setErrorMsg($errorMsg)
-    {
-        $this->last_errormsg = $errorMsg;
-    }
-    
-    /* this function used for special stored procedure call only  */
-    public function execXMLStoredProcedure( $conn, $stmt, $bindArray )
-    {
-        $internalKey= $bindArray['internalKey'];
-        $controlKey = $bindArray['controlKey'];
-        $inputXml   = $bindArray['inputXml'];
-        $outputXml  = $bindArray['outputXml'];
-        $disconnect = $bindArray['disconnect'];
-    
-        $crsr = odbc_prepare ( $conn, $stmt);
+        $crsr = odbc_prepare($conn, $stmt);
         
-        if( !$crsr ) { 
+        if (!$crsr) { 
             $this->setError($conn);
             return false;
         }
         
-        /* extension problem: sends an warning message into the php_log or to stdout 
-         * about of number of result sets .  ( switch on return code of SQLExecute() 
-         * SQL_SUCCESS_WITH_INFO  */
-        $ret = @odbc_execute ( $crsr , array($internalKey, $controlKey, $inputXml ));
-        if(!$ret) {
+        // extension problem: sends warning message into the php_log or stdout 
+        // about number of result sets. (switch on return code of SQLExecute() 
+        // SQL_SUCCESS_WITH_INFO
+        if (!@odbc_execute($crsr , array($bindArray['internalKey'], $bindArray['controlKey'], $bindArray['inputXml']))) {
             $this->setError($conn);
-            
             return "ODBC error code: " . $this->getErrorCode() . ' msg: ' . $this->getErrorMsg();
         }
         
-        //disconnect operation cause crush in fetch ,
-        //nothing appears as sql script.
+        // disconnect operation cause crush in fetch, nothing appears as sql script.
         $row='';
         $outputXML = '';
-        if(!$disconnect) {
-            while( odbc_fetch_row($crsr)) {
+        if (!$bindArray['disconnect']) {
+            while (odbc_fetch_row($crsr)) {
                 $tmp = odbc_result($crsr, 1);
-                if($tmp) {
-                    /*because of some problem in odbc Blob transfering 
-                     * shoudl be executed some "clean" in returned data */
-                    if(strstr($tmp , "</script>")){
-                        $stopFetch = true;
+                
+                if ($tmp) {
+                    // because of ODBC problem blob transferring should execute some "clean" on returned data
+                    if (strstr($tmp , "</script>")) {
                         $pos = strpos($tmp, "</script>");
-                        $pos += strlen("</script>");
-                        $row .= substr($tmp,0,$pos);
+                        $pos += strlen("</script>"); // @todo why append this value?
+                        $row .= substr($tmp, 0, $pos);
                         break;
                     } else {
-                        $row .=$tmp;
+                        $row .= $tmp;
                     }
                 }
             }
@@ -125,16 +150,21 @@ class odbcsupp
         
         return $outputXML;
     }
-    
-    public function executeQuery($conn,  $stmt )
+
+    /**
+     * @param $conn
+     * @param $stmt
+     * @return array
+     */
+    public function executeQuery($conn, $stmt)
     {
         $crsr = odbc_exec($conn, $stmt);
         
-        if(is_resource($crsr )) {      
-            while( odbc_fetch_row( $crsr )) {  
+        if (is_resource($crsr)) {      
+            while (odbc_fetch_row($crsr)) {  
                 $row = odbc_result($crsr, 1);
                 
-                if(!$row) {
+                if (!$row) {
                     break;
                 }
                 
