@@ -1,7 +1,6 @@
 <?php
 namespace ToolkitApi;
 
-use ToolkitApi\ToolkitService;
 use ToolkitApi\ProgramParameter;
 
 /*
@@ -18,21 +17,52 @@ class ToolkitPcml
     // @todo a single array of countref names is OK for now, but won't jibe with official PCML logic of infinite hierarchical references.. To find the ref, we'd have to look at current section and work outward. Too much trouble. What we have here will work most of the time.
     protected $_countRefNames = array(); // names of countRef fields (fields containing counts to return from programs)
     protected $_countersAndCounted = array(); // 'CarCount' => 'Cars'.  counter also used as label.
-    
+
+    // array of simple types, PCML to XMLSERVICE toolkit, with sprintf-style percent formatting.
+    protected $_pcmlTypeMap = array('char'    => "%sa",
+        'packed'  => "%sp%s",
+        'float'   => "4f",   // 4-byte float
+        'struct'  => "ds",   // data structure
+        // omit INT from type map because we'll need program logic to determine if short or regular int.
+        //              'short'   => "5i0",  // int16, 2 bytes
+        //              'int'     => "10i0", // int32, 4 bytes
+        'zoned'   => "%ss%s", // e.g. 5s2
+        'byte'    => "%sb", // binary (hex) 
+        'hole'          => "%sh", // not a PCML type but XMLSERVICE can handle it, so let's be prepared.
+    );
+
+    // PCML usage mapping
+    protected $_pcmlInoutMap = array('input'         => 'in',
+        'output'        => 'out',
+        'inputoutput'   => 'both',
+        // inherit means inherit from parent element, and if no parent element, do INOUT.
+        // @todo implement "inherit" more precisely, checking parent element's usage.
+        'inherit'       => 'both',
+    );
+
+    /**
+     * @return array
+     */
     public function getDescription() 
     {
         return $this->_description;
     }
-    
+
+    /**
+     * @param array $countersAndCounted
+     */
     public function setCountersAndCounted($countersAndCounted = array()) 
     {
         $this->_countersAndCounted = $countersAndCounted;
     }
-    
+
     /**
      * Constructor takes a PCML string and converts to an array-based new toolkit parameter array.
-     * @param string    $pcml              The string of PCML
-     * @param ToolkitService $connection   connection object for toolkit
+     *
+     * @param string $pcml The string of PCML
+     * @param ToolkitService $connection connection object for toolkit
+     * @param array $countersAndCounted
+     * @throws \Exception
      */
     public function __construct($pcml, ToolkitService $connection, $countersAndCounted = array())
     {
@@ -63,14 +93,14 @@ class ToolkitPcml
         $xmlObj = new \SimpleXMLElement($pcml);
 
         // get root node and make sure it's named 'pcml'
-        if(!isset($xmlObj[0]) || ($xmlObj[0]->getName() != 'pcml')) {
+        if (!isset($xmlObj[0]) || ($xmlObj[0]->getName() != 'pcml')) {
             throw new \Exception("PCML file must contain pcml tag");
         }
 
         $pcmlObj = $xmlObj[0];
 
         // get program name, path, etc.
-        if(!isset($pcmlObj->program) || (!$pcmlObj->program)) {
+        if (!isset($pcmlObj->program) || (!$pcmlObj->program)) {
             throw new \Exception("PCML file must contain program tag");
         }
         
@@ -118,39 +148,24 @@ class ToolkitPcml
 
         $this->_description  = $dataDescriptionArray;
     }
-    
-    // array of simple types, PCML to XMLSERVICE toolkit, with sprintf-style percent formatting.
-    protected $_pcmlTypeMap = array('char'    => "%sa",
-                                    'packed'  => "%sp%s",
-                                    'float'   => "4f",   // 4-byte float
-                                    'struct'  => "ds",   // data structure
-            // omit INT from type map because we'll need program logic to determine if short or regular int.
-                      //              'short'   => "5i0",  // int16, 2 bytes
-                      //              'int'     => "10i0", // int32, 4 bytes
-                                    'zoned'   => "%ss%s", // e.g. 5s2
-                                    'byte'    => "%sb", // binary (hex) 
-                                    'hole'          => "%sh", // not a PCML type but XMLSERVICE can handle it, so let's be prepared.
-    );
-    
-    // PCML usage mapping
-    protected $_pcmlInoutMap = array('input'         => 'in',
-                                     'output'        => 'out',
-                                     'inputoutput'   => 'both',
-                                     // inherit means inherit from parent element, and if no parent element, do INOUT.
-                                     // @todo implement "inherit" more precisely, checking parent element's usage.
-                                     'inherit'       => 'both',
-                                );
 
-
-    // When we discover a "CountRef" reference in an old toolkit data description,
-    // retain the name for later use.
+    /**
+     * When we discover a "CountRef" reference in an old toolkit data description, 
+     * retain the name for later use.
+     * 
+     * @param $name
+     */
     protected function addCountRefName($name)
     {
         // add name to our array.
         $this->_countRefNames[] = $name;
     }
     
-    // return array of all names of countRef fields that we have found.
+    /**
+     * return array of all names of countRef fields that we have found.
+     * 
+     * @return array
+     */
     protected function getCountRefNames()
     {
         return $this->_countRefNames;
@@ -158,6 +173,8 @@ class ToolkitPcml
 
     /**
      * Store toolkit object that was passed in
+     *
+     * @param null $conn
      */
     protected function setConnection($conn = null)
     {
@@ -166,6 +183,7 @@ class ToolkitPcml
     
     /**
      * Return toolkit object that was set earlier
+     * 
      * @return ToolkitService
      */
     public function getConnection()
@@ -173,6 +191,11 @@ class ToolkitPcml
         return $this->_connection;
     }
 
+    /**
+     * @param $path
+     * @return array
+     * @throws \Exception
+     */
     public function splitPcmlProgramPath($path)
     {
         // given a program path that MAY be qualified by a library and slash,
@@ -194,15 +217,15 @@ class ToolkitPcml
         // remove .LIB, .PGM, .SRVPGM that might be extensions for IFS-style file path.
         $path = str_replace(array('.PGM', '.SRVPGM','.LIB'), array('', '', ''), $path);
     
-        if(!$path) {
+        if (!$path) {
             throw new \Exception("PCML program path is required.");
         }
     
         $result = array('lib'=>'', 'obj'=>'');
-            $parts = explode('/', $path);
-            $numParts = count($parts);
+        $parts = explode('/', $path);
+        $numParts = count($parts);
     
-        if($numParts > 3) {
+        if ($numParts > 3) {
             throw new \Exception("PCML program path should not have more than 3 slash-delimited parts.");
         }
     
@@ -232,7 +255,14 @@ class ToolkitPcml
         return $result;
     }
 
-    // given a single ->data or ->struct element, return a parameter object in the new toolkit style.
+    /**
+     * given a single ->data or ->struct element, return a parameter object in the new toolkit style.
+     * 
+     * @todo this needs more validation. It is possible that all parts are not set to create return
+     * 
+     * @param \SimpleXmlElement $dataElement
+     * @return ProgramParameter
+     */
     public function singlePcmlToParam(\SimpleXmlElement $dataElement)
     {
         $tagName = $dataElement->getName();
@@ -267,6 +297,7 @@ class ToolkitPcml
                     // @todo verify type with is_array and count
                     foreach ($this->_pcmlStructs as $possibleStruct) {
                         $possStructAttrs = $possibleStruct->attributes();
+                        
                         if ($possStructAttrs['name'] == $structName) {
                             $theStruct = $possibleStruct;
                             $structAttrs = $possStructAttrs;
@@ -281,12 +312,10 @@ class ToolkitPcml
                     return null;
                 }
     
-                // if we got here, we found our struct.
-    
                 // count can also be defined at the structure level. If so, it will override count from data level)
                 if (isset($structAttrs['count'])) {
                     $count = (string) $structAttrs['count'];
-                } //(if count supplied at structure level)
+                }
     
                 // "usage" (in/out/inherit) can be defined here, at the structure level.
                 $structUsage = (isset($structAttrs['usage'])) ? (string) $structAttrs['usage'] : '';
@@ -374,52 +403,29 @@ class ToolkitPcml
         // @todo I think simply add 'counterLabel' and 'countedLabel'. 
         // count
         $newCount = 0; // initialize
-        $countRef = '';
         // @todo deal with this. Really need a better way to find the counter data elements.
         // Allow a countref, too, in PCML??? Maybe! Count will be the dim (max) and countref is the actual name.
         // Some customers have done it wrong. Instead of specifying a field as count, gave max count.
         // "count can be a number where number defines a fixed, never-changing number of elements in a sized array.
-    // OR a data-name where data-name defines the name of a <data> element within the PCML document that will contain, at runtime, the number of elements in the array. The data-name specified can be a fully qualified name or a name that is relative to the current element. In either case, the name must reference a <data> element that is defined with type="int". See Resolving Relative Names for more information about how relative names are resolved.
-    // about finding the element: http://pic.dhe.ibm.com/infocenter/iseries/v7r1m0/index.jsp?topic=%2Frzahh%2Flengthprecisionrelative.htm
+        // OR a data-name where data-name defines the name of a <data> element within the PCML document that will contain, at runtime, the number of elements in the array. The data-name specified can be a fully qualified name or a name that is relative to the current element. In either case, the name must reference a <data> element that is defined with type="int". See Resolving Relative Names for more information about how relative names are resolved.
+        // about finding the element: http://pic.dhe.ibm.com/infocenter/iseries/v7r1m0/index.jsp?topic=%2Frzahh%2Flengthprecisionrelative.htm
         // Names are resolved by seeing if the name can be resolved as a child or descendent of the tag containing the current tag. If the name cannot be resolved at this level, the search continues with the next highest containing tag. This resolution must eventually result in a match of a tag that is contained by either the <pcml> tag or the <rfml> tag, in which case the name is considered to be an absolute name, not a relative name.""
-    // Let's simply use $countersAndCounted. If necessary, pre-process PCML to create $countersAndCounted.
+        // Let's simply use $countersAndCounted. If necessary, pre-process PCML to create $countersAndCounted.
         if (is_numeric($count) && ($count > 0)) {
             $newCount = $count;
         }
-        
-        $element = array();
         
         // $subElements are if this is a struct.
         if (count($subElements)) {
             $dataValue = $subElements;
         }
 
-        //$type,  $io, $comment='', $varName = '', $value, $varing = 'off', $dimension = 0, $by = 'ref')
-        $param = new ProgramParameter(
-                // type
-                sprintf($newType, $length, $precision),
-                // io
-                $newInout,
-                // comment
-                '', // no reason for comment that's identical to varname! wastes XML.
-                // varName
-                $name,
-                // value
-                $dataValue,
-                // varing (varying)
-                'off',
-                // dimension
-                $newCount,
-                // by (val or ref [default is rep])
-                $passBy,
-                // is array says the param is an array of identically typed values that should be indexed numerically.
-                $isArray
-        );
+        $param = new ProgramParameter(sprintf($newType, $length, $precision), $newInout, '', $name, $dataValue, 'off', $newCount, $passBy, $isArray);
 
         if ($this->_countersAndCounted) {
             // some counters were configured
             // counter item reference was specified.
-            if(isset($this->_countersAndCounted[$name])) {
+            if (isset($this->_countersAndCounted[$name])) {
                 $param->setParamLabelCounter($name);
             }
             
@@ -433,7 +439,12 @@ class ToolkitPcml
         return $param;
     }
     
-    // given an XML object containing a PCML program definition, return an old toolkit style of data description array.
+    /**
+     * given an XML object containing a PCML program definition, return an old toolkit style of data description array.
+     * 
+     * @param SimpleXMLElement $xmlObj
+     * @return array
+     */
     public function pcmlToArray(SimpleXMLElement $xmlObj)
     {
         $dataDescription = array();
