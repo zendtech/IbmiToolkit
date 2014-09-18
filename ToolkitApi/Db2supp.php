@@ -12,6 +12,24 @@ class db2supp
 {
     private $last_errorcode;
     private $last_errormsg;
+    private $database;
+    private $user;
+    private $password;
+    private $options;
+
+    /**
+     * @param $database
+     * @param $user
+     * @param $password
+     * @param null $options
+     */
+    public function __construct($database, $user, $password, $options = null)
+    {
+        $this->database = $database;
+        $this->user = $user;
+        $this->password = $password;
+        $this->options = $options;
+    }
 
     /**
      * 
@@ -20,27 +38,28 @@ class db2supp
      * Throw new Exception("Fail execute ($sql) ".db2_stmt_errormsg(),db2_stmt_error());
      * ... and retrieve via try/catch + Exception methods.
      * 
-     * @param $database
-     * @param $user
-     * @param $password
-     * @param null $options 'persistent' is one option
      * @return bool
      */
     public function connect($database, $user, $password, $options = null)
     {
+        $this->database = $database;
+        $this->user = $user;
+        $this->password = $password;
+        $this->options = $options;
+        
         // Compensate for older ibm_db2 driver that may not do this check.
-        if ($user && empty($password)) {
+        if ($this->user && empty($this->password)) {
             $this->setErrorCode('08001');
             $this->setErrorMsg('Authorization failure on distributed database connection attempt. SQLCODE=-30082');
             
             return false;
         }
         
-        if ($options) {
-            if ((isset($options['persistent'])) && $options['persistent']) {
-                $conn = db2_pconnect($database, $user, $password);
+        if ($this->options) {
+            if ((isset($this->options['persistent'])) && $this->options['persistent']) {
+                $conn = db2_pconnect($this->database, $this->user, $this->password);
             } else {
-                $conn = db2_connect($database, $user, $password);
+                $conn = db2_connect($this->database, $this->user, $this->password);
             }
             
             if (is_resource($conn)) {
@@ -66,6 +85,8 @@ class db2supp
     
     /**
      * disconnect, truly close, a persistent connection.
+     * 
+     * NOTE: Only available on i5/OS
      * 
      * @param $conn
      */
@@ -109,7 +130,7 @@ class db2supp
         } else {
             $this->setErrorCode(db2_stmt_error());
             $this->setErrorMsg(db2_stmt_errormsg());
-        }
+        }        
     }
 
     /**
