@@ -40,13 +40,8 @@ class db2supp
      * 
      * @return bool
      */
-    public function connect($database, $user, $password, $options = null)
+    public function connect()
     {
-        $this->database = $database;
-        $this->user = $user;
-        $this->password = $password;
-        $this->options = $options;
-        
         // Compensate for older ibm_db2 driver that may not do this check.
         if ($this->user && empty($this->password)) {
             $this->setErrorCode('08001');
