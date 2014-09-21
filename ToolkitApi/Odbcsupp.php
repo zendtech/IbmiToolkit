@@ -8,26 +8,40 @@ namespace ToolkitApi;
  */
 class odbcsupp
 {
-    private $last_errorcode = '';
-    private $last_errormsg = '';
+    private $last_errorcode;
+    private $last_errormsg;
+    private $database;
+    private $user;
+    private $password;
+    private $options;
 
     /**
-     * 
-     * @todo should perhaps handle this method differently if $options are not passed
-     * 
      * @param $database
      * @param $user
      * @param $password
      * @param null $options
+     */
+    public function __construct($database, $user, $password, $options = null)
+    {
+        $this->database = $database;
+        $this->user = $user;
+        $this->password = $password;
+        $this->options = $options;
+    }
+
+    /**
+     * 
+     * @todo should perhaps handle this method differently if $options are not passed
+     *
      * @return bool|resource
      */
-    public function connect($database, $user, $password, $options = null)
+    public function connect()
     {
-        if ($options) {
-            if ((isset($options['persistent'])) && $options['persistent']) {
-                $conn = odbc_pconnect($database, $user, $password);
+        if ($this->options) {
+            if ((isset($this->options['persistent'])) && $this->options['persistent']) {
+                $conn = odbc_pconnect($this->database, $this->user, $this->password);
             } else {
-                $conn = odbc_connect($database, $user, $password);
+                $conn = odbc_connect($this->database, $this->user, $this->password);
             }
 
             if (is_resource($conn)) {
