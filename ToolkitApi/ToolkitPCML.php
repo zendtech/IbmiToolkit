@@ -3,7 +3,7 @@ namespace ToolkitApi;
 
 use ToolkitApi\ProgramParameter;
 
-/*
+/**
  * Functionality for parsing PCML
  */
 class ToolkitPcml
@@ -192,26 +192,24 @@ class ToolkitPcml
     }
 
     /**
+     * given a program path that MAY be qualified by a library and slash, such as 
+     * /QSYS.LIB/*LIBL.LIB/MYPGM.PGM though it QSYS is the program library, QSYS.LIB 
+     * will only appear once, split it up and return an array of the form:
+     * 
+     * [lib]=>xxx, [obj]=>yyy
+     * 
+     * If no library, that part will be blank.
+     * Note, library could also be *LIBL.LIB
+     * 
+     * Break up path, separated now by slashes. can be varied lib and pgm.
+     * remove the /qsys.lib that may be in front but only if it's simply qualifying another library. qsys may be the actual program library, too.
+     * 
      * @param $path
      * @return array
      * @throws \Exception
      */
     public function splitPcmlProgramPath($path)
     {
-        // given a program path that MAY be qualified by a library and slash,
-        // such as /QSYS.LIB/*LIBL.LIB/MYPGM.PGM
-        // though it QSYS is the program library, QSYS.LIB will only appear once,
-        // split it up and return an array of the form:
-        // [lib]=>xxx, [obj]=>yyy
-        // If no library, that part will be blank.
-    
-        // Note, library could also be *LIBL.LIB
-    
-        // Break up path, separated now by slashes. can be varied lib and pgm.
-        // remove the /qsys.lib that may be in front but only if it's simply qualifying another library. qsys may be the actual program library, too.
-    
-        // trim not only spaces, but slashes, from beginning and end.
-        // also make uppercase for consistency. (OK to use uppercase--lib and program here, not function)
         $path = strtoupper(trim($path, " /"));
     
         // remove .LIB, .PGM, .SRVPGM that might be extensions for IFS-style file path.
