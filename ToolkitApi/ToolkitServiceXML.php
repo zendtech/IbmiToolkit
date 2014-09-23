@@ -53,11 +53,12 @@ class XMLWrapper
             $this->_isCw = $this->ToolkitSrvObj->getIsCw();
         }
     }
-    
+
     /**
      * get option from toolkit object
-     * 
+     *
      * @param $optionName
+     * @return bool|void
      */
     protected function getOption($optionName) 
     {
@@ -74,11 +75,14 @@ class XMLWrapper
         return $this->_isCw;
     }
     
-    // Do any processing on parameter properties
-    // to prepare for hex, ccsid.
-    // Adds these elements to array:
-    // processedData, ccsidStr, hexStr
-    // @todo: This works but is somewhat clumsy to use. Refactor as method of ProgramParam object with XML creator injected into it.  
+    /**
+     * Do any processing on parameter properties to prepare for hex, ccsid.
+     * Adds these elements to array: processedData, ccsidStr, hexStr
+     * 
+     * @todo: This works but is somewhat clumsy to use. Refactor as method of ProgramParam object with XML creator injected into it.
+     * 
+     * @param array $props
+     */
     protected function processParamProps(&$props = array())
     {
         $alphanumeric = true; // start with assumption
@@ -142,8 +146,6 @@ class XMLWrapper
      */
     protected function getPgmTag($pgm, $lib, $function)
     {
-        $pgmtag = ''; // what we'll return
-        
         // specify opm mode if given
         $opmString = ($this->getOption('v5r4')) ? " mode='opm'" : "";
         
@@ -181,12 +183,12 @@ class XMLWrapper
     
     /**
      * Beginning XML tag
+     * ensure configured encoding for proper behavior with non-ASCII languages
      * 
      * @return string
      */
     protected function xmlStart()
     {
-        // ensure configured encoding for proper behavior with non-ASCII languages
         return "<?xml version=\"1.0\" encoding=\"$this->encoding\" ?>";
     }
     
@@ -360,14 +362,14 @@ class XMLWrapper
      * @param string|array $inputOutputParams
      * @param array $returnParams
      * @param $pgm
-     * @param string $lib
+     * @param string $lib blank library means use current/default or library list
      * @param null $function
      * @return string
      */
     public function buildXmlIn($inputOutputParams = NULL, array $returnParams = NULL,
                     $pgm,
-                    $lib = "", // blank library means use current/default or library list
-                    $function = NULL )
+                    $lib = "",
+                    $function = NULL)
     {
         // initialize XML to empty. Could remain blank if no parameters were passed 
         $parametersXml = ''; 
@@ -585,6 +587,7 @@ class XMLWrapper
     {
         $patterns = array('/10i0/', '/5i0/', '/4f/', '/\d*p\d*/');
         $replacements = array('integer', 'integer', 'float', 'float');
+        
         // look for a match
         $newType = preg_replace($patterns, $replacements, $xmlServiceType);
         
@@ -615,10 +618,10 @@ class XMLWrapper
      *   </pgm> 
      * </script>
      * 
-     * @param SimpleXMLElement $simpleXmlElement
+     * @param \SimpleXMLElement $simpleXmlElement
      * @return array
      */
-    protected function getSingleParamFromXml(SimpleXMLElement $simpleXmlElement)
+    protected function getSingleParamFromXml(\SimpleXMLElement $simpleXmlElement)
     {
         // if it's too slow to set types, change it to false.
         $setTypes = $this->getIsCw(); // do it if in CW mode because old toolkit did return correct types
