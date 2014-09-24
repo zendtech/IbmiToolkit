@@ -156,10 +156,8 @@ class db2supp
     public function execXMLStoredProcedure($conn, $sql, $bindArray)
     {
         // @todo see why error doesn't properly bubble up to top level.
-        // But added some error handling in ToolkitService.php, ExecuteProgram, looking at error code.
         $crsr = @db2_prepare($conn, $sql);
         
-        // if the prepare failed
         if (!$crsr) {
             $this->setStmtError();
             return false;
