@@ -39,15 +39,12 @@ class httpsupp
     protected $_pw;
     protected $_debug;
     
-    // parms [$ipc, $ctl, $i5rest, $debug]:
-    //   $ipc - route to XMLSERVICE job (/tmp/xmlibmdb2)
-    //   $ctl - XMLSERVICE control (*sbmjob)
-    //   $i5rest - URL to xmlcgi.pgm
-    //      (example: http://ibmi/cgi-bin/xmlcgi.pgm )
-    //   $debug=*in|*out|*all
-    //     *in - dump XML input (call)
-    //     *out - dump XML output (return)
-    //     *all - dump XML input/output
+    /**
+     * @param string $ipc route to XMLSERVICE job (/tmp/xmlibmdb2)
+     * @param string $ctl XMLSERVICE control (*sbmjob)
+     * @param string $url URL to xmlcgi.pgm (example: http://ibmi/cgi-bin/xmlcgi.pgm )
+     * @param string $debug *in|*out|*all (*in - dump XML input (call)) (*out - dump XML output (return)) (*all - dump XML input/output)
+     */
     public function __construct($ipc='/tmp/xmldb2', $ctl='*sbmjob', $url='http://example.com/cgi-bin/xmlcgi.pgm', $debug='*none')
     {
         $this->setIpc($ipc);
