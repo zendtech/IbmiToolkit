@@ -118,7 +118,6 @@ class db2supp
      */
     protected function setStmtError($stmt = null)
     {
-        // is statement resource provided, or do we get last error?
         if ($stmt) {
             $this->setErrorCode(db2_stmt_error($stmt));
             $this->setErrorMsg(db2_stmt_errormsg($stmt));
