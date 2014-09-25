@@ -226,6 +226,7 @@ class I5Error
 
     /**
      * Return i5 error array for most recent action.
+     * 
      * @return array Error array for most recent action.
      */
     public function getI5Error()
@@ -1053,10 +1054,37 @@ class DataDescription
  */
 class DataDescriptionPcml extends DataDescription
 {
+    // array of simple types, PCML to old toolkit. Used in singlePcmlToArray().
+    protected $_pcmlTypeMap = array('char'          => I5_TYPE_CHAR,
+        'packed'        => I5_TYPE_PACKED,
+        // 4 byte float
+        'float'         => I5_TYPE_FLOAT,
+        // data structure
+        'struct'        => I5_TYPE_STRUCT,
+        // omit INT from type map because we'll need program logic to determine if short or regular int.
+        'zoned'         => I5_TYPE_ZONED,
+        // TODO not sure if byte really maps to binary. No one knows what BYTE really does
+        'byte'          => I5_TYPE_BYTE,
+    );
+
+    // PCML usage mapping
+    protected $_pcmlInoutMap = array('input'         => I5_IN,
+        'output'        => I5_OUT,
+        'inputoutput'   => I5_INOUT,
+        // inherit means inherit from parent element, and if no parent element, do INOUT.
+        // TODO implement "inherit" more precisely, checking parent element's usage.
+        'inherit'       => I5_INOUT,
+    );
+
+    // maintain an array of pcml structures
+    protected $_pcmlStructs = array();
+
     /**
      * Constructor takes a PCML string and converts to an array-based old toolkit data description string.
-     * @param string    $pcml              The string of PCML
-     * @param ServiceToolkit $connection   connection object for toolkit
+     *
+     * @param string $pcml The string of PCML
+     * @param ToolkitService $connection connection object for toolkit
+     * @throws \Exception
      */
     public function __construct($pcml, ToolkitService $connection)
     {
@@ -1064,7 +1092,7 @@ class DataDescriptionPcml extends DataDescription
 
         // Convert PCML from ANSI format (which old toolkit required) to UTF-8 (which SimpleXML requires).
 
-        $encoding = getConfigValue('system', 'encoding', 'ISO-8859-1'); // XML encoding
+        $encoding = $connection->getConfigValue('system', 'encoding', 'ISO-8859-1'); // XML encoding
 
         /*
          * Look for optionally set <?xml encoding attribute
@@ -1148,33 +1176,13 @@ class DataDescriptionPcml extends DataDescription
         parent::__construct($pgmName, $dataDescriptionArray, $connection);
     }
 
-    // array of simple types, PCML to old toolkit. Used in singlePcmlToArray().
-    protected $_pcmlTypeMap = array('char'          => I5_TYPE_CHAR,
-                                'packed'        => I5_TYPE_PACKED,
-                               // 4 byte float
-                                'float'         => I5_TYPE_FLOAT,
-                               // data structure
-                                'struct'        => I5_TYPE_STRUCT,
-       // omit INT from type map because we'll need program logic to determine if short or regular int.
-                                'zoned'         => I5_TYPE_ZONED,
-                               // TODO not sure if byte really maps to binary. No one knows what BYTE really does
-                                'byte'          => I5_TYPE_BYTE,
-                               );
-
-    // PCML usage mapping
-    protected $_pcmlInoutMap = array('input'         => I5_IN,
-                                     'output'        => I5_OUT,
-                                     'inputoutput'   => I5_INOUT,
-                                     // inherit means inherit from parent element, and if no parent element, do INOUT.
-                                     // TODO implement "inherit" more precisely, checking parent element's usage.
-                                     'inherit'       => I5_INOUT,
-                                );
-
-    // maintain an array of pcml structures
-    protected $_pcmlStructs = array();
-
-    // given a single ->data or ->struct element, return an array containing its contents as old toolkit-style data description.
-    public function singlePcmlToArray(SimpleXmlElement $dataElement)
+    /**
+     * given a single ->data or ->struct element, return an array containing its contents as old toolkit-style data description.
+     * 
+     * @param \SimpleXmlElement $dataElement
+     * @return array
+     */
+    public function singlePcmlToArray(\SimpleXmlElement $dataElement)
     {
         $tagName = $dataElement->getName();
 
@@ -1329,8 +1337,13 @@ class DataDescriptionPcml extends DataDescription
         return $element;
     }
 
-    // given an XML object containing a PCML program definition, return an old toolkit style of data description array.
-    public function pcmlToArray(SimpleXMLElement $xmlObj)
+    /**
+     * given an XML object containing a PCML program definition, return an old toolkit style of data description array.
+     * 
+     * @param \SimpleXMLElement $xmlObj
+     * @return array
+     */
+    public function pcmlToArray(\SimpleXMLElement $xmlObj)
     {
         $dataDescription = array();
 
