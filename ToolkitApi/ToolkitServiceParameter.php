@@ -159,20 +159,20 @@ class ProgramParameter
     }
 
     /**
+     * for unnamed data elements, provide a unique name: var0, var1, var2...
+     * 
      * @return string
      */
     protected function getFallbackVarName()
     {
-        // for unnamed data elements, provide a unique name: var0, var1, var2... 
-        // Then increment sequence for next time.
-        // This works better than in the original new toolkit, where the var(n) only was applied if 'var was not set as a variable at all.
-        // whereas often there's a 'var' attribute but it's empty.    
         $varName =  'var' . self::$_fallbackNameSequence++;
         
         return $varName;
     }
 
     /**
+     * if $value is an array, but not yet a data structure, make a data structure of the array elements.
+     * 
      * @param $type
      * @param $io
      * @param $comment
@@ -193,10 +193,6 @@ class ProgramParameter
     protected function handleParamValue($type, $io, $comment, $varName, $value, $varying, $dimension, $by, $isArray,
                                         $labelSetLen, $labelLen, $ccsidBefore, $ccsidAfter, $useHex)
     {
-        
-        // added....
-        // if $value is an array, but not yet a data structure, make a data structure of the array elements.
-        /// same for $dim
         if (is_array($value)  && ($type != 'ds')) {
             $count = count($value);
 
@@ -394,14 +390,13 @@ class ProgramParameter
      * updates $arrParams, so pass it by reference.
      * $arrParms is an array of parameter arrays or objects.
      * 
-     * Note: no return value. The first parameter, $arrayParams, gets updated.
+     * @deprecated Can't find where this function is used.
      * 
      * @param $arrParams
      * @param array $arrValues
      */
     static function UpdateParameterValues(&$arrParams, array $arrValues)
     {
-        // if either argument is not an array, leave.
         if (!is_array($arrValues) || !is_array($arrParams)) {
             return false;
         }
@@ -456,54 +451,6 @@ class ProgramParameter
         }
         
         return $str;
-     }
-
-    /**
-     * ParametersToArray is deprecated. No longer needed
-     * 
-     * @param null $arrParams
-     * @return array|null
-     */
-     static function ParametersToArray($arrParams = null)
-     {
-         if (!is_array($arrParams ) && !( $arrParams instanceof ProgramParameter)) {
-             return null;
-         }
-     
-         $params = null;
-     
-         if ($arrParams  instanceof ProgramParameter) {
-             // single ProgramParameter object
-             if ($arrParams->isDS()) {
-                 $arr = $arrParams->getParamValue();
-                 if ($arrParams->isReturn()) {
-                     // a "return" DS (didn't work properly)
-                     $params = array('ds'       => 
-                                         array('fields'   => self::ParametersToArray( $arr ),
-                                               'ds_descr' => $arrParams->getParamProperties()));
-     
-                 } else { // non-return DS. Reduce DS to simple structure('ds'=>valuearray), eliminating any attributes the DS had, such as its name.
-                     $params[] = array('ds' => self::ParametersToArray($arr));
-                 }
-             } else {   // single non-DS param
-                 $params[]=$arrParams->getParamProperties();
-             }
-         }
-         else
-         {   // array of ProgramParameter objects
-             foreach ($arrParams as $single) {
-                 if ($single->isDS()) {
-                     // element in array is DS
-                     $arr = $single->getParamValue(); // array of values
-                     // Reduce DS to simple structure ('ds'=>valuearray), eliminating any attributes the DS had, such as its name.
-                     $params[] = array('ds'=>  self::ParametersToArray( $arr ));
-                 } else {   // regular non-DS parm
-                     $params[]=$single->getParamProperties();
-                 }
-             }
-         }
-         
-         return $params;
      }
 }
 
