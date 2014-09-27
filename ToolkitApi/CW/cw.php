@@ -133,7 +133,6 @@ function i5CpfError($errMsg = '', $errDesc = '')
 {
     // Shortcut (fewer params) when have an IBM i (AS400) code and message.
     i5ErrorActivity(I5_ERR_PHP_AS400_MESSAGE, I5_CAT_PHP, $errMsg, $errDesc);
-    
 }
 
 /**
@@ -248,7 +247,6 @@ function i5_connect($host='localhost', $user='', $password='', $options=array())
         // The old toolkit returned an error. 
         // We COULD duplicate that "error" behavior by checking for the existence of the number in advance,
         // but that might harm performance. 
-
     }
         
     // check and handle I5_OPTIONS_IDLE_TIMEOUT
@@ -727,8 +725,6 @@ function i5_adopt_authority($user, $password, ToolkitServiceCw $connection)
     
     return true;
 }
-
-// ERROR handling
 
 /**
  * Get array of error information for most recent action. Both numeric and descriptive string indexes are provided.
