@@ -353,6 +353,8 @@ class ToolkitPcml
                 $passBy = 'val'; // rare. PCML calls it 'value'. XMLSERVICE calls it 'val'.
             }
             
+            $newtype = '';
+            
             // find new toolkit equivalent of PCML data type
             if (isset($this->_pcmlTypeMap[$type])) {
                 // a simple type mapping
@@ -367,8 +369,6 @@ class ToolkitPcml
                     $newType = ''; // no match
                 } //(length == 2, et al.)
     
-            } else {
-                $newtype = '';
             }
                 
             $newInout = (isset($this->_pcmlInoutMap[$usage])) ? (string) $this->_pcmlInoutMap[$usage] : '';
