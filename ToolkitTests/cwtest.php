@@ -1,4 +1,10 @@
-<?php 
+<?php
+
+// @todo need to somehow get ToolkitService so we can use getConfigValue()
+
+use ToolkitApi\CW;
+use ToolkitApi\UserSpace;
+use ToolkitApi\DataQueue;
 
 // some items to turn on and off in the test
 $doPcml = true;
@@ -12,10 +18,9 @@ $doJobLogs = true;
 $doSpooledFiles = true;
 $doAdoptAuthority = true;
 
-
 ini_set('display_errors', 1);
-set_time_limit(480); // 
-require_once('CW/cw.php'); // don't need if added auto_append in PHP.INI
+set_time_limit(480);
+//require_once('CW/cw.php'); // don't need if added auto_append in PHP.INI
 
 // Use configurable demo lib/name from toolkit ini
 $demoLib = trim(getConfigValue('demo', 'demo_library'));
@@ -35,7 +40,7 @@ $setLibList = trim(getConfigValue('demo', 'initlibl', ''));
 $setCcsid = trim(getConfigValue('demo', 'ccsid', ''));
 $setJobName = trim(getConfigValue('demo', 'jobname', ''));
 $setIdleTimeout = trim(getConfigValue('demo', 'idle_timeout', ''));
-$transportType = trim(getConfigValue ( 'demo', 'transport_type', '' ) );
+$transportType = trim(getConfigValue ( 'demo', 'transport_type', ''));
 
 // optional demo connection values
 $private = false; // default
@@ -61,7 +66,8 @@ function OkBad($success = false) {
 	} else {
 		return 'Failed with this error: ' . print_r(i5_error(), true);
 	}
-} //(OkBad)
+}
+
 function printArray($array) 
 {
 	return '<PRE>' . print_r($array, true) . '</PRE>';
@@ -94,7 +100,7 @@ h1 {
 	color: #2278A5;
 	border: 1px 1px 1px 1px;
 	padding: 2px 2px 2px 2px;
-	margin-bottom: 30px;  
+	margin-bottom: 30px;
 }
 
 h2 {
@@ -108,7 +114,6 @@ h2 {
 <title><?php echo $scriptTitle; ?></title>
 </head>
 <?php 
-
 echo h1($scriptTitle);
 
 echo h2('Version check');
@@ -120,7 +125,7 @@ if (function_exists('i5_version')) {
 	echo "You are running CW version <b>" . i5_version() . "</b>.<BR> Any updates will be found at $downloadLink.<BR>";
 } else {
 	echo "This version of CW is out of date.<BR>Please download the latest CW from $downloadLink.<BR><BR>";
-} //(if i5_version function exists)
+}
 
 echo h2('Connection');
 
@@ -139,14 +144,17 @@ if ($setCcsid) {
 	$options[I5_OPTIONS_RMTCCSID] = $setCcsid;
 	echo "I5_OPTIONS_RMTCCSID = '$setCcsid'<BR>";
 }
+
 if ($setJobName) {
 	$options[I5_OPTIONS_JOBNAME] = $setJobName;
 	echo "I5_OPTIONS_JOBNAME = '$setJobName'<BR>";
 }
+
 if ($setIdleTimeout) {
 	$options[I5_OPTIONS_IDLE_TIMEOUT] = $setIdleTimeout;
 	echo "I5_OPTIONS_IDLE_TIMEOUT = '$setIdleTimeout'<BR>";
 }
+
 if ($transportType) {
 	$options[CW_TRANSPORT_TYPE] = $transportType;
 	echo "CW_TRANSPORT_TYPE = '$transportType'<BR>";
@@ -164,14 +172,14 @@ echo '<BR>';
  * // If you specify a naming mode (i5/sql) in your connection, make sure they match.
  * $namingMode = DB2_I5_NAMING_ON;
  * $existingDb = db2_pconnect('', '','', array('i5_naming' => $namingMode));
- * // Add to existing connection options                 
+ * // Add to existing connection options
  * $options[CW_EXISTING_TRANSPORT_CONN] = $existingDb;
  * $options[CW_EXISTING_TRANSPORT_I5_NAMING] = $namingMode;
 */
 
 $start = microtime(true);
 
-// about to connect. Can use i5_connect or i5_pconnect.                
+// about to connect. Can use i5_connect or i5_pconnect.
 $conn = $connFunction('', '', '', $options);
 $end = microtime(true);
 $elapsed = $end - $start;
@@ -191,8 +199,7 @@ if ($private) {
 
     $isNew = i5_get_property(I5_NEW_CONNECTION, $conn);
     echo "Is new connection?: $isNew<BR><BR>";
-} //($private)
-
+}
 
 // CONNECTED. 
 
@@ -206,24 +213,22 @@ if (!$list) {
 	    echo "Demo library '$demoLib' exists.<BR><BR>";
 	} else {
 	    die ("<BR>Demo library '$demoLib' NOT found. Ending.");
-	} //(if object was read)
-} //(if !$list)
+	}
+}
 
 i5_objects_list_close($list);
 
 
 // ON TO ACTUAL FUNCTIONALITY
-
 if ($doPcml) {
-
-echo h2('PCML program calls');
+    echo h2('PCML program calls');
 	
 	$pcml = '<pcml version="4.0">
    <program name="YYPLUS" entrypoint="YYPLUS"  path="/QSYS.LIB/' . $demoLib . '.LIB/YYSRVNORES.SRVPGM" >
       <data name="START" type="int" length="4" precision="31" usage="inputoutput" />
       <data name="RESULT" type="int" length="4" precision="31" usage="inputoutput" />
    </program>
-</pcml>';
+    </pcml>';
 
 	echo 'About to do simple PCML program prepare.<BR>';
 	$pgmHandle = i5_program_prepare_PCML($pcml);
@@ -238,39 +243,37 @@ echo h2('PCML program calls');
 		$success = i5_program_call($pgmHandle, $input, $output);
 	
 		if ($success) {
-			echo "Success. Output variables: START: $START. RESULT: $RESULT.";
+			echo "Success. Output variables: START: $start. RESULT: $RESULT.";
 		} else {
 			echo "Problem calling PCML-described program. Error: " . print_r(i5_error(), true);
 		}
-		
-	} //(if !$pgmHandle)
-	
+	}
 
-echo '<BR><BR>';
-
-$pcml = "<pcml version=\"4.0\">                                                                
-   <struct name=\"S2\">                                                               
-      <data name=\"ZOND2\" type=\"zoned\" length=\"10\" precision=\"5\" usage=\"inherit\" />  
-      <data name=\"PACK2\" type=\"packed\" length=\"19\" precision=\"5\" usage=\"inherit\" />
-      <data name=\"PACK3\" type=\"packed\" length=\"19\" precision=\"5\" usage=\"inherit\" />
-      <data name=\"ALPH2\" type=\"char\" length=\"20\" usage=\"inherit\" />                 
-   </struct>                                                                        
-   <struct name=\"S1\">                                                               
-      <data name=\"ZOND\" type=\"zoned\" length=\"10\" precision=\"5\" usage=\"inherit\" />   
-      <data name=\"PACK1\" type=\"packed\" length=\"19\" precision=\"5\" usage=\"inherit\" />
-      <data name=\"ALPH1\" type=\"char\" length=\"10\" usage=\"inherit\" />                 
-   </struct>                                                                        
-   <program name=\"TESTSTRUC\" path=\"/QSYS.LIB/{$demoLib}.LIB/TESTSTRUC.PGM\">   
-      <data name=\"CODE\" type=\"char\" length=\"10\" usage=\"output\" />                  
-      <data name=\"S1\" type=\"struct\" struct=\"S1\" usage=\"inputoutput\" />                  
-      <data name=\"S2\" type=\"struct\" struct=\"S2\" usage=\"inputoutput\" />                  
-      <data name=\"PACK\" type=\"packed\" length=\"1\" precision=\"1\" usage=\"output\" />   
-      <data name=\"CH10\" type=\"char\" length=\"19\" usage=\"output\" />                  
-      <data name=\"CH11\" type=\"char\" length=\"20\" usage=\"output\" />                  
-      <data name=\"CH12\" type=\"char\" length=\"29\" usage=\"output\" />                  
-      <data name=\"CH13\" type=\"char\" length=\"33\" usage=\"output\" />                  
-   </program>                                                                           
-</pcml>";                                                                                 
+    echo '<BR><BR>';
+    
+    $pcml = "<pcml version=\"4.0\">
+       <struct name=\"S2\">
+          <data name=\"ZOND2\" type=\"zoned\" length=\"10\" precision=\"5\" usage=\"inherit\" />
+          <data name=\"PACK2\" type=\"packed\" length=\"19\" precision=\"5\" usage=\"inherit\" />
+          <data name=\"PACK3\" type=\"packed\" length=\"19\" precision=\"5\" usage=\"inherit\" />
+          <data name=\"ALPH2\" type=\"char\" length=\"20\" usage=\"inherit\" />
+       </struct>
+       <struct name=\"S1\">
+          <data name=\"ZOND\" type=\"zoned\" length=\"10\" precision=\"5\" usage=\"inherit\" />
+          <data name=\"PACK1\" type=\"packed\" length=\"19\" precision=\"5\" usage=\"inherit\" />
+          <data name=\"ALPH1\" type=\"char\" length=\"10\" usage=\"inherit\" />
+       </struct>
+       <program name=\"TESTSTRUC\" path=\"/QSYS.LIB/{$demoLib}.LIB/TESTSTRUC.PGM\">
+          <data name=\"CODE\" type=\"char\" length=\"10\" usage=\"output\" />
+          <data name=\"S1\" type=\"struct\" struct=\"S1\" usage=\"inputoutput\" />
+          <data name=\"S2\" type=\"struct\" struct=\"S2\" usage=\"inputoutput\" />
+          <data name=\"PACK\" type=\"packed\" length=\"1\" precision=\"1\" usage=\"output\" />
+          <data name=\"CH10\" type=\"char\" length=\"19\" usage=\"output\" />
+          <data name=\"CH11\" type=\"char\" length=\"20\" usage=\"output\" />
+          <data name=\"CH12\" type=\"char\" length=\"29\" usage=\"output\" />
+          <data name=\"CH13\" type=\"char\" length=\"33\" usage=\"output\" />
+       </program>
+    </pcml>";
 	
 	echo 'About to do a complex PCML program prepare.<BR>';
 	$pgmHandle = i5_program_prepare_PCML($pcml);
@@ -281,21 +284,20 @@ $pcml = "<pcml version=\"4.0\">
 		echo "Problem while preparing complex PCML program description.<BR>";
 	}
 	// define some input values
-$pack3value=7789777.44;
-$alph2value=4;
-
-$paramIn = Array(
-"S1"=>Array("ZOND"=>54.77, "PACK1"=>16.2, "ALPH1"=>"MyValue"),
-"S2"=>Array("ZOND2"=>44.66, "PACK2"=>24444.99945, "PACK3"=>$pack3value, "ALPH2"=>$alph2value)
-);
-
-// now we need to define where to place output values; it will create new local variables
-
-$paramOut = array(
-					"S1"=>"S1_Value", "S2"=>"S2_Value",
-					"CH10"=>"CH10_Value", "CH11"=>"CH11_Value", "CH12"=>"CH12_Value", "CH13"=>"CH13_Value",
-					"CODE"=>"Code_Value", "PACK"=>"Pack"
-);
+    $pack3value=7789777.44;
+    $alph2value=4;
+    
+    $paramIn = array(
+    "S1"=>array("ZOND"=>54.77, "PACK1"=>16.2, "ALPH1"=>"MyValue"),
+    "S2"=>array("ZOND2"=>44.66, "PACK2"=>24444.99945, "PACK3"=>$pack3value, "ALPH2"=>$alph2value)
+    );
+    
+    // now we need to define where to place output values; it will create new local variables
+    $paramOut = array(
+                        "S1"=>"S1_Value", "S2"=>"S2_Value",
+                        "CH10"=>"CH10_Value", "CH11"=>"CH11_Value", "CH12"=>"CH12_Value", "CH13"=>"CH13_Value",
+                        "CODE"=>"Code_Value", "PACK"=>"Pack"
+    );
 	echo 'About to do complex PCML program call.';
 	$success = i5_program_call($pgmHandle, $paramIn, $paramOut);
     if (function_exists('i5_output')) extract(i5_output()); // i5_output() required if called in a function
@@ -314,121 +316,109 @@ $paramOut = array(
 	} else {
 		echo "Problem calling PCML-described program. Error: " . printArray(i5_error());
 	}
-	
-
-} //(doPcml)
-
+}
 
 $bigDesc = array(
-array ("DSName"=>"BIGDS", "DSParm"=>array (
-array ("Name"=>"P1", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10, "Count"=>5),
-array ("Name"=>"P2C", "IO"=>I5_INOUT,"Type"=>I5_TYPE_LONG, "Length"=>4),
-array ("Name"=>"P2", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>1, "CountRef"=>"P2C" ),
-array ("DSName"=>"PS", "Count"=>2, "DSParm"=>array (
-array ("Name"=>"PS1", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10),
-array ("Name"=>"PS2", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10),
-array ("Name"=>"PS3", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10)
-)
-)))
+    array("DSName"=>"BIGDS", "DSParm"=>array(
+        array("Name"=>"P1", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10, "Count"=>5),
+        array("Name"=>"P2C", "IO"=>I5_INOUT,"Type"=>I5_TYPE_LONG, "Length"=>4),
+        array("Name"=>"P2", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>1, "CountRef"=>"P2C"),
+        array("DSName"=>"PS", "Count"=>2, "DSParm"=>array(
+            array("Name"=>"PS1", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10),
+            array("Name"=>"PS2", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10),
+            array("Name"=>"PS3", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10)
+        ))
+    ))
 );
-
 
 $bigInputValues = array(
-"BIGDS"=>array(
-"P1"=>array("t1", "t2", "t3", "t4", "t5"),
-"P2C"=>2,
-"P2"=>array("a", "b"),
-"PS"=>array(
-array("PS1"=>"test1", "PS2"=>"test2", "PS3"=>"test3"),
-array("PS1"=>"test3", "PS2"=>"test4", "PS3"=>"test5")
-)
-));
-	
-	
-if ($doUserSpace) {
-echo h2('User spaces');	
-	
-$userSpaceName = 'DEMOSPACE';
-$userSpaceLib = $demoLib;
-
-$usObj = new UserSpace($conn);
-$usObj->setUSName($userSpaceName, $userSpaceLib); 
-
-// toolkit does not have an i5_userspace_delete so delete with a command.
-$ret = i5_command("DLTUSRSPC USRSPC($userSpaceLib/$userSpaceName)");
-if (function_exists('i5_output')) extract(i5_output()); // i5_output() required if called in a function
-
-$status = ($ret) ? 'successfully' : 'badly';
-echo "deleted user space: $status<BR>";
-//$us = $usObj->CreateUserSpace('ALANUS', 'ALAN', $InitSize =1024, $Authority = '*ALL', $InitChar=' ' );
-$usProperties = array(I5_NAME=>$userSpaceName, I5_LIBNAME=>$userSpaceLib, I5_INIT_VALUE=>'Y');
-echo "About to create user space.<BR>";
-$us = i5_userspace_create($usProperties, $conn);
-if (!$us) {
-	echo "Error returned: " . printArray(i5_error()) . "<BR><BR>";
-} else {
-	echo "Success!<BR><BR>";
-}
-
-// prepare userspace for a put
-$us = i5_userspace_prepare("$userSpaceLib/$userSpaceName", $bigDesc, $conn);
-if (!$us) {
-	echo "Error returned from user space prepare: " . printArray(i5_error()) . "<BR><BR>";
-} else {
-	echo "Success preparing user space.<BR><BR>";
-}
-
-// do the userspace put
-$success = i5_userspace_put($us, $bigInputValues);
-if (!$success) {
-	echo "Error returned from user space put: " . printArray(i5_error()) . "<BR><BR>";
-} else {
-	echo "Success putting data into user space.<BR><BR>";
-}
-
-// do the userspace get
-// removed counfref because doesn't work when getting.
-$bigDesc = array(
-array ("DSName"=>"BIGDS", "DSParm"=>array (
-array ("Name"=>"P1", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10, "Count"=>5),
-array ("Name"=>"P2C", "IO"=>I5_INOUT,"Type"=>I5_TYPE_LONG, "Length"=>4),
-array ("Name"=>"P2", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>1, "Count"=>2),
-array ("DSName"=>"PS", "Count"=>2, "DSParm"=>array (
-array ("Name"=>"PS1", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10),
-array ("Name"=>"PS2", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10),
-array ("Name"=>"PS3", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10)
-))
-))
+    "BIGDS"=>array(
+        "P1"=>array("t1", "t2", "t3", "t4", "t5"),
+        "P2C"=>2,
+        "P2"=>array("a", "b"),
+        "PS"=>array(
+            array("PS1"=>"test1", "PS2"=>"test2", "PS3"=>"test3"),
+            array("PS1"=>"test3", "PS2"=>"test4", "PS3"=>"test5")
+        )
+    )
 );
 
-/*
-*/
-
-// prepare userspace for a get
-$us = i5_userspace_prepare("$userSpaceLib/$userSpaceName", $bigDesc, $conn);
-if (!$us) {
-	echo "Error returned from user space prepare: " . printArray(i5_error()) . "<BR><BR>";
-} else {
-	echo "Success preparing user space.<BR><BR>";
+if ($doUserSpace) {
+    echo h2('User spaces');	
+        
+    $userSpaceName = 'DEMOSPACE';
+    $userSpaceLib = $demoLib;
+    
+    $usObj = new UserSpace($conn);
+    $usObj->setUSName($userSpaceName, $userSpaceLib); 
+    
+    // toolkit does not have an i5_userspace_delete so delete with a command.
+    $ret = i5_command("DLTUSRSPC USRSPC($userSpaceLib/$userSpaceName)", $conn);
+    if (function_exists('i5_output')) extract(i5_output()); // i5_output() required if called in a function
+    
+    $status = ($ret) ? 'successfully' : 'badly';
+    echo "deleted user space: $status<BR>";
+    //$us = $usObj->CreateUserSpace('ALANUS', 'ALAN', $InitSize =1024, $Authority = '*ALL', $InitChar=' ');
+    $usProperties = array(I5_NAME=>$userSpaceName, I5_LIBNAME=>$userSpaceLib, I5_INIT_VALUE=>'Y');
+    echo "About to create user space.<BR>";
+    $us = i5_userspace_create($usProperties, $conn);
+    if (!$us) {
+        echo "Error returned: " . printArray(i5_error()) . "<BR><BR>";
+    } else {
+        echo "Success!<BR><BR>";
+    }
+    
+    // prepare userspace for a put
+    $us = i5_userspace_prepare("$userSpaceLib/$userSpaceName", $bigDesc, $conn);
+    if (!$us) {
+        echo "Error returned from user space prepare: " . printArray(i5_error()) . "<BR><BR>";
+    } else {
+        echo "Success preparing user space.<BR><BR>";
+    }
+    
+    // do the userspace put
+    $success = i5_userspace_put($us, $bigInputValues);
+    if (!$success) {
+        echo "Error returned from user space put: " . printArray(i5_error()) . "<BR><BR>";
+    } else {
+        echo "Success putting data into user space.<BR><BR>";
+    }
+    
+    // do the userspace get
+    // removed counfref because doesn't work when getting.
+    $bigDesc = array(
+        array("DSName"=>"BIGDS", "DSParm"=>array(
+            array("Name"=>"P1", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10, "Count"=>5),
+            array("Name"=>"P2C", "IO"=>I5_INOUT,"Type"=>I5_TYPE_LONG, "Length"=>4),
+            array("Name"=>"P2", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>1, "Count"=>2),
+            array("DSName"=>"PS", "Count"=>2, "DSParm"=>array(
+                array("Name"=>"PS1", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10),
+                array("Name"=>"PS2", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10),
+                array("Name"=>"PS3", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10)
+            ))
+        ))
+    );
+    
+    // prepare userspace for a get
+    $us = i5_userspace_prepare("$userSpaceLib/$userSpaceName", $bigDesc, $conn);
+    if (!$us) {
+        echo "Error returned from user space prepare: " . printArray(i5_error()) . "<BR><BR>";
+    } else {
+        echo "Success preparing user space.<BR><BR>";
+    }
+    
+    $success = i5_userspace_get($us, array("BIGDS"=>"BIGDS"));
+    if (function_exists('i5_output')) extract(i5_output()); // i5_output() required if called in a function
+    
+    if (!$success) {
+        echo "Error returned from user space get: " . i5_error() . "<BR><BR>";
+    } else {
+        echo "Success getting data from user space. BIGDS=" . printArray($BIGDS) . "<BR><BR>";
+    }
 }
-
-
-$success = i5_userspace_get($us, array("BIGDS"=>"BIGDS"));
-if (function_exists('i5_output')) extract(i5_output()); // i5_output() required if called in a function
-
-if (!$success) {
-	echo "Error returned from user space get: " . i5_error() . "<BR><BR>";
-} else {
-	echo "Success getting data from user space. BIGDS=" . printArray($BIGDS) . "<BR><BR>";
-}
-	
-
-} //(user space)
-	
 
 // data queue
 if ($doDataQueue) {
-
 	echo h2('Data queues');
 	
 	$queueName = 'KEYEDQ';
@@ -451,31 +441,30 @@ if ($doDataQueue) {
 	}
 	
 	// test case adapted from p398 of Zend Server 5.1 manual
-	$simpleStructure = 
-	array(
-  'DSName' => 'PS',
-  'DSParm' => 
-  array (
-   
-    array (
-      'type' => 0,
-      'name' => 'PS1',
-      'length' => '10',
-    ),
-   
-    array (
-      'type' => 6,
-      'name' => 'PS2',
-      'length' => '10.4',
-    ),
-   
-    array (
-      'type' => 0,
-      'name' => 'PS3',
-      'length' => '10',
-    ),
-  )
-);
+	$simpleStructure = array(
+        'DSName' => 'PS',
+        'DSParm' => 
+        array(
+            array(
+            'type' => 0,
+            'name' => 'PS1',
+            'length' => '10',
+            ),
+            
+            array(
+            'type' => 6,
+            'name' => 'PS2',
+            'length' => '10.4',
+            ),
+            
+            array(
+            'type' => 0,
+            'name' => 'PS3',
+            'length' => '10',
+            ),
+        )
+    );
+    
 	// prepare
 	$queue = i5_dtaq_prepare("$demoLib/$queueName", $simpleStructure, $keyLen);
     if (!$queue) {
@@ -489,7 +478,7 @@ if ($doDataQueue) {
     
     echo "<BR>About to send simple structure to keyed data queue $queueName with key $key.<BR>";
 	$success = i5_dtaq_send($queue, $key, $data);
-	// 
+	
 	if (!$success) {
 		echo "Error returned from data queue send: " . printArray(i5_error()) . "<BR><BR>";
 	} else {
@@ -527,29 +516,25 @@ if ($doDataQueue) {
 	} catch (Exception $e) {
 		echo "Error creating data queue: " . $e . "<BR><BR>";
 	}
-
 	
-		$bigDesc = array(
-array ("DSName"=>"BIGDS", "DSParm"=>array (
-array ("Name"=>"P1", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10, "Count"=>5),
-array ("Name"=>"P2C", "IO"=>I5_INOUT,"Type"=>I5_TYPE_LONG, "Length"=>4),
-array ("Name"=>"P2", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>1, "Count"=>2),
-array ("DSName"=>"PS", "Count"=>2, "DSParm"=>array (
-array ("Name"=>"PS1", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10),
-array ("Name"=>"PS2", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10),
-array ("Name"=>"PS3", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10)
-))
-))
-);
-	
+	$bigDesc = array(
+        array("DSName"=>"BIGDS", "DSParm"=>array(
+            array("Name"=>"P1", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10, "Count"=>5),
+            array("Name"=>"P2C", "IO"=>I5_INOUT,"Type"=>I5_TYPE_LONG, "Length"=>4),
+            array("Name"=>"P2", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>1, "Count"=>2),
+            array("DSName"=>"PS", "Count"=>2, "DSParm"=>array(
+                array("Name"=>"PS1", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10),
+                array("Name"=>"PS2", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10),
+                array("Name"=>"PS3", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10)
+            ))
+        ))
+    );
 	
 	// prepare
 	$queue = i5_dtaq_prepare("$demoLib/$queueName", $bigDesc);
     if (!$queue) {
     	echo "Error preparing data queue.<BR><BR>";
     }	
-	// send
-
 
     // send
     echo "<BR>About to send big data structure to data queue $queueName.<BR>";
@@ -574,11 +559,10 @@ array ("Name"=>"PS3", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10)
 		
 	echo '<BR>';
 	
-	
 	// Now a short-form DQ test
 	
 	// short-form description
-	$littleDesc = array ("Name"=>"sometext", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>20);
+	$littleDesc = array("Name"=>"sometext", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>20);
 	$littleInput = "Small text input";
 	
 	echo "<BR>About to send small short-form data structure to data queue $queueName.<BR>";
@@ -598,7 +582,6 @@ array ("Name"=>"PS3", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10)
 		echo "Success sending the string '$littleInput' to data queue.<BR><BR>";
 	}
     
-    
     echo "<BR>About to receive small data structure from data queue $queueName.<BR>";
 	$data = i5_dtaq_receive($queue);//, $operator = null, $key = '', $timeout = 0)
 	// receive
@@ -609,11 +592,7 @@ array ("Name"=>"PS3", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10)
 	}
 	
 	echo '<BR><BR>';
-	
-	// end, short-form DQ test
-	
-	
-} //(data queue)
+}
 
 
 if ($doObjectList) {
@@ -636,54 +615,55 @@ if (!$list) {
 i5_objects_list_close($list);
 
 
-} //(0 == 1)
-
+}
 
 if ($doPgmCallSimple) {
-
 	echo h2('Program calls');
     echo 'Program call with simple parameters<BR>';
 	
-$progname = "$demoLib/TESTSTP2";
-
-$desc = array (
-array ("Name"=>"code", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>"10"),
-array ("Name"=>"name", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>"10")
-);
-$desc = Array (
-             0 => Array ( 'type' => 0, 'name' => 'code', 'length' => 10, 'io' => 3 ), 
-             1 => Array ( 'type' => 0, 'name' => 'name', 'length' => 10, 'io' => 3 ) ) ;
-echo "<b>About to call $progname with two char parameters.</b><BR>";
-
-$prog = i5_program_prepare($progname, $desc);
-if ($prog === FALSE) {
-	$errorTab = i5_error();
-	echo "Program prepare failed <br>\n";
-	var_dump($errorTab);
-	die();
-}
-/* Execute Program */
-$params = array ("code"=>"123","name"=>"ABC");
-$retvals = array("code"=>"code","name"=>"name");
-$ret = i5_program_call($prog, $params, $retvals) ;
-if (function_exists('i5_output')) extract(i5_output()); // i5_output() required if called in a function
-
-if ($ret === FALSE)
-{
-$errorTab = i5_error();
-echo "FAIL : i5_program_call failure message: " . $conn->getLastError() . " with code <br>";
-var_dump($errorTab);
-}else {
-    // success
-    echo "Success! The return values are: <br>", "Name: ", $name, "<br> Code: ", $code, "<br><BR>";
-}
-$close_val = i5_program_close ($prog);
-if ($close_val === false )
-{
-print ("FAIL : i5_program_close returned fales, closing an open prog.<br>\n");
-$errorTab = i5_error();
-var_dump($errorTab);
-}
+    $progname = "$demoLib/TESTSTP2";
+    
+    $desc = array(
+        array("Name"=>"code", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>"10"),
+        array("Name"=>"name", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>"10")
+    );
+    
+    $desc = array(
+         0 => array( 'type' => 0, 'name' => 'code', 'length' => 10, 'io' => 3), 
+         1 => array( 'type' => 0, 'name' => 'name', 'length' => 10, 'io' => 3)
+    );
+    
+    echo "<b>About to call $progname with two char parameters.</b><BR>";
+    
+    $prog = i5_program_prepare($progname, $desc);
+    if ($prog === FALSE) {
+        $errorTab = i5_error();
+        echo "Program prepare failed <br>\n";
+        var_dump($errorTab);
+        die();
+    }
+    /* Execute Program */
+    $params = array("code"=>"123","name"=>"ABC");
+    $retvals = array("code"=>"code","name"=>"name");
+    $ret = i5_program_call($prog, $params, $retvals) ;
+    if (function_exists('i5_output')) extract(i5_output()); // i5_output() required if called in a function
+    
+    if ($ret === FALSE)
+    {
+    $errorTab = i5_error();
+    echo "FAIL : i5_program_call failure message: " . $conn->getLastError() . " with code <br>";
+    var_dump($errorTab);
+    }else {
+        // success
+        echo "Success! The return values are: <br>", "Name: ", $name, "<br> Code: ", $code, "<br><BR>";
+    }
+    $close_val = i5_program_close ($prog);
+    if ($close_val === false)
+    {
+    print ("FAIL : i5_program_close returned fales, closing an open prog.<br>\n");
+    $errorTab = i5_error();
+    var_dump($errorTab);
+    }
 
 
 } // (simple call)
@@ -700,16 +680,16 @@ echo "<b>About to call $progname with data structure parameters.</b>";
 
 /*Call a program with parameters that include a DS */
 
-$desc = array (
-array ("Name"=>"P1", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10, "Count"=>5),
-array ("Name"=>"P2C", "IO"=>I5_INOUT,"Type"=>I5_TYPE_LONG, "Length"=>4),
-array ("Name"=>"P2", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>1, "CountRef"=>"P2C" ),
-array ("DSName"=>"PS", "Count"=>2, "DSParm"=>array (
-array ("Name"=>"PS1", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10),
-array ("Name"=>"PS2", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10),
-array ("Name"=>"PS3", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10)
-)
-));
+$desc = array(
+    array("Name"=>"P1", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10, "Count"=>5),
+    array("Name"=>"P2C", "IO"=>I5_INOUT,"Type"=>I5_TYPE_LONG, "Length"=>4),
+    array("Name"=>"P2", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>1, "CountRef"=>"P2C"),
+    array("DSName"=>"PS", "Count"=>2, "DSParm"=>array(
+        array("Name"=>"PS1", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10),
+        array("Name"=>"PS2", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10),
+        array("Name"=>"PS3", "IO"=>I5_INOUT, "Type"=>I5_TYPE_CHAR, "Length"=>10)
+    ))
+);
 
 $prog = i5_program_prepare($progname, $desc);
 if ($prog === FALSE) {
@@ -726,7 +706,7 @@ array("PS1"=>"test1", "PS2"=>"test2", "PS3"=>"test3"),
 array("PS1"=>"test3", "PS2"=>"test4", "PS3"=>"test5")
 );
 
-$params2 = Array(
+$params2 = array(
 "P1"=>array("t1", "t2", "t3", "t4", "t5"),
 "P2C"=>2,
 "P2"=>array("a", "b"),
@@ -750,7 +730,7 @@ var_dump($errorTab);
     echo "PS: " . printArray($PS) . "<BR>";
 }
 $close_val = i5_program_close ($prog);
-if ($close_val === false )
+if ($close_val === false)
 {
 print ("FAIL : i5_program_close returned fales, closing an open prog.<br>\n");
 $errorTab = i5_error();
@@ -909,127 +889,115 @@ if ($ret) {
 // job list
 
 if ($doJobLists) {
-
-echo h2('Job lists');
-	
-echo "About to get up to 5 jobs with jobname ZENDSVR (can also do I5_JOBUSER, I5_USERNAME, I5_JOBNUMBER, and I5_JOBTYPE).<BR>";
-
-$list = i5_job_list(array(I5_JOBNAME=>'ZENDSVR'));
-if (!$list) {
-	echo 'Error getting job list: ' . printArray(i5_error()) . '<BR>';
-} else {
-    $jobCount = 0;
-    while (($listItem = i5_job_list_read($list)) && (++$jobCount <= 5)) {
-			echo printArray($listItem) .  '<BR>';
-	}
-	echo 'End of list.<BR><BR>';
+    echo h2('Job lists');
+        
+    echo "About to get up to 5 jobs with jobname ZENDSVR (can also do I5_JOBUSER, I5_USERNAME, I5_JOBNUMBER, and I5_JOBTYPE).<BR>";
+    
+    $list = i5_job_list(array(I5_JOBNAME=>'ZENDSVR'));
+    if (!$list) {
+        echo 'Error getting job list: ' . printArray(i5_error()) . '<BR>';
+    } else {
+        $jobCount = 0;
+        while (($listItem = i5_job_list_read($list)) && (++$jobCount <= 5)) {
+                echo printArray($listItem) .  '<BR>';
+        }
+        echo 'End of list.<BR><BR>';
+    }
+    
+    i5_job_list_close($list);
+    
+    // Get info about current job
+    echo "Getting information about current job.<BR>";
+    $list = i5_job_list();//array(I5_USERNAME=>'*ALL'), $conn);
+    if (!$list) {
+        echo 'Error getting job list: ' . printArray(i5_error()) . '<BR>';
+    } else {
+         // should be only one for current job.
+        $listItem = i5_job_list_read($list);
+        echo "<BR>list item for current job: " . printArray($listItem) . "<BR><BR>"; 
+        echo "Job name: {$listItem[I5_JOB_NAME]} user: {$listItem[I5_JOB_USER_NAME]} job number: {$listItem[I5_JOB_NUMBER]}<BR><BR>";
+    }
+        
+    i5_job_list_close($list);
 }
-i5_job_list_close($list);
-
-
-// Get info about current job
-echo "Getting information about current job.<BR>";
-$list = i5_job_list();//array(I5_USERNAME=>'*ALL'), $conn);
-if (!$list) {
-	echo 'Error getting job list: ' . printArray(i5_error()) . '<BR>';
-} else {
-	     // should be only one for current job.
-	    $listItem = i5_job_list_read($list);
-	    echo "<BR>list item for current job: " . printArray($listItem) . "<BR><BR>"; 
-	    echo "Job name: {$listItem[I5_JOB_NAME]} user: {$listItem[I5_JOB_USER_NAME]} job number: {$listItem[I5_JOB_NUMBER]}<BR><BR>";
-}
-i5_job_list_close($list);
-
-} //(if do job lists)
-
-
-
 
 if ($doSpooledFiles) {
-
-echo h2('Spooled Files');
-
-$splUser = 'QTMHHTTP';
-echo "Get up to 5 spooled files for user $splUser<BR>";
-$list = i5_spool_list(array(I5_USERNAME=>$splUser), $conn);
-if (!$list) {
-	echo 'Error getting spool list: ' . printArray(i5_error()) . '<BR>';
-} else {
+    echo h2('Spooled Files');
+    
+    $splUser = 'QTMHHTTP';
+    echo "Get up to 5 spooled files for user $splUser<BR>";
+    $list = i5_spool_list(array(I5_USERNAME=>$splUser), $conn);
+    if (!$list) {
+        echo 'Error getting spool list: ' . printArray(i5_error()) . '<BR>';
+    } else {
         $spoolCount = 0;
-	    while (($listItem = i5_spool_list_read($list)) && (++$spoolCount <= 5)) {
-	        echo "<BR>list item: " . printArray($listItem) . "<BR>";
-	        echo '<BR>Output data for this spool file: <BR>';
-	        $data = i5_spool_get_data($listItem['SPLFNAME'],
-	                                  $listItem['JOBNAME'],
-	                                  $listItem['USERNAME'],
-	                                  $listItem['JOBNBR'],
-	                                  $listItem['SPLFNBR']);
-	        if (!$data) {
-	        	echo '<BR>No spool data. Error info: ' . printArray(i5_error()) . '<BR>';
-	        } else {
-	        	echo "<PRE>$data</PRE><BR>";
-	        } //(if data)
-	        
-	    }    	
-}
-i5_spool_list_close($list);
-
-
-$outq = 'QGPL/QPRINT';
-echo "<BR>Get up to 5 spooled files for outq $outq (may get permissions message if user's authority is insufficient)<BR>";
-$list = i5_spool_list(array(I5_OUTQ=>$outq), $conn);
-if (!$list) {
-	echo 'Error getting spool list: ' . printArray(i5_error()) . '<BR>';
-} else {
-
+        while (($listItem = i5_spool_list_read($list)) && (++$spoolCount <= 5)) {
+            echo "<BR>list item: " . printArray($listItem) . "<BR>";
+            echo '<BR>Output data for this spool file: <BR>';
+            $data = i5_spool_get_data($listItem['SPLFNAME'],
+                                          $listItem['JOBNAME'],
+                                          $listItem['USERNAME'],
+                                          $listItem['JOBNBR'],
+                                          $listItem['SPLFNBR']);
+            if (!$data) {
+                echo '<BR>No spool data. Error info: ' . printArray(i5_error()) . '<BR>';
+            } else {
+                echo "<PRE>$data</PRE><BR>";
+            }
+        }    	
+    }
+    
+    i5_spool_list_close($list);
+    
+    $outq = 'QGPL/QPRINT';
+    echo "<BR>Get up to 5 spooled files for outq $outq (may get permissions message if user's authority is insufficient)<BR>";
+    $list = i5_spool_list(array(I5_OUTQ=>$outq), $conn);
+    if (!$list) {
+        echo 'Error getting spool list: ' . printArray(i5_error()) . '<BR>';
+    } else {
+    
         $spoolCount = 0;
-	    while (($listItem = i5_spool_list_read($list)) && (++$spoolCount <= 5)) {
-	
-	        echo "<BR>list item: " . printArray($listItem) . "<BR>";
-	        echo '<BR>Output data for this spool file: <BR>';
-	        $data = i5_spool_get_data($listItem['SPLFNAME'],
-	                                  $listItem['JOBNAME'],
-	                                  $listItem['USERNAME'],
-	                                  $listItem['JOBNBR'],
-	                                  $listItem['SPLFNBR']);
-	        if (!$data) {
-	        	echo '<BR>No spool data. Error info: ' . printArray(i5_error()) . '<BR>';
-	        } else {
-	        	echo "<PRE>$data</PRE><BR>";
-	        } //(if data)
-	        
-	    } //(while spool files) 	
+        while (($listItem = i5_spool_list_read($list)) && (++$spoolCount <= 5)) {
+    
+            echo "<BR>list item: " . printArray($listItem) . "<BR>";
+            echo '<BR>Output data for this spool file: <BR>';
+            $data = i5_spool_get_data($listItem['SPLFNAME'],
+                                      $listItem['JOBNAME'],
+                                      $listItem['USERNAME'],
+                                      $listItem['JOBNBR'],
+                                      $listItem['SPLFNBR']);
+            if (!$data) {
+                echo '<BR>No spool data. Error info: ' . printArray(i5_error()) . '<BR>';
+            } else {
+                echo "<PRE>$data</PRE><BR>";
+            }
+        }
+    }
+    
+    i5_spool_list_close($list);
 }
-i5_spool_list_close($list);
-
-
-} //(spooled files)
-
 
 // job log.
 if ($doJobLogs) {
-
-echo h2('Job logs');	
-	
-// Try current job. Good, it works, except for not enough data coming back from PHP wrapper.
-echo "About to get joblog (partial data) for current job<BR>";
-$list = i5_jobLog_list();
-if (!$list) {
-	echo 'No joblogs found<BR>';
-} else {
-	
-    while ($listItem = i5_jobLog_list_read($list)) {
-			echo printArray($listItem);
-	}
-	echo '<BR>End of list.<BR><BR>';
+    echo h2('Job logs');	
+        
+    // Try current job. Good, it works, except for not enough data coming back from PHP wrapper.
+    echo "About to get joblog (partial data) for current job<BR>";
+    $list = i5_jobLog_list();
+    if (!$list) {
+        echo 'No joblogs found<BR>';
+    } else {
+        
+        while ($listItem = i5_jobLog_list_read($list)) {
+                echo printArray($listItem);
+        }
+        echo '<BR>End of list.<BR><BR>';
+    }
+    
+    i5_jobLog_list_close($list);
 }
-i5_jobLog_list_close($list);
-
-} //(if do joblogs)
-
 
 if ($doAdoptAuthority) {
-
 	echo h2('Adopt authority');	
 	
 	// Note: only works if you've defined $user and $testPw, and created the user profile.
@@ -1062,14 +1030,11 @@ if ($doAdoptAuthority) {
         if (function_exists('i5_output')) extract(i5_output()); // i5_output() required if called in a function
         
         echo "Ran command $cmdString. Return: " . OkBad($commandSuccessful) . 
-              " with original job user '$jobUser',  current user '$currentUser', CCSID '$ccsid', default CCSID '$defaultCcsid', job name '$jobName', job number '$jobNumber', with user liblist '$userLibl'.<BR><BR>";
-    	
-    } //(if $success)
-	
-} //(if ($doAdoptAuthority))
+              " with original job user '$jobUser', current user '$currentUser', CCSID '$ccsid', default CCSID '$defaultCcsid', job name '$jobName', job number '$jobNumber', with user liblist '$userLibl'.<BR><BR>";
+    }
+}
 
-
-$ret = i5_close();//$conn optional
+$ret = i5_close($conn);//$conn optional
 
 echo h2('Connection close');
 echo "Closed i5 connection. return status: " . OkBad($ret) . ".";
