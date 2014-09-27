@@ -93,7 +93,7 @@ class ListFromApi
      */
     public function __construct($requestHandle, $totalRecords, $receiverDs, $lengthOfReceiverVariable, ToolkitService $ToolkitSrvObj = null)
     {
-        if ($ToolkitSrvObj instanceof ToolkitService ) {
+        if ($ToolkitSrvObj instanceof ToolkitService) {
             $this->ToolkitSrvObj = $ToolkitSrvObj;
         }
         
@@ -102,7 +102,6 @@ class ListFromApi
         $this->_totalRecords = $totalRecords;
         $this->_nextRecordToRequest = 1; // will request record #1 when someone asks
         $this->_receiverDs = $receiverDs; // will request record #1 when someone asks
-        
     }
 
     /**
@@ -197,7 +196,8 @@ class ListFromApi
                     </parm>\n" . ToolkitService::getErrorDataStructXml(2); // param number 2
         
         // pass param xml directly in.
-        $retPgmArr = $this->ToolkitSrvObj->PgmCall($apiPgm, $apiLib, $paramXml);
+        $this->ToolkitSrvObj->PgmCall($apiPgm, $apiLib, $paramXml);
+        
         // GUI0006 means end of list
         if ($this->ToolkitSrvObj->getErrorCode()) {
            return false;
@@ -212,7 +212,7 @@ class ListFromApi
  *
  * @package ToolkitApi
  */
-class UserSpace{
+class UserSpace {
     private $ToolkitSrvObj;
     private $USName = NULL;
     private $USlib = 'QTEMP';
@@ -289,7 +289,7 @@ class UserSpace{
      * @return bool
      */
     public function CreateUserSpace($UserSpaceName = NULL, $USLib = NULL, $InitSize =1024, $publicAuthority = '*ALL', $InitValue=' ', 
-                                    $extendedAttribute='PF', $textDescription='ZS XML Service User Space' )
+                                    $extendedAttribute='PF', $textDescription='ZS XML Service User Space')
     {    
         // @todo check that 1 <= InitSize <= 16776704 
         
@@ -344,12 +344,12 @@ class UserSpace{
         $ds[]=ToolkitService::AddParameterInt32('out', "Bytes returned", 'ret_bytes', $BytesRet);
         $ds[]=ToolkitService::AddParameterInt32('out', "Bytes available", 'bytes_avail', $BytesAv);
         $ds[]=ToolkitService::AddParameterInt32('out', "Space size", 'spacesize', $USSize);
-        $ds[]=ToolkitService::AddParameterChar('out',1,"Automatic extendibility",'extend_automatic', $Ext);
-        $ds[]=ToolkitService::AddParameterChar('out',1, "Initial value", 'initval', $InitVal);
-        $ds[]=ToolkitService::AddParameterChar('out',10, "User space library name",'uslib', $libName);
+        $ds[]=ToolkitService::AddParameterChar('out', 1, "Automatic extendibility",'extend_automatic', $Ext);
+        $ds[]=ToolkitService::AddParameterChar('out', 1, "Initial value", 'initval', $InitVal);
+        $ds[]=ToolkitService::AddParameterChar('out', 10, "User space library name", 'uslib', $libName);
         //$params[] = array('ds'=>$ds);
         $params[] = ToolkitService::AddDataStruct($ds, 'receiver'); // note that ds names are discarded
-        $params[] = ToolkitService::AddParameterInt32('in',"Length of reciever",'reciver_len', 24);
+        $params[] = ToolkitService::AddParameterInt32('in', "Length of reciever",'reciver_len', 24);
         $params[] = ToolkitService::AddParameterChar('in', 8, "Format name", 'format', "SPCA0100");
         $params[] = ToolkitService::AddParameterChar('in', 20, "User space name and library", 'usfullname', $this->getUSFullName());      
         $params[] = ToolkitService::AddErrorDataStruct();
@@ -391,7 +391,7 @@ class UserSpace{
      */
     public function DeleteUserSpace()
     {
-        $params[] = ToolkitService::AddParameterChar('in',20, "User space name", 'userspacename', $this->getUSFullName());    
+        $params[] = ToolkitService::AddParameterChar('in', 20, "User space name", 'userspacename', $this->getUSFullName());    
         $params[] = ToolkitService::AddErrorDataStruct();
         
         $retPgmArr = $this->ToolkitSrvObj->PgmCall('QUSDLTUS', 'QSYS', $params);
@@ -400,7 +400,7 @@ class UserSpace{
             return false;
         }
             
-        return true; //deleted
+        return true;
     }
     
     /**
@@ -414,11 +414,11 @@ class UserSpace{
     public function WriteUserSpace($startpos = 1, $valuelen, $value)
     {
         //Size ($comment, $varName = '', $labelFindLen = null) {
-        $params[] =  ToolkitService::AddParameterChar ('in', 20,"User space name and lib",'usfullname', $this->getUSFullName());    
+        $params[] =  ToolkitService::AddParameterChar ('in', 20, "User space name and lib", 'usfullname', $this->getUSFullName());    
         $params[] =  ToolkitService::AddParameterInt32('in', "Starting position",'pos_from', $startpos);
-        $params[] =  ToolkitService::AddParameterInt32('in',"Length of data",'dataLen', $valuelen);
-        $params[] =  ToolkitService::AddParameterChar('in', $valuelen, "Input data", 'data_value',$value);
-        $params[] =  ToolkitService::AddParameterChar('in', 1, "Force changes to auxiliary storage",'aux_storage' ,'0');
+        $params[] =  ToolkitService::AddParameterInt32('in', "Length of data", 'dataLen', $valuelen);
+        $params[] =  ToolkitService::AddParameterChar('in', $valuelen, "Input data", 'data_value', $value);
+        $params[] =  ToolkitService::AddParameterChar('in', 1, "Force changes to auxiliary storage", 'aux_storage', '0');
         $params[] =  ToolkitService::AddErrorDataStruct();
         $retPgmArr = $this->ToolkitSrvObj->PgmCall('QUSCHGUS', 'QSYS', $params);
         
@@ -449,11 +449,11 @@ class UserSpace{
         $labelForSizeOfInputData = 'dssize';
         $param->setParamLabelLen($labelForSizeOfInputData);
     //Size ($comment,  $varName = '', $labelFindLen = null) {
-        $params[] =  ToolkitService::AddParameterChar('in', 20,"User space name and lib",'usfullname', $this->getUSFullName());    
-        $params[] =  ToolkitService::AddParameterInt32('in', "Starting position",'pos_from', $startPos);
+        $params[] =  ToolkitService::AddParameterChar('in', 20,"User space name and lib", 'usfullname', $this->getUSFullName());    
+        $params[] =  ToolkitService::AddParameterInt32('in', "Starting position", 'pos_from', $startPos);
         $params[] =  ToolkitService::AddParameterSize("Length of data",'dataLen', $labelForSizeOfInputData);
         $params[] =  $param;
-        $params[] =  ToolkitService::AddParameterChar('in', 1, "Force changes to auxiliary storage",'aux_storage' ,'0');
+        $params[] =  ToolkitService::AddParameterChar('in', 1, "Force changes to auxiliary storage", 'aux_storage', '0');
         $params[] =  ToolkitService::AddErrorDataStruct();
         
         $retPgmArr = $this->ToolkitSrvObj->PgmCall('QUSCHGUS', 'QSYS', $params);
@@ -479,9 +479,7 @@ class UserSpace{
         //how to see via green screen DSPF STMF('/QSYS.lib/qgpl.lib/ZS14371311.usrspc')
         
         $dataRead = ' ';
-        $params[] = ToolkitService::AddParameterChar('in', 20,  "User space name and library",
-                                                    'userspacename',
-                                                    $this->getUSFullName());
+        $params[] = ToolkitService::AddParameterChar('in', 20,  "User space name and library", 'userspacename', $this->getUSFullName());
         $params[] = ToolkitService::AddParameterInt32('in',  "From position", 'position_from', $frompos);
 
         $receiverVarName = 'receiverdata';
@@ -494,11 +492,11 @@ class UserSpace{
             
             $labelForSizeOfInputData = 'dssize';
 //
-             $params[] = ToolkitService::AddParameterSize("Length of data",'dataLen', $labelForSizeOfInputData);
+             $params[] = ToolkitService::AddParameterSize("Length of data", 'dataLen', $labelForSizeOfInputData);
 
              // wrap simple ds around receive structure so we can assign a varname to retrieve later.
              $receiveDs[] = $receiveStructure;
-             $params[] = ToolkitService::AddDataStruct($receiveDs, $receiverVarName, 0, '', false,$labelForSizeOfInputData);
+             $params[] = ToolkitService::AddDataStruct($receiveDs, $receiverVarName, 0, '', false, $labelForSizeOfInputData);
 
         } else {
             // regular readlen, no special structure or size labels.
@@ -605,7 +603,7 @@ class TmpUserSpace extends UserSpace
      * @param int $DftUsSize
      * @throws \Exception
      */
-    function __construct($ToolkitService , $UsLib = DFTLIB, $DftUsSize = 32700)
+    function __construct($ToolkitService, $UsLib = DFTLIB, $DftUsSize = 32700)
     {        
         parent::__construct($ToolkitService);
         
@@ -677,7 +675,7 @@ class DataQueue
                                  $MaxLength=128,
                                  $Sequence ='*FIFO', $KeyLength=0,
                                  $Authority = '*LIBCRTAUT',
-                                 $QSizeMaxNumEntries=32999,  $QSizeInitNumEntries = 16)
+                                 $QSizeMaxNumEntries=32999, $QSizeInitNumEntries = 16)
     {
         $this->DataQueueName = $DataQName;
         $this->DataQueueLib = $DataQLib;
@@ -711,7 +709,7 @@ class DataQueue
             $InitEntryies = $QSizeInitNumEntries;
         }
         
-        $AdditionalSetting = sprintf("$KeyedSetting SENDERID(*YES) SIZE(%s %d)", $MaxQSize, $InitEntryies );
+        $AdditionalSetting = sprintf("$KeyedSetting SENDERID(*YES) SIZE(%s %d)", $MaxQSize, $InitEntryies);
         
        ($MaxLength > 64512) ? $MaxLen = 64512: $MaxLen = $MaxLength;  
        
@@ -823,6 +821,7 @@ class DataQueue
         $retPgmArr = $this->ToolkitService->PgmCall('QRCVDTAQ', 'QSYS', $params);
         if (isset($retPgmArr['io_param'])) {
             $DQData = $retPgmArr['io_param'];
+            
             if ($DQData['datalen']> 0) {
                 return $DQData;
             }
@@ -853,14 +852,14 @@ class DataQueue
         // QSNDDTAQ API:
         // http://publib.boulder.ibm.com/infocenter/iseries/v5r4/index.jsp?topic=%2Fapis%2Fqsnddtaq.htm
         
-        $params[] = $this->ToolkitService->AddParameterChar('in', 10, 'dqname','dqname', $this->DataQueueName);
+        $params[] = $this->ToolkitService->AddParameterChar('in', 10, 'dqname', 'dqname', $this->DataQueueName);
         $params[] = $this->ToolkitService->AddParameterChar('in', 10, 'dqlib', 'dqlib',$this->DataQueueLib);
          
-        $params[] = $this->ToolkitService->AddParameterPackDec('in', 5,0,'datalen', 'datalen', $DataLen, null);
-        $params[] = $this->ToolkitService->AddParameterChar('in',$DataLen, 'datavalue','datavalue',  $Data);
+        $params[] = $this->ToolkitService->AddParameterPackDec('in', 5, 0, 'datalen', 'datalen', $DataLen, null);
+        $params[] = $this->ToolkitService->AddParameterChar('in', $DataLen, 'datavalue','datavalue',  $Data);
         if ($KeyLength > 0 ) {
-            $params[] = $this->ToolkitService->AddParameterPackDec('in', 3, 0, 'keydatalen','keydatalen', $KeyLength, null);        
-            $params[] = $this->ToolkitService->AddParameterChar('in', $KeyLength, 'keydata','keydata',  $KeyData);
+            $params[] = $this->ToolkitService->AddParameterPackDec('in', 3, 0, 'keydatalen', 'keydatalen', $KeyLength, null);        
+            $params[] = $this->ToolkitService->AddParameterChar('in', $KeyLength, 'keydata', 'keydata',  $KeyData);
         }
         
         $ret = $this->ToolkitService->PgmCall('QSNDDTAQ', 'QSYS', $params);
@@ -880,7 +879,7 @@ class DataQueue
         $params[]=$this->ToolkitService->AddParameterChar('in', 10, 'dqname', 'dqname', $this->DataQueueName);
         $params[]=$this->ToolkitService->AddParameterChar('in', 10, 'dqlib', 'dqlib', $this->DataQueueLib);
         if ($KeyLength > 0) {
-            $params[] = $this->ToolkitService->AddParameterChar('in', 2, 'keydataorder','keydataorder', $KeyOrder);
+            $params[] = $this->ToolkitService->AddParameterChar('in', 2, 'keydataorder', 'keydataorder', $KeyOrder);
             $params[] = $this->ToolkitService->AddParameterPackDec('in', 3, 0, 'keydatalen', 'keydatalen', $KeyLength);
             $params[] = $this->ToolkitService->AddParameterChar('in', ((int)$KeyLength), 'keydata', 'keydata', $KeyData);
             //$params[] = array('ds'=>$this->ToolkitService->GenerateErrorParameter());
@@ -921,7 +920,7 @@ class SpooledFiles
     public function __construct(ToolkitService $ToolkitSrvObj = NULL, $UserLib = NULL)
     {
         if ($ToolkitSrvObj instanceof ToolkitService) {
-                $this->ToolkitSrvObj = $ToolkitSrvObj;
+            $this->ToolkitSrvObj = $ToolkitSrvObj;
                     
             // @todo do not assume a specific plug size.
             $this->ToolkitSrvObj->setOptions(array('plugSize'=>'1M'));
@@ -968,10 +967,10 @@ class SpooledFiles
         $this->TmpUserSpace = new TmpUserSpace($this->ToolkitSrvObj, DFTLIB);
         
         $UsFullName = $this->TmpUserSpace->getUSFullName();
-        $params[] = $this->ToolkitSrvObj->AddParameterChar('in', 20,"User Space Name", 'userspacename', $UsFullName);
+        $params[] = $this->ToolkitSrvObj->AddParameterChar('in', 20, "User Space Name", 'userspacename', $UsFullName);
         $params[] = $this->ToolkitSrvObj->AddParameterChar('in', 10, "User Name", 'username', $UserName);
-        //$retval[]= $this->ToolkitSrvObj->AddReturnParameter('10i0','retval',0);
-        $retval[]= $this->ToolkitSrvObj->AddParameterInt32('out','retval','retval', 0);
+        //$retval[]= $this->ToolkitSrvObj->AddReturnParameter('10i0', 'retval', 0);
+        $retval[]= $this->ToolkitSrvObj->AddParameterInt32('out', 'retval', 'retval', 0);
         
         $this->ToolkitSrvObj->PgmCall(ZSTOOLKITPGM, $this->ToolkitSrvObj->getOption('HelperLib'), 
                                                $params, $retval,
@@ -1009,7 +1008,7 @@ class SpooledFiles
         
         foreach($SpoolInfListArr as $tmparr)
         {
-            $list[] =  array('Number' => substr($tmparr, 0, 4), 
+            $list[] = array('Number' => substr($tmparr, 0, 4), 
                               'Name' => substr($tmparr, 4, 10),
                               'JobNumber' => substr($tmparr, 14, 6),
                               'JobName' =>  substr($tmparr, 20,10),
@@ -1019,7 +1018,7 @@ class SpooledFiles
                               'TotalPages' =>  substr($tmparr, 70, 5),
                               'Status' =>  substr($tmparr, 75, 10),
                               'DateOpen'=> substr($tmparr, 85, 7),
-                              'TimeOpen'=>substr($tmparr, 92,6)
+                              'TimeOpen'=>substr($tmparr, 92, 6)
             );
         }
         
@@ -1045,7 +1044,7 @@ class SpooledFiles
         }
          
         // @todo under the flag for current Object???
-        $crtf = "CRTDUPOBJ OBJ(ZSF255) FROMLIB(".$this->ToolkitSrvObj->getOption('HelperLib').") OBJTYPE(*FILE) TOLIB($this->TmpLib) NEWOBJ($this->TMPFName)";
+        $crtf = "CRTDUPOBJ OBJ(ZSF255) FROMLIB(" . $this->ToolkitSrvObj->getOption('HelperLib') . ") OBJTYPE(*FILE) TOLIB($this->TmpLib) NEWOBJ($this->TMPFName)";
         $this->ToolkitSrvObj->ClCommandWithCpf($crtf); // was ClCommand
         
         // clear the temp file
@@ -1054,7 +1053,7 @@ class SpooledFiles
         
         // copy spooled file to temp file
         $cmd = sprintf ("CPYSPLF FILE(%s) TOFILE($this->TmpLib/$this->TMPFName) JOB(%s/%s/%s) SPLNBR(%s)", 
-                     $SplfName , trim($JobNmbr), trim($JobUser), trim($JobName), $SplfNbr);
+                     $SplfName, trim($JobNmbr), trim($JobUser), trim($JobName), $SplfNbr);
         
         $this->ToolkitSrvObj->ClCommandWithCpf($cmd);
         sleep(1);
@@ -1113,7 +1112,7 @@ class JobLogs
 {
     private $JOBLIST_RECORD_SIZE = 60;
     private $JOBLOG_RECORD_SIZE  = 80;
-    private $Temp_US_Size         = 128000;
+    private $Temp_US_Size        = 128000;
     private $ToolkitSrvObj;
     private $TmpUserSpace;
     private $TmpLib = DFTLIB;
@@ -1168,11 +1167,11 @@ class JobLogs
         $this->TmpUserSpace = new TmpUserSpace($this->ToolkitSrvObj, $this->TmpLib, $this->Temp_US_Size); 
         $FullUSName = $this->TmpUserSpace->getUSFullName();
             
-        $params[]=$this->ToolkitSrvObj->AddParameterChar('input', 20, 'USER SPACE NAME','userspacename', $FullUSName);
-        $params[]=$this->ToolkitSrvObj->AddParameterChar('input',10,'USER NAME', 'username',$ForUser);
-        $params[]=$this->ToolkitSrvObj->AddParameterChar('input',10,'Job status', 'jobstatus',$JobStatus);
+        $params[]=$this->ToolkitSrvObj->AddParameterChar('input', 20, 'USER SPACE NAME', 'userspacename', $FullUSName);
+        $params[]=$this->ToolkitSrvObj->AddParameterChar('input', 10, 'USER NAME', 'username', $ForUser);
+        $params[]=$this->ToolkitSrvObj->AddParameterChar('input', 10, 'Job status', 'jobstatus', $JobStatus);
     
-        $ret = $this->ToolkitSrvObj->PgmCall(ZSTOOLKITPGM, $this->ToolkitSrvObj->getOption('HelperLib'), $params,NULL, array ('func' => 'JOBLIST'));
+        $ret = $this->ToolkitSrvObj->PgmCall(ZSTOOLKITPGM, $this->ToolkitSrvObj->getOption('HelperLib'), $params, NULL, array ('func' => 'JOBLIST'));
         sleep(1);    
         $JobList  = $this->TmpUserSpace->ReadUserSpace(1, $this->TmpUserSpace->RetrieveUserSpaceSize());
         
@@ -1228,9 +1227,9 @@ class JobLogs
         
         $this->TmpUserSpace = new TmpUserSpace($this->ToolkitSrvObj, $this->TmpLib); 
         $FullUSName = $this->TmpUserSpace->getUSFullName();
-        $InputArray[]=$this->ToolkitSrvObj->AddParameterChar('input',20,'USER SPACE NAME','userspacename', $FullUSName);
-        $InputArray[]=$this->ToolkitSrvObj->AddParameterChar('input',10,'JOB NAME','jobname',$JobName);
-        $InputArray[]=$this->ToolkitSrvObj->AddParameterChar('input',10,'USER NAME','username',$JobUser);
+        $InputArray[]=$this->ToolkitSrvObj->AddParameterChar('input', 20, 'USER SPACE NAME', 'userspacename', $FullUSName);
+        $InputArray[]=$this->ToolkitSrvObj->AddParameterChar('input', 10, 'JOB NAME', 'jobname', $JobName);
+        $InputArray[]=$this->ToolkitSrvObj->AddParameterChar('input', 10, 'USER NAME', 'username', $JobUser);
         //L from the last log message to the first one
         //from the first message to the last one
         $dir = 'L';
@@ -1239,11 +1238,11 @@ class JobLogs
             $dir = $direction;
         }
         
-        $InputArray[]=$this->ToolkitSrvObj->AddParameterChar('input', 6, 'Job Number','jobnumber',$JobNumber);
+        $InputArray[]=$this->ToolkitSrvObj->AddParameterChar('input', 6, 'Job Number', 'jobnumber', $JobNumber);
         //From the Last - "L"
-        $InputArray[]=$this->ToolkitSrvObj->AddParameterChar('input',1, 'Direction','direction',$dir);
+        $InputArray[]=$this->ToolkitSrvObj->AddParameterChar('input', 1, 'Direction', 'direction', $dir);
         $ret_code ='0';
-        $InputArray[]=$this->ToolkitSrvObj->AddParameterChar('both', 1, 'retcode','retcode',$ret_code);
+        $InputArray[]=$this->ToolkitSrvObj->AddParameterChar('both', 1, 'retcode', 'retcode', $ret_code);
         
         $OutputArray = $this->ToolkitSrvObj->PgmCall(ZSTOOLKITPGM, $this->ToolkitSrvObj->getOption('HelperLib'), $InputArray, NULL, array('func'=>'JOBLOGINFO'));
         if (isset($OutputArray['io_param']['retcode'])) {
@@ -1256,11 +1255,11 @@ class JobLogs
         
         sleep(1);
         
-        $JobLogRows = $this->TmpUserSpace->ReadUserSpace (1, $this->TmpUserSpace->RetrieveUserSpaceSize());
+        $JobLogRows = $this->TmpUserSpace->ReadUserSpace(1, $this->TmpUserSpace->RetrieveUserSpaceSize());
         $this->TmpUserSpace->DeleteUserSpace();
         unset ($this->TmpUserSpace);
 
-        if (trim($JobLogRows)!='' ) {
+        if (trim($JobLogRows) != '') {
             $logArray = str_split($JobLogRows, $this->JOBLOG_RECORD_SIZE);
             return $logArray;
         } else {
@@ -1282,15 +1281,16 @@ class JobLogs
         /**
          * used format:JOBI0200
          */
-        if ($JobName=='' ||$JobUser=='' || $JobNumber == '')
-           return false; //nothing to show
+        if ($JobName=='' ||$JobUser=='' || $JobNumber == '') {
+            return false; //nothing to show
+        }
            
         $reciever =" ";
         $jobName26 = sprintf("%-10s%-10s%-6s", $JobName, $JobUser, $JobNumber);
         
         // changed
         $receiverSize = 1000; // 200
-        $params[] =  ToolkitService::AddParameterChar('input', 26, "QualifiedJobName", 'JobName',trim($jobName26));        
+        $params[] =  ToolkitService::AddParameterChar('input', 26, "QualifiedJobName", 'JobName', trim($jobName26));        
         $params[] =  ToolkitService::AddParameterChar('both', $receiverSize, "reciever", 'reciever', $reciever);                                
         $ret = $this->ToolkitSrvObj->PgmCall(ZSTOOLKITPGM, $this->ToolkitSrvObj->getOption('HelperLib'), $params, NULL, array('func'=>'GETJOBINFO'));
         if ($ret && trim($ret['io_param']['reciever'])!='') {
@@ -1307,8 +1307,8 @@ class JobLogs
     private function parseJobInfString($jobinfo)
     {
         return array(
-            'JobName'=>substr($jobinfo, 0, 10 ),
-            'JobUser'=>substr($jobinfo, 10, 10 ),
+            'JobName'=>substr($jobinfo, 0, 10),
+            'JobUser'=>substr($jobinfo, 10, 10),
             'JobNumber'=>substr($jobinfo, 20, 6),
             'JobStatus'=>substr($jobinfo, 26, 10),
             'ActJobStat'=>substr($jobinfo, 36, 4),
@@ -1328,7 +1328,7 @@ class JobLogs
  */
 class ObjectLists
 {
-    private $OBJLLISTREC_SIZE=30;
+    private $OBJLLISTREC_SIZE = 30;
     private $ToolkitSrvObj;
     private $TmpUserSpace ;
     private $ErrMessage;
@@ -1346,24 +1346,6 @@ class ObjectLists
         }
     }
     
-/*    private function verify_CPFError($retPgmArr, $functionErrMsg)
-    {
-        if (!is_array($retPgmArr)) {
-            $this->ErrMessage = $functionErrMsg . $this->ToolkitSrvObj->getLastError();
-            return true;
-        }
-        
-        $retArr = $retPgmArr['io_param'];
-        if (isset($retArr) && strcmp($retArr['exceptId'], '0000000')) {
-                $this->CPFErr = $retArr['exceptId'];
-                $this->ErrMessage = $functionErrMsg . $this->CPFErr;
-            return true; //some problem
-         }
-         
-         return false; 
-    }
-*/    
-    
     /**
      * @param string $object = *ALL, *name, *generic name
      * @param string $library = *ALL, *name, *generic name
@@ -1371,7 +1353,7 @@ class ObjectLists
      * @return array|bool
      * @throws \Exception
      */
-    public function getObjectList($object= '*ALL', $library='*LIBL', $objecttype ='*ALL')
+    public function getObjectList($object = '*ALL', $library = '*LIBL', $objecttype = '*ALL')
     {
         $ObjName = $object;
         $ObjLib  = $library;
@@ -1381,13 +1363,12 @@ class ObjectLists
         
         $UsFullName = $this->TmpUserSpace->getUSFullName();
 
-        $params[] = $this->ToolkitSrvObj->AddParameterChar('in', 20, "User Space Name", 'userspacename',$UsFullName);
-        $params[] = $this->ToolkitSrvObj->AddParameterChar('in', 10, "Object name", 'objectname',$ObjName);
-        $params[] = $this->ToolkitSrvObj->AddParameterChar('in', 10, "Object library",'objectlib', $ObjLib);
+        $params[] = $this->ToolkitSrvObj->AddParameterChar('in', 20, "User Space Name", 'userspacename', $UsFullName);
+        $params[] = $this->ToolkitSrvObj->AddParameterChar('in', 10, "Object name", 'objectname', $ObjName);
+        $params[] = $this->ToolkitSrvObj->AddParameterChar('in', 10, "Object library", 'objectlib', $ObjLib);
         $params[] = $this->ToolkitSrvObj->AddParameterChar('in', 10, "Object Type", 'objecttype', $ObjType);
         $this->ToolkitSrvObj->PgmCall(ZSTOOLKITPGM, $this->ToolkitSrvObj->getOption('HelperLib'), $params, NULL, array('func' => 'OBJLST'));
         
-        $ObjList ='';
         $ObjList  = $this->TmpUserSpace->ReadUserSpace(1, $this->TmpUserSpace->RetrieveUserSpaceSize());
         $this->TmpUserSpace->DeleteUserSpace();
         
@@ -1434,7 +1415,7 @@ class SystemValues
     public function setConnection ($dbname , $user, $pass)
     {
         if (!$this->ToolkitSrvObj instanceof ToolkitService) {
-            $this->ToolkitSrvObj = new ToolkitService($dbname, $user, $pass );
+            $this->ToolkitSrvObj = new ToolkitService($dbname, $user, $pass);
         }
     }
 
@@ -1448,6 +1429,7 @@ class SystemValues
         }
         
         $tmparray = $this->ToolkitSrvObj->CLInteractiveCommand ('WRKSYSVAL OUTPUT(*PRINT)');
+        
         if (isset($tmparray)) {
             $i = 4;
             while (isset($tmparray [$i + 1])) {
@@ -1479,10 +1461,11 @@ class SystemValues
         
         $Err = ' ';
         $SysValue = ' ';
-        $params [] = $this->ToolkitSrvObj->AddParameterChar('both',1, "ErrorCode", 'errorcode',$Err);
-        $params [] = $this->ToolkitSrvObj->AddParameterChar('both',10, "SysValName",'sysvalname', $sysValueName);
-        $params [] = $this->ToolkitSrvObj->AddParameterChar('both',1024, "SysValue", 'sysval',$SysValue);
-        $retArr = $this->ToolkitSrvObj->PgmCall(ZSTOOLKITPGM, $this->ToolkitSrvObj->getOption('HelperLib'), $params,NULL, array('func' => 'RTVSYSVAL'));
+        $params [] = $this->ToolkitSrvObj->AddParameterChar('both', 1, "ErrorCode", 'errorcode', $Err);
+        $params [] = $this->ToolkitSrvObj->AddParameterChar('both', 10, "SysValName", 'sysvalname', $sysValueName);
+        $params [] = $this->ToolkitSrvObj->AddParameterChar('both', 1024, "SysValue", 'sysval', $SysValue);
+        $retArr = $this->ToolkitSrvObj->PgmCall(ZSTOOLKITPGM, $this->ToolkitSrvObj->getOption('HelperLib'), $params, NULL, array('func' => 'RTVSYSVAL'));
+        
         if ($retArr !== false  && isset($retArr['io_param'])) {
             $sysval = $retArr['io_param'];
             if (isset($sysval['sysvalname'])) {
@@ -1538,7 +1521,7 @@ class DataArea
     public function __construct(ToolkitService $ToolkitSrvObj = null)
     {
         if ($ToolkitSrvObj instanceof ToolkitService) {
-            $this->ToolkitSrvObj = $ToolkitSrvObj ;
+            $this->ToolkitSrvObj = $ToolkitSrvObj;
             return $this;
         } else {
             return false;
@@ -1550,14 +1533,12 @@ class DataArea
      * use CL command
      * 
      * @param string $DataAreaName
-     * @param string $DataAreaLib
+     * @param string $DataAreaLib *CURLIB is correct, the default with CRTDTAARA.
      * @param int $size
      * @return bool
      * @throws \Exception
      */
-    public function createDataArea($DataAreaName = '', 
-                                    $DataAreaLib = "*CURLIB", // *CURLIB is correct, the default with CRTDTAARA. 
-                                     $size = 2000)
+    public function createDataArea($DataAreaName = '', $DataAreaLib = "*CURLIB", $size = 2000)
     {    
         if ($DataAreaName !='' && $this->DataAreaName == NULL) { /*was not set before*/
             $this->setDataAreaName($DataAreaName , $DataAreaLib);
@@ -1575,7 +1556,7 @@ class DataArea
        
         // @todo get CPF code
         if (!$this->ToolkitSrvObj->CLCommand($cmd)) {
-            $this->ErrMessage =  "Create Data Area failed.". $this->ToolkitSrvObj->getLastError();
+            $this->ErrMessage =  "Create Data Area failed." . $this->ToolkitSrvObj->getLastError();
             throw new \Exception($this->ErrMessage);
         }
         
@@ -1587,7 +1568,6 @@ class DataArea
      */
     private function getAPIDataAreaName()
     {     
-        // "DATAAREA  LIBRARY"
         return  (sprintf("%-10s%-10s", $this->DataAreaName, $this->DataAreaLib));
     }
 
@@ -1611,7 +1591,7 @@ class DataArea
      * @param string $dataAreaLib
      * @throws \Exception
      */
-    public function setDataAreaName($dataAreaName , $dataAreaLib = "*LIBL")
+    public function setDataAreaName($dataAreaName, $dataAreaLib = "*LIBL")
     {    
         /**
          * special values:
@@ -1663,8 +1643,6 @@ class DataArea
         
         $toolkit = $this->ToolkitSrvObj;
         
-        // new way
-
         /**
          * Retrieve Data Area (QWCRDTAA) API
          * http://publib.boulder.ibm.com/infocenter/iseries/v5r3/index.jsp?topic=%2Fapis%2Fqwcrdtaa.htm
@@ -1754,7 +1732,7 @@ class DataArea
      * @param int $dataLen
      * @throws \Exception
      */
-    public function writeDataArea($value, $fromPosition=0, $dataLen=0)
+    public function writeDataArea($value, $fromPosition = 0, $dataLen = 0)
     {
         $substring = ''; // init
         if ($fromPosition > 0) {
@@ -1767,7 +1745,7 @@ class DataArea
                           $this->getQualifiedDataAreaName());
         
         if (!$this->ToolkitSrvObj->CLCommand($cmd)) {
-            $this->ErrMessage =  "Write into Data Area failed.". $this->ToolkitSrvObj->getLastError();
+            $this->ErrMessage =  "Write into Data Area failed." . $this->ToolkitSrvObj->getLastError();
             throw new \Exception($this->ErrMessage);
         }
     }
@@ -1779,14 +1757,14 @@ class DataArea
      * @param string $DataAreaLib
      * @throws \Exception
      */
-    public function deleteDataArea($DataAreaName='', $DataAreaLib='')
+    public function deleteDataArea($DataAreaName = '', $DataAreaLib = '')
     {
         $cmd = sprintf("QSYS/DLTDTAARA DTAARA(%s/%s)", 
                        ($DataAreaLib != '' ? $DataAreaLib : $this->DataAreaLib),
                        ($DataAreaName != NULL ? $DataAreaName : $this->DataAreaName));
         
         if (!$this->ToolkitSrvObj->CLCommand($cmd)) {
-            $this->ErrMessage =  "Delete Data Area failed.". $this->ToolkitSrvObj->getLastError();
+            $this->ErrMessage =  "Delete Data Area failed." . $this->ToolkitSrvObj->getLastError();
             throw new \Exception($this->ErrMessage);
         }
     }
