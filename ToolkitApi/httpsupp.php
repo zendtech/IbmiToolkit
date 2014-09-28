@@ -219,10 +219,9 @@ class httpsupp
      * @param string $db
      * @param $user
      * @param $pw
-     * @param array $options
      * @return $this
      */
-    public function http_connect($db = '*LOCAL', $user, $pw, $options=array())
+    public function http_connect($db = '*LOCAL', $user, $pw)
     {
         $this->_db = $db;
         $this->_user = $user;
@@ -235,12 +234,11 @@ class httpsupp
      * @param string $database
      * @param $user
      * @param $password
-     * @param null $options
      * @return httpsupp
      */
-    public function connect($database = '*LOCAL', $user, $password, $options = null)
+    public function connect($database = '*LOCAL', $user, $password)
     {
-        return $this->http_connect($database, $user, $password, $options = array());
+        return $this->http_connect($database, $user, $password);
     
     }
 
