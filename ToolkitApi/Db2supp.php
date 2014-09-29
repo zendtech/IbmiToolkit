@@ -146,14 +146,11 @@ class db2supp
     /**
      * this function used for special stored procedure call only
      * 
-     * @todo the end result of this function is actually passed into the function. Why do the return?
-     * 
      * @param $conn
      * @param $sql
-     * @param $bindArray
      * @return bool
      */
-    public function execXMLStoredProcedure($conn, $sql, $bindArray)
+    public function execXMLStoredProcedure($conn, $sql)
     {
         // @todo see why error doesn't properly bubble up to top level.
         $crsr = @db2_prepare($conn, $sql);
@@ -185,7 +182,7 @@ class db2supp
             return false;
         }
         
-        return $bindArray['outputXml'];
+        return true;
     }
 
     /**
