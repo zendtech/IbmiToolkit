@@ -172,6 +172,7 @@ class odbcsupp
      */
     public function executeQuery($conn, $stmt)
     {
+        $txt = array();
         $crsr = odbc_exec($conn, $stmt);
         
         if (is_resource($crsr)) {      
@@ -182,12 +183,12 @@ class odbcsupp
                     break;
                 }
                 
-                $Txt[]=  $row;
+                $txt[]=  $row;
             }
         } else {
             $this->setError($conn);
         }
         
-        return $Txt;
+        return $txt;
     }
 }
