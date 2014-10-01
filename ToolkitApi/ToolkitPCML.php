@@ -1,7 +1,7 @@
 <?php
 namespace ToolkitApi;
 
-use ToolkitApi\ProgramParameter;
+
 
 /**
  * Functionality for parsing PCML
@@ -104,10 +104,6 @@ class ToolkitPcml
             throw new \Exception("PCML file must contain program tag");
         }
         
-        $programNode = $pcmlObj->program;
-
-        $pgmAttrs = $programNode->attributes();
-
         /**
          * sample:
          * <program name="name"
@@ -120,30 +116,11 @@ class ToolkitPcml
          * </program>
          */
 
-        // let's focus on name, path, and entrypoint, the only attributes likely to be used here.
-        $givenPgmName = (isset($pgmAttrs['name'])) ? $pgmAttrs['name'] : ''; // ignored!
-        $path = (isset($pgmAttrs['path'])) ? $pgmAttrs['path'] : '';
-        $entrypoint = (isset($pgmAttrs['entrypoint'])) ? $pgmAttrs['entrypoint'] : '';
-
-        // Note: if entrypoint is supplied, it's the function in a service program. "name" will be the same as entrypoint.
-        // if entrypoint is not supplied, name is the actual program name.
-        // Therefore, "name" seems somewhat worthless.
-
-        // break up path, separated now by slashes. can be varied lib and pgm.
-        // remove the /qsys.lib that may be in front but only if it's simply qualifying another library. qsys may be the actual program library, too.
-
-        $objArray = $this->splitPcmlProgramPath($path);
-        
-        $pgmLib = ($objArray['lib']) ? $objArray['lib'] : '';
-        $pgmName = $objArray['obj'];
-        $pgmProcedure = ($entrypoint) ? $entrypoint : ''; // optional procedure (aka function)
-        
         // Now create data description array.
         // @todo create separate method to convert PCML to param array.
         $dataDescriptionArray = $this->pcmlToArray($xmlObj);
 
         //Change the encoding back to the one wanted by the user, since SimpleXML encodes its output always in UTF-8
-        $pgmName = mb_convert_encoding($pgmName, $encoding, 'UTF-8');
         mb_convert_variables($encoding, 'UTF-8', $dataDescriptionArray);
 
         $this->_description  = $dataDescriptionArray;
@@ -353,8 +330,6 @@ class ToolkitPcml
                 $passBy = 'val'; // rare. PCML calls it 'value'. XMLSERVICE calls it 'val'.
             }
             
-            $newtype = '';
-            
             // find new toolkit equivalent of PCML data type
             if (isset($this->_pcmlTypeMap[$type])) {
                 // a simple type mapping
@@ -378,24 +353,12 @@ class ToolkitPcml
             // well, it's already handled by toolkit....try and see, though.
             // poss. eliminate extra object levels, at least?
             
-            // @todo (I think I did it!) handle this better. Use 'dim'.
-            // See if Count can replace $dim as I did.
-            // if $dim, it's an array. Otherwise a single value.
             if ($count > 1) {
-                // array of dummy values, dimension of $dim
-                // @todo: should be able to use a single ProgramParameter object with the 'dim' value set.
-                //       Or try to fix into a DS mold.
-            //    $dataValue = array_fill(0, $count, '');
                 $isArray = true;
             } else {
                 // no need for any dummy value.Could be 'init' from above, or leave the default.
-//                $dataValue = '';
                 $isArray = false;
-                // and leave $dim alone to flow into the ProgramParmeter below.
             }
-            
-            // done with $dim. PHP wrapper handles dim differently.
-            $dim = 0;
         }
 
         // @todo I think simply add 'counterLabel' and 'countedLabel'. 
@@ -440,10 +403,10 @@ class ToolkitPcml
     /**
      * given an XML object containing a PCML program definition, return an old toolkit style of data description array.
      * 
-     * @param SimpleXMLElement $xmlObj
+     * @param \SimpleXMLElement $xmlObj
      * @return array
      */
-    public function pcmlToArray(SimpleXMLElement $xmlObj)
+    public function pcmlToArray(\SimpleXMLElement $xmlObj)
     {
         $dataDescription = array();
     
