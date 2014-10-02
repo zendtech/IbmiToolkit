@@ -1,8 +1,6 @@
 <?php
 namespace ToolkitApi;
 
-use ToolkitApi\DateTimeApi;
-
 /**
  * Class XMLWrapper
  *
@@ -36,7 +34,7 @@ class XMLWrapper
      * @param string $options
      * @param ToolkitService $ToolkitSrvObj
      */
-    function __construct($options ='',  ToolkitService $ToolkitSrvObj = null)
+    public function __construct($options ='', ToolkitService $ToolkitSrvObj = null)
     {
         if (is_string($options)) {
             // $options is a string so it must be encoding (assumption for backwards compatibility)
@@ -244,7 +242,7 @@ class XMLWrapper
     {
         $xmlobj = simplexml_load_string($xml);
         
-        if (!$xmlobj instanceof SimpleXMLElement) {
+        if (!$xmlobj instanceof \SimpleXMLElement) {
             $badXmlLog = '/tmp/bad.xml';
             $this->error = "Unable to parse output XML, which has been logged in $badXmlLog. Possible problems: CCSID, encoding, binary data in an alpha field (use binary/BYTE type instead); if < or > are the problem, consider using CDATA tags.";
             error_log($xml, 3, $badXmlLog);
@@ -442,6 +440,7 @@ class XMLWrapper
     protected function buildParamXml(ProgramParameter $paramElement)
     {
         $paramXml = '';
+        $specialOuterDsName = '';
         
         // build start ds tag
         $props  = $paramElement->getParamProperties();
@@ -630,7 +629,6 @@ class XMLWrapper
         
         // is this a parm, or perhaps a DS??
         $elementType = $simpleXmlElement->getName(); // "name" of the XML tag is element type
-        $elementAttrs = $simpleXmlElement->attributes();
         
         // if this is the outer (parm or return) element, go down one level to either ds or data.
         if ($elementType == 'parm' || $elementType == 'return') {
@@ -810,7 +808,7 @@ class XMLWrapper
         //                                     or <report> (if unsuccessful)
         // Outer node is discarded in parsed XML objects.
         
-        if (!$xmlobj instanceof SimpleXMLElement) {
+        if (!$xmlobj instanceof \SimpleXMLElement) {
             $badXmlLog = '/tmp/bad.xml';
             $this->error = "Unable to parse output XML, which has been logged in $badXmlLog. Possible problems: CCSID, encoding, binary data in an alpha field (use binary/BYTE type instead); if < or > are the problem, consider using CDATA tags.";
             error_log($xml, 3, $badXmlLog);
@@ -947,7 +945,7 @@ class XMLWrapper
         $this->error = '';
         
         $xmlobj = simplexml_load_string($xml);
-        if (!$xmlobj instanceof SimpleXMLElement) {
+        if (!$xmlobj instanceof \SimpleXMLElement) {
             /*bad xml returned*/
             $this->error = "Can't read output xml";
             error_log($xml, 3, '/tmp/bad.xml');
@@ -1058,7 +1056,7 @@ class XMLWrapper
         $values = array();
         
         $xmlobj = @simplexml_load_string($xml);
-        if (!$xmlobj instanceof SimpleXMLElement) {
+        if (!$xmlobj instanceof \SimpleXMLElement) {
             /* bad xml returned*/
             $this->error = "Can't read output xml";
             return false;
