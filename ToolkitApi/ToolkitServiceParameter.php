@@ -387,44 +387,6 @@ class ProgramParameter
     }
 
     /**
-     * updates $arrParams, so pass it by reference.
-     * $arrParms is an array of parameter arrays or objects.
-     * 
-     * @deprecated Can't find where this function is used.
-     * 
-     * @param $arrParams
-     * @param array $arrValues
-     */
-    static function UpdateParameterValues(&$arrParams, array $arrValues)
-    {
-        if (!is_array($arrValues) || !is_array($arrParams)) {
-            return false;
-        }
-
-        // loop through all values passed in
-        foreach($arrValues as $varName =>$newData) {
-            // for each value, loop through all params at this level to see if the names match.
-            // find a param matching value passed in.
-            foreach ($arrParams as $single) {   
-                // if a data structure, get inner array and call self recursively.
-                if (is_object($single) && $single->isDS()) {
-                    $arr = $single->getParamValue();
-                    self::UpdateParameterValues($arr, array ($varName =>$newData));
-                } else {
-                    // regular param, not a ds. could be an array of values, though.
-                    $paramName =$single->getParamName();
-
-                    if ($paramName === $varName) {
-                        //$single->setParamValue(self::handleParamValue($newData)); // if data is an array; not done right
-                        $single->setParamValue($newData);
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    /**
      * bin2str is used by the 5250 Bridge. It converts a hex string to character string
      * while cleaning up unexpected characters.
      * Original comment: "can not be public. Return XML does not return a type of values."
