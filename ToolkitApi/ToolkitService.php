@@ -129,6 +129,7 @@ class ToolkitService
     
     protected $serviceParams;
     protected $optionalParamNames;
+    protected $execStartTime;
 
     /**
      * need to define this so we get Cw object and not parent object
@@ -214,6 +215,8 @@ class ToolkitService
      */
     protected function __construct($databaseNameOrResource, $userOrI5NamingFlag = '0', $password = '', $transportType = '', $isPersistent = false)
     {
+        $this->execStartTime = '';
+        
         // set service parameters to use in object.
         $this->serviceParams = $this->getDefaultServiceParams();
 
@@ -264,7 +267,7 @@ class ToolkitService
             
             if ($this->isDebug()) {
                 $this->debugLog("Creating a new db connection at " . date("Y-m-d H:i:s") . ".\n");
-                $startCreate = microtime(true);
+                $this->execStartTime = microtime(true);
             }
               
             $this->setIsPersistent($isPersistent);
@@ -273,7 +276,7 @@ class ToolkitService
             $conn = $transport->connect();
             
             if ($this->isDebug()) {
-                $durationCreate = sprintf('%f', microtime(true) - $startCreate);
+                $durationCreate = sprintf('%f', microtime(true) - $this->execStartTime);
                 $this->debugLog("Created a new db connection in $durationCreate seconds.");
             }
 
@@ -386,7 +389,7 @@ class ToolkitService
             return $this->_dataSize[$plugSize];
         }
         
-        throw new \Exception("plugSize '$plugSize' is not valid. Try one of these: " . $this->validPlugSizeList);
+        throw new \Exception("plugSize '$plugSize' is not valid. Try one of these: " . $this->validPlugSizeList());
     }
 
     /**
@@ -418,7 +421,7 @@ class ToolkitService
     protected function chooseTransport($transportName = '', $database = '', $user = '', $password = '', $options = null)
     {
         if ($transportName == 'http') {
-            $transport =  new httpsupp();
+            $transport = new httpsupp();
             $this->setTransport($transport);
         } else {
             $this->setDb($transportName, $database, $user, $password, $options);
@@ -450,13 +453,13 @@ class ToolkitService
         
         if ($extensionName === 'ibm_db2') {
                 $this->setOptions(array('plugPrefix' => 'iPLUG'));
-                $this->db  = new db2supp($database, $user, $password, $options);
+                $this->db = new db2supp($database, $user, $password, $options);
                 
                 $this->setDb2(); // not used in toolkit anymore but keep for backwards compat.
         } elseif ($extensionName === 'odbc') {
                 //for odbc will be different default stored procedure call
                 $this->setOptions(array('plugPrefix' => 'iPLUGR')); // "R" = "result set" which is how ODBC driver returns param results
-                $this->db =  new odbcsupp($database, $user, $password, $options);
+                $this->db = new odbcsupp($database, $user, $password, $options);
         }
         
         // transport, too, to be generic
@@ -827,57 +830,27 @@ class ToolkitService
      * @return string
      * @throws \Exception
      */
-    public function ExecuteProgram($inputXml, $disconnect=false)
+    public function ExecuteProgram($inputXml, $disconnect = false)
     {
+        $this->execStartTime = '';
         $this->error = '';
 
         $this->VerifyPLUGName(); // calculates value of option 'plug'
         $this->VerifyInternalKey();
 
         // @todo create driver-specific SQL in driver classes (db2, odbc)
-        $toolkitLib = $this->getOption('XMLServiceLib');
         $internalKey = $this->getInternalKey();
         $controlKeyString = $this->getControlKey($disconnect);
 
         $plugSize = $this->getOption('plugSize');
         
-        $transportType = $this->getOption('transportType');
-                
         // @todo have one transport class that includes db as well.
         
         // If a database transport
         if (isset($this->db) && $this->db) {
-            $schemaSep = $this->getOption('schemaSep');
             
-            $plugPrefix =  $this->getOption('plugPrefix');
-            // construct plug name from prefix + size
-            $plug = $plugPrefix . $plugSize; // e.g. iPLUG512K
+            $result = $this->makeDbCall($internalKey, $plugSize, $controlKeyString, $inputXml, $disconnect);
             
-            if ($plugPrefix == 'iPLUG') {
-                // db2 driver stored procedures take 4 params
-                $sql =  "call {$toolkitLib}{$schemaSep}{$plug}(?,?,?,?)";
-            } else {    /*odbc, iPLUGR */
-                // only three params for odbc stored procedures
-                $sql =  "call {$toolkitLib}{$schemaSep}{$plug}(?,?,?)";
-            }
-            
-            $bindArray = array(
-                    "internalKey"=> $internalKey,
-                    "controlKey" => $controlKeyString,
-                    "inputXml" => $inputXml,
-                    "outputXml"=> '',
-                    "disconnect"=>$disconnect
-            );
-
-            // if debug mode, log control key, stored procedure statement, and input XML.
-            if ($this->isDebug()) {
-                $this->debugLog("\nExec start: " . date("Y-m-d H:i:s") . "\nVersion of toolkit front end: " . self::getFrontEndVersion() ."\nIPC: '" . $this->getInternalKey() . "'. Control key: $controlKeyString\nStmt: $sql with transport: $transportType\nInput XML: $inputXml\n");
-                $start = microtime(true);
-            }
-                    
-            // can return false if prepare or exec failed.
-            // @todo this call seems wasteful since the result is already contained in the $bindArray
-            $outputXml = $this->db->execXMLStoredProcedure($this->conn, $sql, $bindArray);
         } else {
             // Not a DB transport. At this time, assume HTTP transport (which doesn't use a plug, by the way. uses outbytesize)
             $transport = $this->getTransport();
@@ -892,82 +865,70 @@ class ToolkitService
             // if debug mode, log control key, and input XML.
             if ($this->isDebug()) {
                 $this->debugLog("\nExec start: " . date("Y-m-d H:i:s") . "\nVersion of toolkit front end: " . self::getFrontEndVersion() ."\nIPC: '" . $this->getInternalKey() . "'. Control key: $controlKeyString\nHost URL: $url\nExpected output size (plugSize): $plugSize or $outByteSize bytes\nInput XML: $inputXml\n");
-                $start = microtime(true);
+                $this->execStartTime = microtime(true);
             }     
             
-            $outputXml = $transport->send($inputXml, $outByteSize);
-        }
-        
-        if ($this->isDebug() && $outputXml) {
-            $end = microtime(true);
-            $elapsed = $end - $start;
-            $this->debugLog("Output XML: $outputXml\nExec end: " . date("Y-m-d H:i:s") . ". Seconds to execute: $elapsed.\n\n");
-        }
+            $result = $transport->send($inputXml, $outByteSize);
 
-        // if false returned, was a database error (stored proc prepare or execute error)
-        // @todo add ODBC SQL State codes
-        
-        // If can't find stored proc for ODBC: Database code (if any): S1000. Message: [unixODBC][IBM][System i Access ODBC Driver][DB2 for i5/OS]SQL0440 - Routine IPLUG512K in XMLSERVICE not found with specified parameters.
-        //Warning: odbc_prepare(): SQL error: [unixODBC][IBM][System i Access ODBC Driver][DB2 for i5/OS]SQL0440 - Routine IPLUG512K in XMLSERVICE not found with specified parameters., SQL state S1000 in SQLPrepare in /usr/local/zend/ToolkitAPI/Odbcsupp.php on line 89    
-        if ($outputXml === false) {
-            $this->cpfErr = $this->db->getErrorCode(); // actually SQL State
-            $this->error = $this->db->getErrorMsg();
-            
-            $serviceLibrary = $this->getOption('XMLServiceLib');
-            if ($this->cpfErr == 22001) {
-                //22001 = On db2_execute, plug was too small to get input XML.
-                $this->getOption('plug');
-                $errorReason = "Error: XML input was too large for the current plug size, '$plugSize'. Set a larger plugSize.";
-            } elseif ($this->cpfErr == 22003) {
-                //22003 = On db2_execute, plug was too small to get output XML.
-                $this->getOption('plug');
-                $errorReason = "Error: XML output was too large for the current plug size, '$plugSize'. Set a larger plugSize.";
-            } elseif ($this->cpfErr == 22501) {
-                //22501 = Probably missing the LOB DB2 PTF. Get the latest DB2 Group PTF or CUME.
-                // or individual PTF: 
-                //        V5R4: 5722SS1 SI39610
-                //         6.1: 5761SS1 SI39829
-                //         7.1: 5770SS1 SI39831/SI39917 
-                $errorReason = "Error: http://forums.zend.com/viewtopic.php?f=113&t=45413 Message: {$this->error}.";
-            } elseif ($this->cpfErr == 38501) {
-                // SQLState 38501: error in stored procedure. Possibly trace=true but library XMLSERVLOG doesn't exist.            
-                //          or     Trigger program or external routine detected an error. SQLCODE=-443
-                $errorReason = "Error: SQLState 38501. Message: {$this->error}. Error in stored procedure or program. Could be a library that does not exist. If trace=true (not debug--trace), make sure XMLSERVLOG exists.";
-            } elseif ($this->cpfErr == 42704) {
-                //42704 = obj not found
-                $errorReason = "Error: Toolkit not found in specified service library ($serviceLibrary).";
-            } elseif ($this->cpfErr == 42833) {
-                //42833 = The qualified object name is inconsistent with the naming option.
-                $errorReason = "Error: i5_naming mismatch. When connecting to the toolkit, you specified i5_naming='$this->_i5NamingFlag' (or left the default of 0), which does not match the naming mode of the database job. Solution: If you are using a persistent database connection, ensure that every time you connect to db2 or the toolkit with a given user profile, you specify the same naming value for 'i5_naming'. If you are using library lists or a schema separator of '/', the naming mode must be '1'.";
-            } elseif ($this->cpfErr == 58004) {
-                //58004 = The qualified object name is inconsistent with the naming option.
-                $errorReason = "Error:  Message: {$this->error}. SQLState 58004. If SQLCode is -901, check previous messages in joblog. Could mean an incorrect library in library list or another previous error in database job.";
-            } elseif ($this->cpfErr == '' || $this->cpfErr == 'HY017') {
-                // no SQLSTATE or HY017: The DB2 QSQSRVR job no longer exists.
-                    $errorReason = "Error: SQLSTATE='{$this->cpfErr}' and Message: '{$this->error}', indicating that this PHP job's associated database job is no longer running.";
-            } else {
-                $errorReason = "Toolkit request failed. Review the database code and message.";
-                $errorReason .= " Database code (if any): '{$this->cpfErr}'. Message: {$this->error}";
+            // workaround: XMLSERVICE as of 1.7.4 returns a single space instead of empty string when no content was requested.
+            if ($result == ' ') {
+                $result = '';
             }
+        }
+        
+        if ($this->isDebug() && $result) {
+            $end = microtime(true);
+            $elapsed = $end - $this->execStartTime;
+            $this->debugLog("Output XML: $result\nExec end: " . date("Y-m-d H:i:s") . ". Seconds to execute: $elapsed.\n\n");
+        }
 
-            // other codes: SQLState 38501: error in stored procedure. Possibly trace=true but library XMLSERVLOG doesn't exist.            
-            //                       38501: Trigger program or external routine detected an error. SQLCODE=-443 
-            //                              could be bad library in libl.
-            //    in joblog, see:
-            /* CPF2110  Library GLUMP not found.
-             * then:
-             * SQL0443 Message . . . . :   Trigger program or external routine detected an error.
+        return $result;
+    }
+
+    /**
+     * @param $internalKey
+     * @param $plugSize
+     * @param $controlKeyString
+     * @param $inputXml
+     * @param bool $disconnect
+     * @return array
+     */
+    protected function makeDbCall($internalKey, $plugSize, $controlKeyString, $inputXml, $disconnect = false)
+    {
+        $toolkitLib = $this->getOption('XMLServiceLib');
+        $schemaSep = $this->getOption('schemaSep');
+        $transportType = $this->getOption('transportType');
+
+        $plugPrefix =  $this->getOption('plugPrefix');
+        // construct plug name from prefix + size
+        $plug = $plugPrefix . $plugSize; // e.g. iPLUG512K
+
+        if ($plugPrefix == 'iPLUG') {
+            // db2 driver stored procedures take 4 params
+            $sql =  "call {$toolkitLib}{$schemaSep}{$plug}(?,?,?,?)";
+        } else {    /*odbc, iPLUGR */
+            // only three params for odbc stored procedures
+            $sql =  "call {$toolkitLib}{$schemaSep}{$plug}(?,?,?)";
+        }
+
+        // if debug mode, log control key, stored procedure statement, and input XML.
+        if ($this->isDebug()) {
+            $this->debugLog("\nExec start: " . date("Y-m-d H:i:s") . "\nVersion of toolkit front end: " . self::getFrontEndVersion() ."\nIPC: '" . $this->getInternalKey() . "'. Control key: $controlKeyString\nStmt: $sql with transport: $transportType\nInput XML: $inputXml\n");
+            $this->execStartTime = microtime(true);
+        }
+
+        // can return false if prepare or exec failed.
+        if (!$this->db->execXMLStoredProcedure($this->conn, $sql)) {
+            // if false returned, was a database error (stored proc prepare or execute error)
+            // @todo add ODBC SQL State codes
+
+            // If can't find stored proc for ODBC: Database code (if any): S1000. Message: [unixODBC][IBM][System i Access ODBC Driver][DB2 for i5/OS]SQL0440 - Routine IPLUG512K in XMLSERVICE not found with specified parameters.
+            //Warning: odbc_prepare(): SQL error: [unixODBC][IBM][System i Access ODBC Driver][DB2 for i5/OS]SQL0440 - Routine IPLUG512K in XMLSERVICE not found with specified parameters., SQL state S1000 in SQLPrepare in /usr/local/zend/ToolkitAPI/Odbcsupp.php on line 89    
+            $this->cpfErr = $this->db->getErrorCode();
+            $this->setErrorMsg($this->db->getErrorMsg());
+
+            $errorReason = $this->getErrorReason($plugSize);
             
-            Cause . . . . . :   Either a trigger program, external procedure, or external 
-              function detected and returned an error to SQL. If the error occurred in a
-              trigger program, the trigger was on table QCMDEXC in schema QSYS. If the
-              error occurred in an external procedure or function, the external name is
-              QCMDEXC in schema QSYS.  The associated text is Library GLUMP not found..
-              If the error occurred in a trigger program, the associated text is the type 
-              of trigger program.  If the error occurred in an external function, the
-              associated text is the text of the error message returned from the external 
-              function.
-             */
             logThis($errorReason);
             die($errorReason);
         }
@@ -979,13 +940,74 @@ class ToolkitService
                 $this->debugLog("Db disconnect requested and done.\n");
             } //(debug)
         }
-
-        // workaround: XMLSERVICE as of 1.7.4 returns a single space instead of empty string when no content was requested.
-        if ($outputXml == ' ') {
-            $outputXml = '';
-        }
         
-        return $outputXml;
+        return array(
+            "internalKey"=> $internalKey,
+            "controlKey" => $controlKeyString,
+            "inputXml" => $inputXml,
+            "outputXml"=> '',
+            "disconnect"=>$disconnect
+        );
+    }
+    
+    protected function getErrorReason($plugSize)
+    {
+        $serviceLibrary = $this->getOption('XMLServiceLib');
+        
+        if ($this->cpfErr == 22001) {
+            //22001 = On db2_execute, plug was too small to get input XML.
+            $errorReason = "Error: XML input was too large for the current plug size, '$plugSize'. Set a larger plugSize.";
+        } elseif ($this->cpfErr == 22003) {
+            //22003 = On db2_execute, plug was too small to get output XML.
+            $errorReason = "Error: XML output was too large for the current plug size, '$plugSize'. Set a larger plugSize.";
+        } elseif ($this->cpfErr == 22501) {
+            //22501 = Probably missing the LOB DB2 PTF. Get the latest DB2 Group PTF or CUME.
+            // or individual PTF: 
+            //        V5R4: 5722SS1 SI39610
+            //         6.1: 5761SS1 SI39829
+            //         7.1: 5770SS1 SI39831/SI39917 
+            $errorReason = "Error: http://forums.zend.com/viewtopic.php?f=113&t=45413 Message: {$this->error}.";
+        } elseif ($this->cpfErr == 38501) {
+            // SQLState 38501: error in stored procedure. Possibly trace=true but library XMLSERVLOG doesn't exist.            
+            //          or     Trigger program or external routine detected an error. SQLCODE=-443
+            $errorReason = "Error: SQLState 38501. Message: {$this->error}. Error in stored procedure or program. Could be a library that does not exist. If trace=true (not debug--trace), make sure XMLSERVLOG exists.";
+        } elseif ($this->cpfErr == 42704) {
+            //42704 = obj not found
+            $errorReason = "Error: Toolkit not found in specified service library ($serviceLibrary).";
+        } elseif ($this->cpfErr == 42833) {
+            //42833 = The qualified object name is inconsistent with the naming option.
+            $errorReason = "Error: i5_naming mismatch. When connecting to the toolkit, you specified i5_naming='$this->_i5NamingFlag' (or left the default of 0), which does not match the naming mode of the database job. Solution: If you are using a persistent database connection, ensure that every time you connect to db2 or the toolkit with a given user profile, you specify the same naming value for 'i5_naming'. If you are using library lists or a schema separator of '/', the naming mode must be '1'.";
+        } elseif ($this->cpfErr == 58004) {
+            //58004 = The qualified object name is inconsistent with the naming option.
+            $errorReason = "Error:  Message: {$this->error}. SQLState 58004. If SQLCode is -901, check previous messages in joblog. Could mean an incorrect library in library list or another previous error in database job.";
+        } elseif ($this->cpfErr == '' || $this->cpfErr == 'HY017') {
+            // no SQLSTATE or HY017: The DB2 QSQSRVR job no longer exists.
+            $errorReason = "Error: SQLSTATE='{$this->cpfErr}' and Message: '{$this->error}', indicating that this PHP job's associated database job is no longer running.";
+        } else {
+            $errorReason = "Toolkit request failed. Review the database code and message.";
+            $errorReason .= " Database code (if any): '{$this->cpfErr}'. Message: {$this->error}";
+        }
+
+        // other codes: SQLState 38501: error in stored procedure. Possibly trace=true but library XMLSERVLOG doesn't exist.            
+        //                       38501: Trigger program or external routine detected an error. SQLCODE=-443 
+        //                              could be bad library in libl.
+        //    in joblog, see:
+        /* CPF2110  Library GLUMP not found.
+         * then:
+         * SQL0443 Message . . . . :   Trigger program or external routine detected an error.
+        
+        Cause . . . . . :   Either a trigger program, external procedure, or external 
+          function detected and returned an error to SQL. If the error occurred in a
+          trigger program, the trigger was on table QCMDEXC in schema QSYS. If the
+          error occurred in an external procedure or function, the external name is
+          QCMDEXC in schema QSYS.  The associated text is Library GLUMP not found..
+          If the error occurred in a trigger program, the associated text is the type 
+          of trigger program.  If the error occurred in an external function, the
+          associated text is the text of the error message returned from the external 
+          function.
+         */
+        
+        return $errorReason;
     }
 
     /**
@@ -1036,7 +1058,7 @@ class ToolkitService
         $outputXml = $this->sendXml($inputXml, false);
 
         if ($outputXml) {
-            $this->cpfErr = 0;
+            $this->cpfErr = '0';
             $this->error = '';
              
             return $xmlWrapper->parseDiagnosticsXml($outputXml);
@@ -1062,18 +1084,17 @@ class ToolkitService
     }
 
     /**
-     * return version number of XMLSERVICE. Not static because must connect to back-end to get the version number.
+     * return version number of XMLSERVICE. Not static because must connect to back-end
+     * to get the version number.
      * 
-     * @return bool
+     * @return string Version
      */
     public function getBackEndVersion()
     {
-        $diag = $this->getDiagnostics();
+        $diagnostics = $this->getDiagnostics();
         
-        if (isset($diag['version'])) {
-            return $diag['version'];
-        } else {
-            return false;
+        if (isset($diagnostics['version'])) {
+            return $diagnostics['version'];
         }
     }
     
@@ -1138,7 +1159,7 @@ class ToolkitService
         $successFlag = $this->XMLWrapper->getCmdResultFromXml($outputXml, $parentTag);
 
         if ($successFlag) {
-            $this->cpfErr = 0;
+            $this->cpfErr = '0';
             $this->error = '';
         } else {
             $this->cpfErr = $this->XMLWrapper->getErrorCode();
@@ -1336,7 +1357,7 @@ class ToolkitService
     static function AddParameterChar($io, $size , $comment, $varName = '', $value= '', $varying = 'off',$dimension = 0,
                                       $by='', $isArray = false, $ccsidBefore = '', $ccsidAfter = '', $useHex = false)
     {
-        return new CharParam($io, $size , $comment, $varName, $value , $varying ,$dimension, 
+        return new CharParam($io, $size , $comment, $varName, $value , $varying , $dimension, $by, 
                                     $isArray, $ccsidBefore, $ccsidAfter, $useHex);
     }
 
@@ -1743,7 +1764,7 @@ class ToolkitService
      */
     protected function getControlKey($disconnect = false)
     {
-        $key = ''; // initialize
+        $key = '';
 
         if ($disconnect) {
             return "*immed";
@@ -1776,7 +1797,6 @@ class ToolkitService
          */
         if ($this->isStateless()) {
             $key .= " *here";
-
         } else {
             // not stateless, so could make sense to supply *sbmjob parameters for spawning a separate job.
             if (trim($this->getOption('sbmjobParams')) != '') {
@@ -1990,12 +2010,15 @@ class ToolkitService
     }
 
     /**
+     * 
+     * @todo should this be using $this->cpfErr
+     * 
      * @param array $Error
      * @return bool
      */
     public function ParseErrorParameter(array $Error)
     {
-        if(!is_array($Error)) {
+        if (!is_array($Error)) {
             return false;
         }
         
@@ -2223,6 +2246,7 @@ class ToolkitService
         } else {
             // could not find it.
             // use error text from XML parser (though this text is usually worthless)
+            // @todo $this->cpfErr is expecting a 7 digit code, so this may be wrong
             $this->cpfErr = 'UNEXPECTED';
             $this->error = $this->XMLWrapper->getLastError();
             $this->errorText = $this->error;
@@ -2292,17 +2316,14 @@ class ToolkitService
     
         // now set the user profile via the handle.
         // http://publib.boulder.ibm.com/infocenter/iseries/v5r3/index.jsp?topic=%2Fapis%2FQWTSETP.htm
-        $apiPgm = 'QWTSETP'; // set profile
-        $apiLib = 'QSYS';
+//        $apiPgm = 'QWTSETP'; // set profile
+//        $apiLib = 'QSYS';
     
         // reset $params array for next API call
         $params = array();
         $params[] = $this->addParameterBin('in', 12, '1. profile handle', 'handleIn', $handle);
         // error ds param
         $params[] = $this->addParameterInt32('both', '2. Size of error DS. Use 0 to force errors to bubble up to the job',  'errbytes', '0');
-    
-        // now call the "set handle" API!
-        $retPgmArr = $this->PgmCall($apiPgm, $apiLib, $params);
     
         // any errors?
         if ($this->getErrorMsg() || $this->getErrorCode()) {
