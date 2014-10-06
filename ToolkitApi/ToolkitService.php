@@ -1093,9 +1093,11 @@ class ToolkitService
     {
         $diagnostics = $this->getDiagnostics();
         
-        if (isset($diagnostics['version'])) {
-            return $diagnostics['version'];
+        if (!$diagnostics['version']) {
+            return false;
         }
+        
+        return $diagnostics['version'];
     }
     
     /**
