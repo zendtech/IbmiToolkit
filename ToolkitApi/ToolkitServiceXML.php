@@ -281,7 +281,9 @@ class XMLWrapper
     }
 
     /**
+     * 
      * @param $xml
+     * @return array
      */
     public function parseDiagnosticsXml($xml)
     {
@@ -300,7 +302,7 @@ class XMLWrapper
         
             $tempJobInfo = (array) $diag->jobinfo;
             // ensure that all values are strings. Blanks might have remained Simple XML Objects.
-            foreach ($tempJobInfo as $name=>$value) {
+            foreach ($tempJobInfo as $name => $value) {
                 $info['jobinfo'][$name] = (string) $value; 
             }
         }
@@ -875,10 +877,9 @@ class XMLWrapper
     }
     
     /**
-     * $cmd can be a string or array of multiple commands
      * It's more efficient to run multiple commands with one XMLSERVICE call than to do many calls
      * 
-     * @param $cmd
+     * @param array $cmd string will be turned into an array
      * @param string $exec
      * @return string
      */
