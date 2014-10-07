@@ -1126,10 +1126,10 @@ class ToolkitService
     }
     
     /**
-     * exec could be 'pase', 'pasecmd', 'system,' 'rexx', or 'cmd'
+     * CLCommand 
      * 
-     * @param $command can be a string or an array of multiple commands
-     * @param string $exec
+     * @param array $command string will be turned into an array
+     * @param string $exec could be 'pase', 'pasecmd', 'system,' 'rexx', or 'cmd'
      * @return array|bool
      */
     public function CLCommand($command, $exec = '')
@@ -1291,6 +1291,8 @@ class ToolkitService
                 return false;
                 break;
         }
+        
+        return true;
     }
 
     /**
@@ -1312,7 +1314,7 @@ class ToolkitService
      * slightly slower than regular cmd but faster than rexx
      * (Actually it's faster than cmd in recent tests. It depends, perhaps.)
      * 
-     * @param $command can be a string or an array.
+     * @param string $command can be a string or an array.
      * @return array|bool
      */
     public function ClCommandWithCpf($command)
@@ -2012,6 +2014,7 @@ class ToolkitService
     }
 
     /**
+     * err_bytes_avail is the official, reliable way to check for an error.
      * 
      * @todo should this be using $this->cpfErr
      * 
@@ -2020,16 +2023,16 @@ class ToolkitService
      */
     public function ParseErrorParameter(array $Error)
     {
+        $CPFErr = false;
         if (!is_array($Error)) {
             return false;
         }
         
         // If there's an error structure and some error info was returned.
-        // (err_bytes_avail is the official, reliable way to check for an error.)
         if (isset($Error['exceptId']) && ($Error['err_bytes_avail'] > 0)) {
             $CPFErr = $Error['exceptId'];
-            /*Add here array parse if need */
         }
+        
         return $CPFErr;
     }
     
@@ -2345,7 +2348,7 @@ class ToolkitService
         $params[] = $this->addParameterInt32('both', '2. Size of error DS. Use 0 to force errors to bubble up to the job',  'errbytes', '0');
     
         // now call the "release handle" API!
-        $retPgmArr = $this->PgmCall($apiPgm, $apiLib, $params);
+        $this->PgmCall($apiPgm, $apiLib, $params);
     
         // any errors?
         if ($this->getErrorMsg() || $this->getErrorCode()) {
