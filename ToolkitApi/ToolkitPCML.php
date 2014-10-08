@@ -255,110 +255,112 @@ class ToolkitPcml
         $subElements = array();
     
         // each item should have tag name <data>
-        if ($tagName == 'data') {
+        if ($tagName != 'data') {
+            return false;
+        }
     
-            $type = (isset($attrs['type'])) ? (string) $attrs['type'] : '';
-    
-            // Get initial value, if specified by PCML.
-            $dataValue = (isset($attrs['init'])) ? (string) $attrs['init'] : '';
-            
-            // if a struct then we need to recurse.
-            if ($type == 'struct') {
-                $theStruct = null; // init
-    
-                // look for matching struct definition encountered earlier.
-                if ($this->_pcmlStructs) {
-    
-                    // @todo verify type with is_array and count
-                    foreach ($this->_pcmlStructs as $possibleStruct) {
-                        $possStructAttrs = $possibleStruct->attributes();
-                        
-                        if ($possStructAttrs['name'] == $structName) {
-                            $theStruct = $possibleStruct;
-                            $structAttrs = $possStructAttrs;
-                            break;
-                        }
-                    }
-                }
-    
-                // if struct was not found, generate error for log
-                if (!$theStruct) {
-                    // $this->getConnection->logThis("PCML structure '$structName' not found.");
-                    return null;
-                }
-    
-                // count can also be defined at the structure level. If so, it will override count from data level)
-                if (isset($structAttrs['count'])) {
-                    $count = (string) $structAttrs['count'];
-                }
-    
-                // "usage" (in/out/inherit) can be defined here, at the structure level.
-                $structUsage = (isset($structAttrs['usage'])) ? (string) $structAttrs['usage'] : '';
-    
-                // if we're not inheriting from our parent data element, but there is a struct usage, use the struct's usage (input, output, or inputoutput).
-                if (!empty($structUsage) && ($structUsage != 'inherit')) {
-                    $usage = $structUsage;
-                }
-    
-                $structSubDataElementsXmlObj = $theStruct->xpath('data');
-                if ($structSubDataElementsXmlObj) {
-                    foreach ($structSubDataElementsXmlObj as $subDataElementXmlObj) {
-    
-                        if ($subDataElementXmlObj->attributes()->usage == 'inherit') {
-                            // subdata is inheriting type from us. Give it to them.
-                            $subDataElementXmlObj->attributes()->usage = $usage;
-                        }
-    
-                        // here's where the recursion comes in. Convert data and add to array for our struct.
-                        $subElements[] = $this->singlePcmlToParam($subDataElementXmlObj);
-                    }
-                }
-            }
-    
-            /* explanation of the terms "length" and "precision" in PCML:
-             * http://publib.boulder.ibm.com/infocenter/iadthelp/v6r0/index.jsp?topic=/com.ibm.etools.iseries.webtools.doc/ref/rdtcattr.htm
-             * 
-             * For "int" values, length is the number of bytes; precision represents the number of bits. (Can be ignored here)
-             * For zoned and packed values, length is the maximum number of digits; precision represents the maximum decimal places.
-             * 
-             */
-            $length = (isset($attrs['length'])) ? (string) $attrs['length'] : '';
-            $precision = (isset($attrs['precision'])) ? (string) $attrs['precision'] : '';
+        $type = (isset($attrs['type'])) ? (string) $attrs['type'] : '';
 
-            $passBy = ''; // default of blank will become 'ref'/Reference in XMLSERVICE. Blank is fine here.
-            if (isset($attrs['passby']) && ($attrs['passby'] == 'value')) {
-                $passBy = 'val'; // rare. PCML calls it 'value'. XMLSERVICE calls it 'val'.
+        // Get initial value, if specified by PCML.
+        $dataValue = (isset($attrs['init'])) ? (string) $attrs['init'] : '';
+        
+        // if a struct then we need to recurse.
+        if ($type == 'struct') {
+            $theStruct = null; // init
+
+            // look for matching struct definition encountered earlier.
+            if ($this->_pcmlStructs) {
+
+                // @todo verify type with is_array and count
+                foreach ($this->_pcmlStructs as $possibleStruct) {
+                    $possStructAttrs = $possibleStruct->attributes();
+                    
+                    if ($possStructAttrs['name'] == $structName) {
+                        $theStruct = $possibleStruct;
+                        $structAttrs = $possStructAttrs;
+                        break;
+                    }
+                }
             }
-            
-            // find new toolkit equivalent of PCML data type
-            if (isset($this->_pcmlTypeMap[$type])) {
-                // a simple type mapping
-                $newType = (string) $this->_pcmlTypeMap[$type];
-            } elseif ($type == 'int') {
-                // one of the integer types. Need to use length to determine which one.
-                if ($length == '2') {
-                    $newType = '5i0'; // short ints have two bytes
-                } elseif ($length == '4') {
-                    $newType = '10i0'; // normal ints have four bytes
-                } else {
-                    $newType = ''; // no match
-                } //(length == 2, et al.)
-    
+
+            // if struct was not found, generate error for log
+            if (!$theStruct) {
+                // $this->getConnection->logThis("PCML structure '$structName' not found.");
+                return null;
             }
-                
-            $newInout = (isset($this->_pcmlInoutMap[$usage])) ? (string) $this->_pcmlInoutMap[$usage] : '';
-    
-            // @todo correct all this isArray business. 
-            // Can we manage without isArray? 
-            // well, it's already handled by toolkit....try and see, though.
-            // poss. eliminate extra object levels, at least?
-            
-            if ($count > 1) {
-                $isArray = true;
+
+            // count can also be defined at the structure level. If so, it will override count from data level)
+            if (isset($structAttrs['count'])) {
+                $count = (string) $structAttrs['count'];
+            }
+
+            // "usage" (in/out/inherit) can be defined here, at the structure level.
+            $structUsage = (isset($structAttrs['usage'])) ? (string) $structAttrs['usage'] : '';
+
+            // if we're not inheriting from our parent data element, but there is a struct usage, use the struct's usage (input, output, or inputoutput).
+            if (!empty($structUsage) && ($structUsage != 'inherit')) {
+                $usage = $structUsage;
+            }
+
+            $structSubDataElementsXmlObj = $theStruct->xpath('data');
+            if ($structSubDataElementsXmlObj) {
+                foreach ($structSubDataElementsXmlObj as $subDataElementXmlObj) {
+
+                    if ($subDataElementXmlObj->attributes()->usage == 'inherit') {
+                        // subdata is inheriting type from us. Give it to them.
+                        $subDataElementXmlObj->attributes()->usage = $usage;
+                    }
+
+                    // here's where the recursion comes in. Convert data and add to array for our struct.
+                    $subElements[] = $this->singlePcmlToParam($subDataElementXmlObj);
+                }
+            }
+        }
+
+        /* explanation of the terms "length" and "precision" in PCML:
+         * http://publib.boulder.ibm.com/infocenter/iadthelp/v6r0/index.jsp?topic=/com.ibm.etools.iseries.webtools.doc/ref/rdtcattr.htm
+         * 
+         * For "int" values, length is the number of bytes; precision represents the number of bits. (Can be ignored here)
+         * For zoned and packed values, length is the maximum number of digits; precision represents the maximum decimal places.
+         * 
+         */
+        $length = (isset($attrs['length'])) ? (string) $attrs['length'] : '';
+        $precision = (isset($attrs['precision'])) ? (string) $attrs['precision'] : '';
+
+        $passBy = ''; // default of blank will become 'ref'/Reference in XMLSERVICE. Blank is fine here.
+        if (isset($attrs['passby']) && ($attrs['passby'] == 'value')) {
+            $passBy = 'val'; // rare. PCML calls it 'value'. XMLSERVICE calls it 'val'.
+        }
+        
+        // find new toolkit equivalent of PCML data type
+        if (isset($this->_pcmlTypeMap[$type])) {
+            // a simple type mapping
+            $newType = (string) $this->_pcmlTypeMap[$type];
+        } elseif ($type == 'int') {
+            // one of the integer types. Need to use length to determine which one.
+            if ($length == '2') {
+                $newType = '5i0'; // short ints have two bytes
+            } elseif ($length == '4') {
+                $newType = '10i0'; // normal ints have four bytes
             } else {
-                // no need for any dummy value.Could be 'init' from above, or leave the default.
-                $isArray = false;
-            }
+                $newType = ''; // no match
+            } //(length == 2, et al.)
+        } else {
+            $newType = '';
+        }
+            
+        $newInout = (isset($this->_pcmlInoutMap[$usage])) ? (string) $this->_pcmlInoutMap[$usage] : '';
+
+        // @todo correct all this isArray business. 
+        // Can we manage without isArray? 
+        // well, it's already handled by toolkit....try and see, though.
+        // poss. eliminate extra object levels, at least?
+        
+        if ($count > 1) {
+            $isArray = true;
+        } else {
+            // no need for any dummy value.Could be 'init' from above, or leave the default.
+            $isArray = false;
         }
 
         // @todo I think simply add 'counterLabel' and 'countedLabel'. 
