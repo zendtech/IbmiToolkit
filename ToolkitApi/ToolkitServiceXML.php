@@ -46,7 +46,7 @@ class XMLWrapper
             }
         }
         
-        if (isset($ToolkitSrvObj) && $ToolkitSrvObj instanceof ToolkitService) {
+        if ($ToolkitSrvObj) {
             $this->ToolkitSrvObj = $ToolkitSrvObj;
             $this->_isCw = $this->ToolkitSrvObj->getIsCw();
         }
