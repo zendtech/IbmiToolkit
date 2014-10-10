@@ -173,7 +173,7 @@ class XMLWrapper
             // no hex/CCSID, so use short form of pgm tag
             // (For backward compability with pre-1.6.8 XMLSERVICE)
             $funcString = ($function) ? " func='$function'" : "";
-            $pgmtag = "<pgm name='$pgm' lib='$lib'$opmString$funcString>";
+            $pgmtag = "<pgm name='" . $pgm . "' lib='" . $lib . "' " . $opmString . $funcString . ">";
         }
         
         return $pgmtag;
