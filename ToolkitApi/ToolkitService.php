@@ -1064,9 +1064,9 @@ class ToolkitService
             return $xmlWrapper->parseDiagnosticsXml($outputXml);
         } else {
             // error or no info
-             $this->cpfErr = $this->XMLWrapper->getErrorCode();
+             $this->cpfErr = $xmlWrapper->getErrorCode();
              $this->error = $this->cpfErr; // ->error is ambiguous. Include for backward compat.
-             $this->errorText = $this->XMLWrapper->getErrorMsg();
+             $this->errorText = $xmlWrapper->getErrorMsg();
              return false;
         }
                 // get status: error or success, with a real CPF error message, and set the error code/msg.
