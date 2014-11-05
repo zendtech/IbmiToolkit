@@ -1,4 +1,11 @@
-<?php 
+<?php
+/**
+ * Class db2supp
+ *
+ * @todo define common transport class/interface extended/implemented by all transports
+ *
+ * @package ToolkitApi
+ */
 class db2supp {
 
 // TODO define common transport class/interface extended/implemented by all transports 	
@@ -7,7 +14,15 @@ class db2supp {
 private $last_errorcode = ''; // SQL State
 private $last_errormsg = ''; // SQL Code with message
 
-// 'persistent' is one option
+	/**
+	 * @todo Throw in your "transport/adapter" framework for a real OO look and feel ....
+	 * Throw new Exception("Fail execute ($sql) ".db2_stmt_errormsg(),db2_stmt_error());
+	 * ... and retrieve via try/catch + Exception methods.
+	 *
+	 * 'persistent' is one option
+	 * 
+	 * @return bool
+	 */
 public function connect($database, $user, $password, $options = null){
 
 	/*
@@ -50,7 +65,10 @@ Throw new Exception( "Fail execute ($sql) ".db2_stmt_errormsg(),db2_stmt_error()
     return false;
    
 } //(public function connect($database, $user, $password, $options = null))
-
+	
+	/**
+	 * @param $conn
+	 */
 public function disconnect( $conn ){
 
 	if(is_resource($conn))
@@ -58,26 +76,44 @@ public function disconnect( $conn ){
 
 }
 
-// disconnect, truly close, a persistent connection.
+	/**
+	 * disconnect, truly close, a persistent connection.
+	 *
+	 * NOTE: Only available on i5/OS
+	 *
+	 * @param $conn
+	 */
 public function disconnectPersistent( $conn ){
 
 	if(is_resource($conn))
 		db2_pclose($conn);
 
 }
-
-
+	
+	/**
+	 * @return string
+	 */
 public function getErrorCode(){
 
 	return $this->last_errorcode;
 }
-
-// added
+	
+	/**
+	 * @return string
+	 */
 public function getErrorMsg(){
 
 	return $this->last_errormsg;
 }
-
+	
+	/**
+	 * set error code and message based on last db2 prepare or execute error.
+	 *
+	 * @todo: consider using GET DIAGNOSTICS for even more message text:
+	 * http://publib.boulder.ibm.com/infocenter/iseries/v5r4/index.jsp?topic=%2Frzala%2Frzalafinder.htm
+	 *
+	 * @param null $stmt
+	 */
 protected function setStmtError($stmt = null) {
 	// set error code and message based on last db2 prepare or execute error.
 	
@@ -94,18 +130,29 @@ protected function setStmtError($stmt = null) {
 	} //(if ($stmt))
 	
 } //(setStmtError($stmt = null))
-
+	
+	/**
+	 * @param $errorCode
+	 */
 protected function setErrorCode($errorCode) {
 	$this->last_errorcode = $errorCode;
 }
-
-
+	
+	/**
+	 * @param $errorMsg
+	 */
 protected function setErrorMsg($errorMsg) {
 	$this->last_errormsg = $errorMsg;
 }
-
-
-/* this function used for special stored procedure call only  */
+	
+	
+	/**
+	 * this function used for special stored procedure call only
+	 *
+	 * @param $conn
+	 * @param $sql
+	 * @return bool
+	 */
 public function execXMLStoredProcedure( $conn, $sql, $bindArray )										
 {
 
@@ -158,9 +205,19 @@ public function execXMLStoredProcedure( $conn, $sql, $bindArray )
 	return $outputXml;
 		
 } //(public function execXMLStoredProcedure)
-/*returns a first column from sql stmt result set*/
-// used in one place: iToolkitService's ReadSPLFData().
-// TODO eliminate this method if possible.
+	
+	/**
+	 * returns a first column from sql stmt result set
+	 *
+	 * used in one place: iToolkitService's ReadSPLFData().
+	 *
+	 * @todo eliminate this method if possible.
+	 *
+	 * @param $conn
+	 * @param $sql
+	 * @throws \Exception
+	 * @return array
+	 */
 public function executeQuery($conn, $sql )
 {
 

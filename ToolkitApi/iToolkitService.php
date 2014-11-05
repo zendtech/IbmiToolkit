@@ -1,18 +1,29 @@
 <?php
 include_once 'ToolkitService.php';
-
+/**
+ * Class DateTimeApi
+ *
+ * @package ToolkitApi
+ */
 class DateTimeApi
 {
 	protected $ToolkitSrvObj;
-	
+	/**
+	 * @param ToolkitService $ToolkitSrvObj
+	 */
 	public function __construct( ToolkitService $ToolkitSrvObj = null){
 
 		if ($ToolkitSrvObj instanceof ToolkitService ) {
 			$this->ToolkitSrvObj = $ToolkitSrvObj ;
 		}
-	} 
+	}
 	
-	// from 8-character *DTS format to 17-character full date and time
+	/**
+	 * from 8-character *DTS format to 17-character full date and time
+	 *
+	 * @param $dtsDateTime
+	 * @return bool
+	 */
 	public function dtsToYymmdd($dtsDateTime) {
 		
 		$inputFormat = "*DTS"; // special system format, returned by some APIs.
@@ -54,7 +65,11 @@ class DateTimeApi
 
 } //(class DateTimeApi)
 
-// definition of list from IBM i API
+/**
+ * Class ListFromApi
+ *
+ * @package ToolkitApi
+ */
 class ListFromApi
 {
 	protected $ToolkitSrvObj;
@@ -66,7 +81,13 @@ class ListFromApi
 
     // listinfo: totalRecords, firstRecordNumber, requestHandle. if firstRec... < totalRecords then can continue.
     // return I5_ERR_BEOF when went past last record. get CPF GUI0006 when used invalid record#.
-	
+	/**
+	 * @param $requestHandle
+	 * @param $totalRecords
+	 * @param $receiverDs
+	 * @param $lengthOfReceiverVariable
+	 * @param ToolkitService $ToolkitSrvObj
+	 */
 	public function __construct($requestHandle, $totalRecords, $receiverDs, $lengthOfReceiverVariable, ToolkitService $ToolkitSrvObj = null){
 		if ($ToolkitSrvObj instanceof ToolkitService ) {
 			$this->ToolkitSrvObj = $ToolkitSrvObj ;
@@ -79,16 +100,22 @@ class ListFromApi
 		$this->_receiverDs = $receiverDs; // will request record #1 when someone asks
 		
 	} //(constructor)
-	
+	/**
+	 * @return ToolkitService
+	 */
 	public function getConn() 
 	{
 		return $this->ToolkitSrvObj;
 	}
 	
-	// Call QGYGTLE (get list entry) API using handle and "next record to request."
-	// Return false when run out of records (get GUI0006 error code).
-	// Note: if get timing problems where no records are returned:
-	// Embed the call to the QGYGTLE API in a do-loop that loops until a record is returned. 
+	/**
+	 * Call QGYGTLE (get list entry) API using handle and "next record to request."
+	 *
+	 * Note: if get timing problems where no records are returned:
+	 * Embed the call to the QGYGTLE API in a do-loop that loops until a record is returned.
+	 *
+	 * @return bool Return false when run out of records (get GUI0006 error code).
+	 */
 	public function getNextEntry() {
 
 		$apiPgm = 'QGYGTLE';
@@ -135,8 +162,12 @@ class ListFromApi
       
       
 	} //(getNextEntry)		
-		
-	// close the list
+	
+	/**
+	 * close the list
+	 *
+	 * @return bool
+	 */
 	public function close() {
 		// call QGYCLST, the "close list" api.
 		$apiPgm = 'QGYCLST';
@@ -163,7 +194,11 @@ class ListFromApi
 } // (class ListFromApi)
 
 
-
+/**
+ * Class UserSpace
+ *
+ * @package ToolkitApi
+ */
 class UserSpace{
     private $ToolkitSrvObj;
     private $USName = NULL;
@@ -172,19 +207,25 @@ class UserSpace{
     protected $CPFErr = '0000000';
 	protected $ErrMessage;
 	
-		
+	/**
+	 * @param ToolkitService $ToolkitSrvObj
+	 */
 	public function __construct( ToolkitService $ToolkitSrvObj = null){
 		if ($ToolkitSrvObj instanceof ToolkitService ) {
 			$this->ToolkitSrvObj = $ToolkitSrvObj ;
 		}	    	
 		return $this;	
-	} 
-			
+	}
+	/**
+	 * @return string
+	 */
     public function getCpfErr()
 	{ 
 		return $this->CPFErr;
 	}
-	
+	/**
+	 * @return mixed
+	 */
 	public function getError()
 	{ 
 		return $this->ErrMessage;
@@ -218,8 +259,17 @@ class UserSpace{
 	     
 
 	} //(verify_CPFError)
-*/	
-	
+*/
+	/**
+	 * @param null $UserSpaceName
+	 * @param null $USLib
+	 * @param int $InitSize
+	 * @param string $publicAuthority
+	 * @param string $InitValue
+	 * @param string $extendedAttribute
+	 * @param string $textDescription
+	 * @return bool
+	 */
 	public function CreateUserSpace($UserSpaceName = NULL, $USLib = NULL, $InitSize =1024, $publicAuthority = '*ALL', $InitValue=' ', 
 	                                $extendedAttribute='PF', $textDescription='ZS XML Service User Space' ){	
 		
@@ -258,8 +308,10 @@ class UserSpace{
 		}
 		    
 		return true; //created
-	} 
-	
+	}
+	/**
+	 * @return array|bool
+	 */
 	public function RetrieveUserSpaceAttr()
 	{	
 		$BytesRet = 0;
@@ -305,14 +357,18 @@ class UserSpace{
 		             "User space library name"=>$retArr['uslib']);
 			
 	} //(public function RetrieveUserSpaceAttr())
-	
+	/**
+	 * @return int
+	 */
 	public function RetrieveUserSpaceSize()
 	{
 		$ret = $this->RetrieveUserSpaceAttr();
 		return ( isset($ret['Space Size'])? $ret['Space Size']: -1); // -1 is an error condition
 
 	}
-	
+	/**
+	 * @return bool
+	 */
 	public function DeleteUserSpace(){
 				
 		$params[] = ToolkitService::AddParameterChar('in',20, "User space name", 'userspacename', $this->getUSFullName());	
@@ -325,9 +381,14 @@ class UserSpace{
 		    
 		return true; //deleted
 	}
-	/*
-	 *TODO write binary data?
-	 * */
+	/**
+	 * @todo write binary data?
+	 *
+	 * @param int $startpos
+	 * @param $valuelen
+	 * @param $value
+	 * @return bool
+	 */
     public function WriteUserSpace($startpos = 1, $valuelen, $value){
     	
     	
@@ -347,8 +408,14 @@ class UserSpace{
 		return true;		
 				
     }
-
-    // CW version. $param must be an array of ProgramParameter objects or a single ProgramParameter object.
+	
+	/**
+	 * CW version. $param must be an array of ProgramParameter objects or a single ProgramParameter object.
+	 *
+	 * @param int $startPos
+	 * @param ProgramParameter $param
+	 * @return bool
+	 */
     public function WriteUserSpaceCw($startPos = 1, ProgramParameter $param){
     /*	if (!is_object($param) && !is_array($param)) {
     		throw new Exception('Parameter passed to WriteUserSpaceCw must be an array or ProgramParameter object.');
@@ -375,8 +442,16 @@ class UserSpace{
 		    return true;		
 		}				
     } //(WriteUserSpaceCw)
-    
-    // if receiveDescription given, readlen = 0
+	
+	/**
+	 * if receiveDescription given, readlen = 0
+	 *
+	 * @param int $frompos
+	 * @param int $readlen
+	 * @param null $receiveStructure
+	 * @return bool
+	 * @throws \Exception
+	 */
 	public function ReadUserSpace($frompos=1, $readlen = 0, $receiveStructure = null ){	
 		
 		//how to see via green screen DSPF STMF('/QSYS.lib/qgpl.lib/ZS14371311.usrspc')   
@@ -436,7 +511,10 @@ class UserSpace{
 
         return $params;
 	}
-*/		
+*/
+	/**
+	 * @return null|string
+	 */
 	protected  function generate_name()
 	{
 		$localtime = localtime();
@@ -448,7 +526,10 @@ class UserSpace{
 					  );
 		return $this->USName;
 	}
-	
+	/**
+	 * @param null $name
+	 * @param null $lib
+	 */
 	public function setUSName($name = NULL, $lib = NULL) {
 		
 		if ($name === NULL)
@@ -462,13 +543,17 @@ class UserSpace{
 			$this->USlib = $lib;
 	}
 	
-			
+	/**
+	 * @return null
+	 */
 	public function getUSName (){
 		return $this->USName;
 	}
-	/*
+	/**
 	 * Name and Library
-	 * */
+	 *
+	 * @return null|string
+	 */
 	public function getUSFullName()
 	{
 		if($this->USName != null)		
@@ -477,10 +562,19 @@ class UserSpace{
 		return NULL;	
 	}	
 }
-
+/**
+ * Class TmpUserSpace
+ *
+ * @package ToolkitApi
+ */
 class TmpUserSpace extends UserSpace {
 	private $TMPUSName;
-		
+	/**
+	 * @param ToolkitService $ToolkitService
+	 * @param string $UsLib
+	 * @param int $DftUsSize
+	 * @throws \Exception
+	 */
 	function __construct( $ToolkitService , $UsLib = DFTLIB, $DftUsSize = 32700 ){		
 		parent::__construct($ToolkitService);
 		
@@ -491,13 +585,19 @@ class TmpUserSpace extends UserSpace {
 			$this->TMPUSName  = sprintf("%-10s%-10s", $this->getUSName(), $UsLib);
 		return $this;		
 	}
-	
+	/**
+	 * @todo do not delete
+	 */
 	function __destruct(){
 		// TODO do not delete
 //		$this->DeleteUserSpace();
 	}		
 }
-
+/**
+ * Class DataQueue
+ *
+ * @package ToolkitApi
+ */
 class DataQueue{
 
 	private $ToolkitService;	
@@ -506,7 +606,9 @@ class DataQueue{
 	private $CPFErr = '0000000';
 	private $ErrMessage;
 	
-	
+	/**
+	 * @param ToolkitService $ToolkitSrvObj
+	 */
 	public function __construct( ToolkitService $ToolkitSrvObj = null){
 		if ($ToolkitSrvObj instanceof ToolkitService ) {
 			$this->ToolkitService = $ToolkitSrvObj ;
@@ -516,11 +618,25 @@ class DataQueue{
 		return false;
 			
 	}
+	/**
+	 * @return mixed
+	 */
     public function getError()
     {
     	return $this->ErrMessage;
     }
-	
+	/**
+	 * @param $DataQName
+	 * @param $DataQLib
+	 * @param int $MaxLength
+	 * @param string $Sequence
+	 * @param int $KeyLength
+	 * @param string $Authority
+	 * @param int $QSizeMaxNumEntries
+	 * @param int $QSizeInitNumEntries
+	 * @return bool
+	 * @throws \Exception
+	 */
 	public function CreateDataQ( $DataQName, $DataQLib, 
         						 $MaxLength=128,
                                  $Sequence ='*FIFO', $KeyLength=0,
@@ -572,7 +688,12 @@ class DataQueue{
 		}
 		return true;
 	}
-	
+	/**
+	 * @param string $DataQName
+	 * @param string $DataQLib
+	 * @return bool
+	 * @throws \Exception
+	 */
 	public function DeleteDQ($DataQName ='', $DataQLib = ''){
 		
 		$cmd = sprintf("QSYS/DLTDTAQ DTAQ(%s/%s)", 
@@ -589,14 +710,30 @@ class DataQueue{
 		return true;
 	}
 	
-	// Correct spelling with this alias
+	/**
+	 * Correct spelling with this alias
+	 *
+	 * @param $WaitTime
+	 * @param string $KeyOrder
+	 * @param int $KeyLength
+	 * @param string $KeyData
+	 * @param string $WithRemoveMsg
+	 * @return bool
+	 */
 	public function receiveDataQueue($WaitTime, $KeyOrder = '', $KeyLength = 0, $KeyData = '', $WithRemoveMsg = 'N') {
 		
 		// call misspelled one
 		return $this->receieveDataQueue($WaitTime, $KeyOrder, $KeyLength, $KeyData, $WithRemoveMsg);
 	} //receiveDataQueue)
 	
-
+	/**
+	 * @param $WaitTime
+	 * @param string $KeyOrder
+	 * @param int $KeyLength
+	 * @param string $KeyData
+	 * @param string $WithRemoveMsg
+	 * @return bool
+	 */
 	public function receieveDataQueue($WaitTime, $KeyOrder = '', $KeyLength = 0, $KeyData = '', $WithRemoveMsg = 'N') {
 		
 		
@@ -659,13 +796,22 @@ class DataQueue{
 			
 		return false;	
 	}
-	
+	/**
+	 * @param $DataQName
+	 * @param $DataQLib
+	 */
 	public function SetDataQName($DataQName, $DataQLib){
 		$this->DataQueueName = $DataQName;
 		$this->DataQueueLib = $DataQLib;
 	
 	}
-	
+	/**
+	 * @param $DataLen
+	 * @param $Data
+	 * @param int $KeyLength
+	 * @param string $KeyData
+	 * @return array|bool
+	 */
 	public function SendDataQueue($DataLen, $Data, $KeyLength=0, $KeyData=''){
 		// QSNDDTAQ API:
 		// http://publib.boulder.ibm.com/infocenter/iseries/v5r4/index.jsp?topic=%2Fapis%2Fqsnddtaq.htm
@@ -684,7 +830,12 @@ class DataQueue{
 		return $ret;
 		
 	} //(SendDataQueue)
-	
+	/**
+	 * @param string $KeyOrder
+	 * @param int $KeyLength
+	 * @param string $KeyData
+	 * @return bool
+	 */
 	public function ClearDQ($KeyOrder= '', $KeyLength=0, $KeyData=''){
 		
 		//QCLRDTAQ
@@ -708,7 +859,11 @@ class DataQueue{
 		return true;	
 	}  
 }
-
+/**
+ * Class SpooledFiles
+ *
+ * @package ToolkitApi
+ */
 class SpooledFiles 
 {	
 	private $SPOOLFILELIST_SIZE = 98;
@@ -719,7 +874,10 @@ class SpooledFiles
 	private $ErrMessage;	
     //private $old_plug;         /* spool file and list of spoll files 
     							 /*	may return a huge xml output. Use 'plug'=>"iPLUG1M"	*/
-	 
+	/**
+	 * @param ToolkitService $ToolkitSrvObj
+	 * @param null $UserLib
+	 */
 	public function __construct( ToolkitService $ToolkitSrvObj = NULL, $UserLib = NULL ){
 		if ($ToolkitSrvObj instanceof ToolkitService ) {
 				$this->ToolkitSrvObj = $ToolkitSrvObj ;
@@ -739,14 +897,24 @@ class SpooledFiles
 	    } else		
 		return false;
 	}
+	/**
+	 *
+	 */
 	public function __destructor(){
 		//$this->ToolkitSrvObj->setToolkitServiceParams(array('plug'=>$old_plug));
 	}
-	
+	/**
+	 * @return mixed
+	 */
 	public function getError()
     {
     	return $this->ErrMessage;
-    }   		
+    }
+	/**
+	 * @param string $UserName
+	 * @return array|bool|null
+	 * @throws \Exception
+	 */
 	public function GetSPLList( $UserName = "*CURRENT"){		
          
 		$list = NULL;
@@ -789,7 +957,10 @@ class SpooledFiles
         return  false; 
 		
 	}
-
+	/**
+	 * @param $SpoolInfListArr
+	 * @return array|null
+	 */
 	private function buildSpoolList( $SpoolInfListArr ){
 		$list= NULL;		
 			foreach($SpoolInfListArr as $tmparr)
@@ -809,8 +980,18 @@ class SpooledFiles
 			}
 			return $list;
 	}
-
-	//multi user using!
+	
+	/**
+	 * multi user using!
+	 *
+	 * @param $SplfName
+	 * @param $SplfNbr
+	 * @param $JobNmbr
+	 * @param $JobName
+	 * @param $JobUser
+	 * @param string $TMPFName
+	 * @return mixed|string
+	 */
 	public function GetSPLF( $SplfName , $SplfNbr, $JobNmbr, $JobName, $JobUser, $TMPFName=''){
 
 	 $this->clearError();
@@ -840,7 +1021,10 @@ class SpooledFiles
       
 	  return $Txt;
 	} //(GetSPLF)
-	
+	/**
+	 * @return mixed|string
+	 * @throws \Exception
+	 */
 	private function ReadSPLFData()
 	{
 	    $Txt='';
@@ -855,18 +1039,26 @@ class SpooledFiles
 		return $Txt;
 	}
 	
-	
+	/**
+	 * @param $msg
+	 */
 	private function setError( $msg )
     {
     	$this->ErrMessage = $msg;
-    }  
-    
+    }
+	/**
+	 *
+	 */
     private function clearError()
     {
     	$this->ErrMessage = '';
     }  
 }
-
+/**
+ * Class JobLogs
+ *
+ * @package ToolkitApi
+ */
 class JobLogs {
 	private $JOBLIST_RECORD_SIZE = 60;
 	private $JOBLOG_RECORD_SIZE  = 80;
@@ -875,8 +1067,11 @@ class JobLogs {
 	private $ToolkitSrvObj;
 	private $TmpUserSpace;
 	private $TmpLib = DFTLIB;
-    
 	
+	/**
+	 * @param ToolkitService $ToolkitSrvObj
+	 * @param string $tmpUSLib
+	 */
 	public function __construct( ToolkitService  $ToolkitSrvObj = null, $tmpUSLib = DFTLIB ){
 		if ($ToolkitSrvObj instanceof ToolkitService ) {
 			$this->ToolkitSrvObj = $ToolkitSrvObj;
@@ -893,11 +1088,19 @@ class JobLogs {
 			return false;
 			
 	}
+	/**
+	 * @param $newSize
+	 */
 	public function setTemp_US_Size( $newSize){
 		if($newSize > 128000 )
 			$this->Temp_US_Size = $newSize;
 	}
-		
+	/**
+	 * @param null $user
+	 * @param string $jobstatus
+	 * @return array|bool
+	 * @throws \Exception
+	 */
 	public function JobList( $user = NULL, $jobstatus = "*ACTIVE")
 	{
 		if($user != NULL)
@@ -924,7 +1127,10 @@ class JobLogs {
         else
             return false; 	
 	}
-	 
+	/**
+	 * @param $JobListString
+	 * @return array
+	 */
 	public function createJobListArray($JobListString)
 	{			
 	   $JobList = array();
@@ -945,7 +1151,16 @@ class JobLogs {
 		return $JobList;
 	}
 	
-	// it seems that all three parms must be entered; it's for a specific job.
+	/**
+	 * it seems that all three parms must be entered; it's for a specific job.
+	 *
+	 * @param $JobName
+	 * @param $JobUser
+	 * @param $JobNumber
+	 * @param string $direction
+	 * @return array|bool
+	 * @throws \Exception
+	 */
 	public function JobLog($JobName, $JobUser, $JobNumber, $direction = 'L')
 	{
 
@@ -989,7 +1204,15 @@ class JobLogs {
             return false;
 	    } 	
 	} //(function JobLog) 
-
+	/**
+	 *
+	 * @todo currentJobLog. retrieve log for it in either direction.
+	 *
+	 * @param $JobName
+	 * @param $JobUser
+	 * @param $JobNumber
+	 * @return array|bool
+	 */
 	public function GetJobInfo($JobName, $JobUser, $JobNumber)
 	{/*
 		used format:JOBI0200
@@ -1013,7 +1236,10 @@ class JobLogs {
 	// *****************************************************************************************
 	// TODO currentJobLog. retrieve log for it in either direction.
 	// *****************************************************************************************
-	
+	/**
+	 * @param $jobinfo
+	 * @return array
+	 */
 	private function parseJobInfString( $jobinfo)
 	{
 		return array(
@@ -1030,14 +1256,20 @@ class JobLogs {
 		);
 	}
   }
-
+/**
+ * Class ObjectLists
+ *
+ * @package ToolkitApi
+ */
 class ObjectLists
 {
 	private $OBJLLISTREC_SIZE=30;
 	private $ToolkitSrvObj;
 	private $TmpUserSpace ;
 	private $ErrMessage;
-	
+	/**
+	 * @param ToolkitService $ToolkitSrvObj
+	 */
     public function __construct( ToolkitService $ToolkitSrvObj = null)
     {
 		if ($ToolkitSrvObj instanceof ToolkitService ) {
@@ -1063,12 +1295,14 @@ class ObjectLists
 	     
 	     return false; 
 	}
-*/	
+*/
 	
 	/**
-	 * $object     = *ALL,  *name, *generic name
-	 * $library    = *ALL,  *name, *generic name 
-	 * $objecttype = *ALL, *type 
+	 * @param string $object = *ALL, *name, *generic name
+	 * @param string $library = *ALL, *name, *generic name
+	 * @param string $objecttype = *ALL, *type
+	 * @return array|bool
+	 * @throws \Exception
 	 */
 	public function getObjectList($object= '*ALL', $library='*LIBL', $objecttype ='*ALL'){
 		$ObjName = $object;
@@ -1099,11 +1333,17 @@ class ObjectLists
 	
 	
 } //(class ObjectLists)
-
+/**
+ * Class SystemValues
+ *
+ * @package ToolkitApi
+ */
 class SystemValues   {		
 	private $ToolkitSrvObj;
 	private $ErrMessage;
-		
+	/**
+	 * @param ToolkitService $ToolkitSrvObj
+	 */
 	public function __construct( ToolkitService $ToolkitSrvObj = null){
 		if ($ToolkitSrvObj instanceof ToolkitService ) {
 			$this->ToolkitSrvObj = $ToolkitSrvObj ;			
@@ -1112,15 +1352,24 @@ class SystemValues   {
 		else 
 		return false;
 	}
-    
-	// TODO Deprecate setConnection in future.
+	
+	/**
+	 *
+	 * @todo Deprecate setConnection in future.
+	 *
+	 * @param $dbname
+	 * @param $user
+	 * @param $pass
+	 */
 	public function setConnection ($dbname , $user, $pass)
 	{
 		if( !$this->ToolkitSrvObj instanceof ToolkitService){
 			$this->ToolkitSrvObj = new ToolkitService($dbname, $user, $pass );
 		}		
 	}
-    
+	/**
+	 * @return array|bool
+	 */
 	public function systemValuesList() {
 		
 	    if( !$this->ToolkitSrvObj instanceof ToolkitService ) 
@@ -1145,7 +1394,11 @@ class SystemValues   {
 			return false;
 		
 	} //(systemValuesList)
-	
+	/**
+	 * @todo QWCRSVAL to work with 2 tiers while retaining good performance
+	 *
+	 * @param $sysValueName
+	 */
 	public function getSystemValue($sysValueName) {
 		
 		if( !$this->ToolkitSrvObj instanceof ToolkitService ) 
@@ -1167,11 +1420,15 @@ class SystemValues   {
 				$this->setError( $sysval['errorcode']);	
 	    }
  	} //(getSystemValue)
-	
+	/**
+	 * @return mixed
+	 */
 	public function getError(){
 	     return $this->ErrMessage;
 	}
-	
+	/**
+	 * @param $errCode
+	 */
 	private  function setError ( $errCode )
 	{
 		if($errCode == '') /*clear error message*/{
@@ -1189,13 +1446,20 @@ class SystemValues   {
 				
 	}
  }
+/**
+ * Class DataArea
+ *
+ * @package ToolkitApi
+ */
  class DataArea 
  {
  	private $DataAreaName =null;
  	private $DataAreaLib  =null;
  	private $ToolkitSrvObj=null;
- 	private $ErrMessage;	
- 	
+ 	private $ErrMessage;
+	 /**
+	  * @param ToolkitService $ToolkitSrvObj
+	  */
  	public function __construct( ToolkitService $ToolkitSrvObj = null){
 		if ($ToolkitSrvObj instanceof ToolkitService ) {
 			$this->ToolkitSrvObj = $ToolkitSrvObj ;			
@@ -1204,8 +1468,16 @@ class SystemValues   {
 		else 
 			return false;
 	}
-	/*for *char data area. According to create other data area types 
-	 * use CL command */
+	 /**
+	  * for *char data area. According to create other data area types
+	  * use CL command
+	  *
+	  * @param string $DataAreaName
+	  * @param string $DataAreaLib *CURLIB is correct, the default with CRTDTAARA.
+	  * @param int $size
+	  * @return bool
+	  * @throws \Exception
+	  */
  	public function createDataArea( $DataAreaName = '', 
 	                                $DataAreaLib = "*CURLIB", // *CURLIB is correct, the default with CRTDTAARA. 
  			                        $size = 2000 )	                              
@@ -1230,13 +1502,17 @@ class SystemValues   {
 		}
 		return true;	     
 	}
-	
+	 /**
+	  * @return string
+	  */
 	private function getAPIDataAreaName()
 	{ 	
 		// "DATAAREA  LIBRARY"   
 	    return  ( sprintf("%-10s%-10s", $this->DataAreaName, $this->DataAreaLib));	  
     }
-    
+	 /**
+	  * @return null|string
+	  */
     protected function getQualifiedDataAreaName() {
     	// return dtaara name in lib/dtaara format.
     	if ($this->DataAreaLib) {
@@ -1247,8 +1523,14 @@ class SystemValues   {
     	}
         	  
     } //(protected function getQualifiedDataAreaName())
-    
-    // *LIBL to read/write data area. *CURLIB to create.
+	
+	 /**
+	  * *LIBL to read/write data area. *CURLIB to create.
+	  *
+	  * @param $dataAreaName
+	  * @param string $dataAreaLib
+	  * @throws \Exception
+	  */
 	public function setDataAreaName( $dataAreaName , $dataAreaLib = "*LIBL")
 	{	
         /* special values:
@@ -1270,7 +1552,11 @@ class SystemValues   {
 		$this->DataAreaLib = $dataAreaLib;
 	}
 	
-
+	 /**
+	  * @param int $fromPosition
+	  * @param string $dataLen
+	  * @return bool
+	  */
 	public function readDataArea( $fromPosition = 1 , $dataLen = '*ALL' )
 	{	
 		if( !$this->ToolkitSrvObj instanceof ToolkitService ) 
@@ -1382,15 +1668,24 @@ class SystemValues   {
 		return ($value) ? $value : false;
 		
 	} //(public function readDataArea)
-	
+	 /**
+	  * @param $msg
+	  */
 	private function setError( $msg){
 	  $this->ErrMessage = $msg;
 	}
-	
+	 /**
+	  * @return mixed
+	  */
  	public function getError(){
 	     return $this->ErrMessage;
 	}
-	
+	 /**
+	  * @param $value
+	  * @param int $fromPosition
+	  * @param int $dataLen
+	  * @throws \Exception
+	  */
 	public function writeDataArea($value, $fromPosition=0, $dataLen=0)
 	{	
 		$substring = ''; // init		
@@ -1408,7 +1703,13 @@ class SystemValues   {
 		}			         
 		
     }
-    // requires explicit library
+	 /**
+	  * requires explicit library
+	  *
+	  * @param string $DataAreaName
+	  * @param string $DataAreaLib
+	  * @throws \Exception
+	  */
  	public function deleteDataArea($DataAreaName='', $DataAreaLib='')
 	{		
 		$cmd = sprintf("QSYS/DLTDTAARA DTAARA(%s/%s)", 

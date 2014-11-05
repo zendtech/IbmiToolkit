@@ -1,4 +1,9 @@
 <?php
+/**
+ * Class XMLWrapper
+ *
+ * @package ToolkitApi
+ */
 class XMLWrapper {
 
 	protected $encoding ='';
@@ -19,10 +24,15 @@ class XMLWrapper {
 	protected $_varyingTypes = array('on', '2', '4');
 
 	// whether CW is being used. 
-	protected $_isCw = false; 
+	protected $_isCw = false;
 	
-	// options can be string or array.
-	// If string, assume it's "encoding." Otherwise can be array of options.
+	/**
+	 * options can be string or array.
+	 * If string, assume it's "encoding." Otherwise can be array of options.
+	 *
+	 * @param string $options
+	 * @param ToolkitService $ToolkitSrvObj
+	 */
 	function __construct( $options ='',  ToolkitService $ToolkitSrvObj = null)
 	{
 
@@ -50,28 +60,40 @@ class XMLWrapper {
 		
 
 	} //(__construct)
-
-
-    // get option from toolkit object
+	
+	
+	/**
+	 * get option from toolkit object
+	 *
+	 * @param $optionName
+	 * @return bool|void
+	 */
     protected function getOption($optionName) 
     {
 	    return $this->ToolkitSrvObj->getOption($optionName);
 	
     } //(getOption)
-
-
-	// are we using CW or not?
+	
+	
+	/**
+	 * are we using CW
+	 *
+	 * @return bool
+	 */
 	protected function getIsCw() 
 	{
 		return $this->_isCw;
 		
 	} //(function getIsCw())
 	
-	// Do any processing on parameter properties
-	// to prepare for hex, ccsid.
-	// Adds these elements to array:
-	// processedData, ccsidStr, hexStr
-	// TODO: This works but is somewhat clumsy to use. Refactor as method of ProgramParam object with XML creator injected into it.  
+	/**
+	 * Do any processing on parameter properties to prepare for hex, ccsid.
+	 * Adds these elements to array: processedData, ccsidStr, hexStr
+	 *
+	 * @todo: This works but is somewhat clumsy to use. Refactor as method of ProgramParam object with XML creator injected into it.
+	 *
+	 * @param array $props
+	 */  
 	protected function processParamProps(&$props = array())
 	{
 		
@@ -109,10 +131,15 @@ class XMLWrapper {
 		
 		
 	} //(processParamProps)
-
-
-	// for strings such as program and library names and commands,
-	// apply global hex settings to a string, then return the encoded string.
+	
+	
+	/**
+	 * for strings such as program and library names and commands,
+	 * apply global hex settings to a string, then return the encoded string.
+	 *
+	 * @param $string
+	 * @return string
+	 */
 	protected function encodeString($string) 
 	{
 		if ($this->getOption('useHex')) {
@@ -123,14 +150,18 @@ class XMLWrapper {
 		
 	} //(encodeString($string))
 	
-
-	/**********************************************************
+	
+	/**
 	 * getPgmTag()
-	 * return the XML string that specifies a program's name,
-	 * including potential library, function, and atttributes.
 	 *
-	 **********************************************************
-    **/
+	 * return the XML string that specifies a program's name,
+	 * including potential library, function, and attributes.
+	 *
+	 * @param $pgm
+	 * @param $lib
+	 * @param $function
+	 * @return string
+	 */
 	protected function getPgmTag($pgm, $lib, $function) {
 		 
 		$pgmtag = ''; // what we'll return
@@ -178,7 +209,12 @@ class XMLWrapper {
 	} //(getPgmTag)
 	
 	
-	// Beginning XML tag
+	/**
+	 * Beginning XML tag
+	 * ensure configured encoding for proper behavior with non-ASCII languages
+	 *
+	 * @return string
+	 */
 	protected function xmlStart()
 	{
 	
@@ -186,10 +222,16 @@ class XMLWrapper {
 		return "<?xml version=\"1.0\" encoding=\"$this->encoding\" ?>";
 		
 	} //(function xmlStart)
-
 	
-	// For consistently, add commonly used starting and ending tags to input XML
-	// TODO: $xml should be a property of the class (true OO style), then $this->addOuterTags();
+	
+	/**
+	 * For consistently, add commonly used starting and ending tags to input XML
+	 *
+	 * @todo: $xml should be a property of the class (true OO style), then $this->addOuterTags();
+	 *
+	 * @param $inputXml
+	 * @return string
+	 */
 	protected function addOuterTags($inputXml) {
 		// 
 		
@@ -214,17 +256,23 @@ class XMLWrapper {
 		return $finalXml; 
 		
 	} //(protected function addOuterTags($inputXml))
-
 	
-	// provide XML for disconnecting (beware, reconnecting can be slow)
+	/**
+	 * provide XML for disconnecting (beware, reconnecting can be slow)
+	 *
+	 * @return string
+	 */
 	public function disconnectXMLIn() {
 		$xml = $this->xmlStart(); // start is all we need
 		return $xml;
 	} //(public function disconnectXMLIn())
-
 	
-
-	// convert xml string to simplexml object
+	/**
+	 * convert xml string to simplexml object
+	 *
+	 * @param $xml
+	 * @return bool|\SimpleXMLElement
+	 */
 	protected function xmlToObj($xml)
 	{
 	
@@ -242,9 +290,15 @@ class XMLWrapper {
 	
 	} //(protected function xmlToObj($xml))
 	
-	
-	
-	// $info can be 'joblog' (joblog and additional info) or 'conf' (if custom config info set up in PLUGCONF)
+	/**
+	 * $info can be 'joblog' (joblog and additional info) or 'conf' (if custom config info set up in PLUGCONF)
+	 *
+	 * @param string $info
+	 * @param string $jobName
+	 * @param string $jobUser
+	 * @param string $jobNumber
+	 * @return string
+	 */
 	public function diagnosticsXmlIn($info = 'joblog', $jobName = '', $jobUser = '', $jobNumber = '') {
 		
 		// xml tag
@@ -265,7 +319,11 @@ class XMLWrapper {
 		
 		
 	} //(public function diagnosticsXmlIn)
-
+	/**
+	 *
+	 * @param $xml
+	 * @return array
+	 */
 	public function parseDiagnosticsXml($xml)
     {
 
@@ -342,10 +400,18 @@ stuff
 		
 	} //(public function parseDiagnosticsXml($xml))
 	
-	
-	// $inputOutputParams can be an array of ProgramParameter objects,
-	// or
-	// an XML string representing parameters already in XML form ("parm" tags).
+	/**
+	 * $inputOutputParams can be an array of ProgramParameter objects,
+	 * or
+	 * an XML string representing parameters already in XML form ("parm" tags).
+	 *
+	 * @param string|array $inputOutputParams
+	 * @param array $returnParams
+	 * @param $pgm
+	 * @param string $lib blank library means use current/default or library list
+	 * @param null $function
+	 * @return string
+	 */
 	public function buildXmlIn($inputOutputParams = NULL, array $returnParams = NULL,
 								$pgm,
 								$lib = "", // blank library means use current/default or library list
@@ -423,10 +489,14 @@ stuff
 	    return $this->addOuterTags($xmlIn);
 
     } //(buildXmlInCw)
-
-
-    // Do all that's necessary to convert a single parameter into XML.
-    // Can call itself recursively for infinitely deep data structures.
+	
+	/**
+	 * Do all that's necessary to convert a single parameter into XML.
+	 * Can call itself recursively for infinitely deep data structures.
+	 *
+	 * @param ProgramParameter $paramElement
+	 * @return string
+	 */
 	protected function buildParamXml(ProgramParameter $paramElement) {
 
 		$paramXml = '';
@@ -572,9 +642,14 @@ stuff
 		return $paramXml;
 
 	} //(buildParamXml)
-
-	// given XMLSERVICE type such as 10i0, 5i0, 4f, 4p2, set data to the corresponding PHP type as closely as possible.
-	// Omit alpha/string because that's our default.
+	
+	/**
+	 * given XMLSERVICE type such as 10i0, 5i0, 4f, 4p2, set data to the corresponding PHP type as closely as possible.
+	 * Omit alpha/string because that's our default.
+	 *
+	 * @param $data
+	 * @param $xmlServiceType
+	 */
 	protected function updateType(&$data, $xmlServiceType)
 	{
 		$patterns = array('/10i0/', '/5i0/', '/4f/', '/\d*p\d*/');
@@ -587,28 +662,32 @@ stuff
 			settype($data, $newType);
 		}
 	} //(phpTypeFromXmlServiceType)
-
 	
-	/* typical XML program call
-	 * 
+	
+	/**
+	 * Parse a piece of XML representing a single parameter (whether output or return type).
+	 * Can all itself recursively for infinitely deep data structures.
+	 * Returns an array containing nested key/value pairs for the parameter.
+	 *
+	 * typical XML program call
+	 *
 	 * <script>
-      *   <pgm name='ZZCALL'> 
-      *      <parm>
-      *       <data type='1A'>a</data>
-      *      </parm> 
-      *      <parm>
-      *       <data type='2s'>23</data>
-      *      </parm> 
-      *      <return>
-      *       <data type='10i0' comment='Could be a data structure, too'>0</data>
-      *      </return> 
-      *   </pgm> 
-      * </script>
+	 * <pgm name='ZZCALL'>
+	 * <parm>
+	 * <data type='1A'>a</data>
+	 * </parm>
+	 * <parm>
+	 * <data type='2s'>23</data>
+	 * </parm>
+	 * <return>
+	 * <data type='10i0' comment='Could be a data structure, too'>0</data>
+	 * </return>
+	 * </pgm>
+	 * </script>
+	 *
+	 * @param \SimpleXMLElement $simpleXmlElement
+	 * @return array
 	 */
-	
-	// Parse a piece of XML representing a single parameter (whether output or return type).
-	// Can all itself recursively for infinitely deep data structures.
-	// Returns an array containing nested key/value pairs for the parameter. 
 	protected function getSingleParamFromXml(SimpleXMLElement $simpleXmlElement) {
 
 		// if it's too slow to set types, change it to false.
@@ -768,28 +847,32 @@ stuff
 		return $element;
 
 	} //(getSingleParamFromXml)
-
-/* sample
-<parm io='both' comment='PS'>
-<ds var='PS' array='on'>
-<ds var='PS_0'>
-<data var='PS1' type='10a' varying='off'>test1</data>
-<data var='PS2' type='10a' varying='off'>test2</data>
-<data var='PS3' type='10a' varying='off'>test3</data>
-</ds>
-<ds var='PS_1'>
-<data var='PS1' type='10a' varying='off'>test3</data>
-<data var='PS2' type='10a' varying='off'>test4</data>
-<data var='PS3' type='10a' varying='off'>test5</data>
-</ds>
-</ds>
-</parm>
-</pgm>
-*/
-
-	// Given the full XML received from XMLSERVICE program call,
-	// parse it into an array of parameter key/value pairs (can be nested if complex DSes) ready to use.
-	// The array will contain both 'io_param' (regular output params) and 'retvals' (return param) elements.
+	
+	/**
+	 * Given the full XML received from XMLSERVICE program call,
+	 * parse it into an array of parameter key/value pairs (can be nested if complex DSes) ready to use.
+	 * The array will contain both 'io_param' (regular output params) and 'retvals' (return param) elements.
+	 *
+	 * sample
+	 * <parm io='both' comment='PS'>
+	 * <ds var='PS' array='on'>
+	 * <ds var='PS_0'>
+	 * <data var='PS1' type='10a' varying='off'>test1</data>
+	 * <data var='PS2' type='10a' varying='off'>test2</data>
+	 * <data var='PS3' type='10a' varying='off'>test3</data>
+	 * </ds>
+	 * <ds var='PS_1'>
+	 * <data var='PS1' type='10a' varying='off'>test3</data>
+	 * <data var='PS2' type='10a' varying='off'>test4</data>
+	 * <data var='PS3' type='10a' varying='off'>test5</data>
+	 * </ds>
+	 * </ds>
+	 * </parm>
+	 * </pgm>
+	 *
+	 * @param $xml
+	 * @return array
+	 */
 	public function getParamsFromXml($xml) {
 
 		// initialize results array to empty arrays for both regular in/out params and return params
@@ -862,15 +945,23 @@ stuff
 	   return $callResults;
 	   
 	} //(getParamsFromXml)
-
-
+	
+	/**
+	 * @param $cmd
+	 * @return string
+	 */
    public function getCommandXmlInPase( $cmd )
     {
     	return $this->buildCommandXmlIn($cmd, 'pase');
     }
-
-    // $cmd can be a string or array of multiple commands
-    // It's more efficient to run multiple commands with one XMLSERVICE call than to do many calls
+	
+	/**
+	 * It's more efficient to run multiple commands with one XMLSERVICE call than to do many calls
+	 *
+	 * @param array $cmd string will be turned into an array
+	 * @param string $exec
+	 * @return string
+	 */
    public function buildCommandXmlIn( $cmd, $exec = 'pase')
     {
     	
@@ -927,11 +1018,15 @@ stuff
 
         return $this->addOuterTags($xmlIn);
     } //(function buildCommandXmlIn)
-
-
-
-   // gets any error code and sets it in toolkit.
-   // returns true or false depending on interpretation of status
+	
+	/**
+	 * gets any error code and sets it in toolkit.
+	 * returns true or false depending on interpretation of status
+	 *
+	 * @param $xml
+	 * @param string $parentTag
+	 * @return bool
+	 */
    public function getCmdResultFromXml($xml, $parentTag = 'sh') {
    	   $this->error = '';
 
@@ -1039,8 +1134,14 @@ stuff
 
 		return $retval;
    }
-
-   // Get rows from command output.
+	
+	/**
+	 * Get rows from command output.
+	 *
+	 * @param $xml
+	 * @param string $parent
+	 * @return array
+	 */
    public function getRowsFromXml($xml, $parent = 'sh')
    {
 
@@ -1115,21 +1216,32 @@ stuff
 
     return $values;
   } //(public function getRowsFromXml($xml, $parent = 'sh'))
-
+	/**
+	 * @return string
+	 */
   public function getErrorCode() {
       return (isset($this->cpfErr)) ? $this->cpfErr : '';
   }
-  
+	/**
+	 * @return string
+	 */
   public function getErrorMsg() {
   	return (isset($this->errorText)) ? $this->errorText : '';
   }
-  
-  
-  // return error message text (?)
+	
+	
+	/**
+	 * return error message text (?)
+	 *
+	 * @return mixed
+	 */
   public function getLastError()
   {
   	return $this->error;
   }
+	/**
+	 * @return mixed
+	 */
   public function getLastJoblog()
   {
   	return $this->joblog;

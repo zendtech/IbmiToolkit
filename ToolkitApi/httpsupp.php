@@ -1,31 +1,31 @@
-<?php 
+<?php
 
-// httpsupp is an experimental class (not supported by Zend at this time)
-// that provides an 'http' driverless transport.
-
-/* To set up your server for HTTP/CGI look here:
+/**
+ * httpsupp is an experimental class (not supported by Zend at this time) that
+ * provides an 'http' driverless transport.
+ *
+ * To set up your server for HTTP/CGI look here:
  * http://174.79.32.155/wiki/index.php/XMLService/XMLService
- * and read: "Optional XMLSERVICE REST interface via RPG CGI (xmlcgi.pgm)" 
-*/
-
-/*
- * // -------------------------------------------------------------------
-// transport: REST POST
-//   HTTP based transport to XMLSERVICE:
-//   script.php(http://ibmi/cgi-bin/xmlcgi.pgm)--->XMLCGI.PGM--->XMLSERVICE
-// Apache conf (httpd.conf):
-//   ScriptAlias /cgi-bin/ /QSYS.LIB/XMLSERVICE.LIB/
-//   <Directory /QSYS.LIB/XMLSERVICE.LIB/>
-//     AllowOverride None
-//     order allow,deny
-//     allow from all
-//     SetHandler cgi-script
-//     Options +ExecCGI
-//   </Directory>
-
+ * and read: "Optional XMLSERVICE REST interface via RPG CGI (xmlcgi.pgm)"
+ *
+ * transport: REST POST
+ * HTTP based transport to XMLSERVICE:
+ * script.php(http://ibmi/cgi-bin/xmlcgi.pgm)--->XMLCGI.PGM--->XMLSERVICE
+ * Apache conf (httpd.conf):
+ * ScriptAlias /cgi-bin/ /QSYS.LIB/XMLSERVICE.LIB/
+ *
+ * <Directory /QSYS.LIB/XMLSERVICE.LIB/>
+ * AllowOverride None
+ * order allow,deny
+ * allow from all
+ * SetHandler cgi-script
+ * Options +ExecCGI
+ * </Directory>
+ *
+ * @todo define common transport class/interface extended/implemented by all transports. They have much in common.
+ *
+ * @package ToolkitApi
  */
-
-
 class httpsupp {
 
 // TODO define common transport class/interface extended/implemented by all transports 	
@@ -42,16 +42,13 @@ protected $_user = null;
 protected $_pw = null;
 
 protected $_debug = null; // TODO see what for
-
-// parms [$ipc, $ctl, $i5rest, $debug]:
-//   $ipc - route to XMLSERVICE job (/tmp/xmlibmdb2)
-//   $ctl - XMLSERVICE control (*sbmjob)
-//   $i5rest - URL to xmlcgi.pgm
-//      (example: http://ibmi/cgi-bin/xmlcgi.pgm )
-//   $debug=*in|*out|*all
-//     *in - dump XML input (call)
-//     *out - dump XML output (return)
-//     *all - dump XML input/output
+	
+	/**
+	 * @param string $ipc route to XMLSERVICE job (/tmp/xmlibmdb2)
+	 * @param string $ctl XMLSERVICE control (*sbmjob)
+	 * @param string $url URL to xmlcgi.pgm (example: http://ibmi/cgi-bin/xmlcgi.pgm )
+	 * @param string $debug *in|*out|*all (*in - dump XML input (call)) (*out - dump XML output (return)) (*all - dump XML input/output)
+	 */
 public function __construct(
 		$ipc='/tmp/xmldb2',
 		$ctl='*sbmjob',
@@ -60,8 +57,12 @@ public function __construct(
 )
 {
 }
-
-
+	
+	/**
+	 * @param $xmlIn
+	 * @param $outSize
+	 * @return string
+	 */
 public function send($xmlIn,$outSize)
 {
 	// http POST parms
@@ -99,55 +100,86 @@ public function send($xmlIn,$outSize)
 	return $clobOut;
 	
 } //(send)
-
+	
+	/**
+	 * @return string
+	 */
 public function getErrorCode(){
 
 	return $this->last_errorcode;
 }
-
+	
+	/**
+	 * @return string
+	 */
 public function getErrorMsg(){
 
 	return $this->last_errormsg;
 }
-
-
+	
+	/**
+	 * @param $errorCode
+	 */
 protected function setErrorCode($errorCode) {
 	$this->last_errorcode = $errorCode;
 }
-
-
+	
+	/**
+	 * @param $errorMsg
+	 */
 protected function setErrorMsg($errorMsg) {
 	$this->last_errormsg = $errorMsg;
 }
-
+	
+	/**
+	 * @param $ipc
+	 */
 public function setIpc($ipc) {
 	$this->_ipc = $ipc;
 }
-
+	
+	/**
+	 * @return null
+	 */
 public function getIpc() {
 	return $this->_ipc;
 }
-
+	
+	/**
+	 * @param string $ctl
+	 */
 public function setCtl($ctl = '') {
 	$this->_ctl = $ctl;
 }
-
+	
+	/**
+	 * @return null
+	 */
 public function getCtl() {
 	return $this->_ctl;
 }
-
-
-
+	
+	/**
+	 * @param string $url\
+	 */
 public function setUrl($url = '') {
 	$this->_url = $url;
 }
-
+	
+	/**
+	 * @return null
+	 */
 public function getUrl() {
 	return $this->_url;
 }
-
-
-// TODO shared transport method
+	
+	/**
+	 *
+	 * @todo shared transport method
+	 *
+	 * @param $xml
+	 * @return string
+	 */
 public function driverJunkAway($xml)
 {
 	// trim blanks
@@ -170,7 +202,13 @@ public function driverJunkAway($xml)
 	}
 	return $clobOut;
 }
-
+	
+	/**
+	 * @param string $db
+	 * @param $user
+	 * @param $pw
+	 * @return $this
+	 */
 public function http_connect($db = '*LOCAL', $user, $pw, $options=array()) {
 	
 	if (!$db) {
@@ -183,18 +221,32 @@ public function http_connect($db = '*LOCAL', $user, $pw, $options=array()) {
 	
 	return $this;
 }
-
+	
+	/**
+	 * @param string $database
+	 * @param $user
+	 * @param $password
+	 * @return httpsupp
+	 */
 public function connect($database = '*LOCAL', $user, $password, $options = null){
     return $this->http_connect($database, $user, $password, $options = array());
 
 }
-
+	/**
+	 * @return null
+	 */
 protected function getUser() {
 	return $this->_user;
 }
+	/**
+	 * @return null
+	 */
 protected function getPw() {
 	return $this->_pw;
 }
+	/**
+	 * @return null
+	 */
 protected function getDb() {
 	return $this->_db;
 }

@@ -1,4 +1,9 @@
 <?php
+/**
+ * Class ProgramParameter
+ *
+ * @package ToolkitApi
+ */
 class ProgramParameter
 {
 
@@ -26,9 +31,25 @@ class ProgramParameter
 	
 	
 // TODO do setlen for other program param types, too
-
-
-	// added byval, isarray, labellen, labelsetlen
+	
+	
+	/**
+	 * @param $type
+	 * @param $io
+	 * @param string $comment
+	 * @param string $varName
+	 * @param $value
+	 * @param string $varying
+	 * @param int $dimension
+	 * @param string $by
+	 * @param bool $isArray
+	 * @param null $labelSetLen
+	 * @param null $labelLen
+	 * @param string $ccsidBefore
+	 * @param string $ccsidAfter
+	 * @param bool $useHex
+	 * @throws \Exception
+	 */
 	function __construct( $type,  $io, $comment='', $varName = '', $value, $varying = 'off', $dimension = 0, $by = 'ref', $isArray = false, $labelSetLen = null, $labelLen = null,
 	                      $ccsidBefore = '', $ccsidAfter = '', $useHex = false)
 	{
@@ -54,7 +75,10 @@ class ProgramParameter
         
         
 	} //(constructor)
-
+	
+	/**
+	 * @return array
+	 */
 	public function getParamProperities()
 	{
 		// if varName is empty then set a fallback unique varName.
@@ -81,14 +105,23 @@ class ProgramParameter
 		);
 
 	} //(getParamProperities)
-
-	// spell it right
+	
+	/**
+	 * spell it right
+	 *
+	 * @return array
+	 */
 	public function getParamProperties() {
 		return $this->getParamProperities();
 	}
-
-
-        // set a parameter's properties via an key=>value array structure. Choose any properties to set.
+	
+	
+	/**
+	 * set a parameter's properties via an key=>value array structure. Choose any properties to set.
+	 * map the XML keywords (usually shorter than true class property names) to the class property names.
+	 *
+	 * @param array $properties
+	 */
 	public function setParamProperties($properties = array())
 	{
 	        // map the XML keywords (usually shorter than true class property names)
@@ -124,15 +157,21 @@ class ProgramParameter
 
 
 	} //(setParamProperties)
-
-    // for unnamed data elements, to provide a unique name
-    // initialized by PgmCall method, so make public.		
+	
+	/**
+	 * for unnamed data elements, to provide a unique name initialized by PgmCall method, so make public.
+	 */		
 	static function initializeFallbackVarName() {
 	
 	    self::$_fallbackNameSequence = 0; //static variable
 	
     } //(function initializeFallbackVarName)
-
+	
+	/**
+	 * for unnamed data elements, provide a unique name: var0, var1, var2...
+	 *
+	 * @return string
+	 */
 	protected function getFallbackVarName() {
 	
 	    // for unnamed data elements, provide a unique name: var0, var1, var2... 
@@ -144,8 +183,27 @@ class ProgramParameter
 	    return $varName;
 	
     } //(function getFallbackVarName() )
-
- 
+	
+	/**
+	 * if $value is an array, but not yet a data structure, make a data structure of the array elements.
+	 *
+	 * @param $type
+	 * @param $io
+	 * @param $comment
+	 * @param $varName
+	 * @param $value
+	 * @param $varying
+	 * @param $dimension
+	 * @param $by
+	 * @param $isArray
+	 * @param $labelSetLen
+	 * @param $labelLen
+	 * @param $ccsidBefore
+	 * @param $ccsidAfter
+	 * @param $useHex
+	 * @return array
+	 * @throws \Exception
+	 */
 	protected function handleParamValue($type, $io, $comment, $varName, $value, $varying, $dimension, $by, $isArray,
 			                            $labelSetLen, $labelLen, $ccsidBefore, $ccsidAfter, $useHex)
 	{
@@ -178,94 +236,139 @@ class ProgramParameter
 		return $value;
 
 	} //(setParamValue)
-
+	
+	/**
+	 * @param $value
+	 */
 	public function setParamValue($value)
 	{
 		$this->data = $value;
     }
-
-
-
-    // set "len label"
+	
+	/**
+	 * set "len label"
+	 *
+	 * @param $labelLen
+	 */    
     public function setParamLabelLen($labelLen)
 	{
 		$this->labelLen = $labelLen;
     }
-
+	
+	/**
+	 * @param $name
+	 */
 	public function setParamName($name)
 	{
 		$this->varName = $name;
 	}
-
-
+	
+	/**
+	 * @return string
+	 */
 	public function getParamName()
 	{
 		return $this->varName;
 	}
-
+	/**
+	 * @return array
+	 */
 	public function getParamValue(){
 		return $this->data;
 	}
-
-
+	
+	/**
+	 * @return int
+	 */
 	public function getParamDimension()
 	{
 		return $this->dimension;
 	}
-
+	/**
+	 * @param int $dimension
+	 * @return $this
+	 */
 	public function setParamDimension($dimension = 0)
 	{
 		$this->dimension =  $dimension;
 		return $this; // fluent interface
 	}
 	
-	
-	// for a data structure or other item in an array, set the label for "do until"
+	/**
+	 * for a data structure or other item in an array, set the label for "do until"
+	 *
+	 * @param string $label
+	 * @return $this
+	 */
 	public function setParamLabelCounted($label = '')
 	{
 		$this->labelDoUntil =  $label;
 		return $this; // fluent interface
 	}
-
-	// for a numeric counter field that will determine how many array elements return from a program call,
-	// set the label for "enddo". Links up with the Dou label given to the dim'med array element itself.
+	
+	/**
+	 * for a numeric counter field that will determine how many array elements return
+	 * from a program call, set the label for "enddo". Links up with the Dou label
+	 * given to the dim'med array element itself.
+	 *
+	 * @param string $label
+	 * @return $this
+	 */
 	public function setParamLabelCounter($label = '')
 	{
 		$this->labelEndDo =  $label;
 		return $this; // fluent interface
 	}
-
 	
-	// "CCSID before" means how to convert to CCSID on the way in to XMLSERVICE, when needed 
+	/**
+	 * "CCSID before" means how to convert to CCSID on the way in to XMLSERVICE, when needed
+	 *
+	 * @param string $ccsidBefore
+	 * @return $this
+	 */
 	public function setParamCcsidBefore($ccsidBefore = '') 
 	{
 		$this->_ccsidBefore = $ccsidBefore;
 		return $this; // fluent interface
 	} //(setParamCcsidBefore)
-
-
-	// "CCSID after" means how to convert to CCSID on the way out from XMLSERVICE, when needed
+	
+	
+	/**
+	 * "CCSID after" means how to convert to CCSID on the way out from XMLSERVICE, when needed
+	 *
+	 * @param string $ccsidAfter
+	 * @return $this
+	 */
 	public function setParamCcsidAfter($ccsidAfter = '')
 	{
 		$this->_ccsidAfter = $ccsidAfter;
 		return $this; // fluent interface
 	} //(setParamCcsidAfter)
 	
-
-	// "useHex" controls whether the data will be converted to/from hex
+	/**
+	 * "useHex" controls whether the data will be converted to/from hex
+	 *
+	 * @param bool $useHex
+	 * @return $this
+	 */
 	public function setParamUseHex($useHex = false)
 	{
 		$this->_useHex = $useHex;
 		return $this; // fluent interface
 	} //(setParamUseHex)
-	
+	/**
+	 * @param string $comment
+	 * @return $this
+	 */
 	public function setParamComment($comment = '')
 	{
 		$this->comment = $comment;
 		return $this; // fluent interface
     } //(setParamComment)
 	
-	
+	/**
+	 * @return bool
+	 */
 	public function isDS(){
 		if($this->type == "ds") {
 		    return true;
@@ -273,21 +376,26 @@ class ProgramParameter
 		    return false;
 		}
 	} //(public function isDS())
-
+	/**
+	 * setReturnParameter ...
+	 */
 	public function setReturnParameter()
 	{
 		$this->returnParameter = true;
 	}
-
+	/**
+	 * @return bool
+	 */
 	public function isReturn()
 	{
 		return $this->returnParameter;
 	}
-
-	// updates $arrParams, so pass it by reference.
-	// $arrParms is an array of parameter arrays or objects.
-	//
-	// Note: no return value. The first parameter, $arrayParams, gets updated.
+	
+	/**
+	 * @param $arrParams
+	 * @param array $arrValues
+	 * @return bool
+	 */
 	static function UpdateParameterValues(&$arrParams, array $arrValues){
 
 		// added the params part
@@ -319,12 +427,15 @@ class ProgramParameter
 		    }
 	    }
 	} //(UpdateParameterValues)
-
 	
-	/* bin2str is used by the 5250 Bridge. It converts a hex string to character string
+	/**
+	 * bin2str is used by the 5250 Bridge. It converts a hex string to character string
 	 * while cleaning up unexpected characters.
 	 * Original comment: "can not be public. Return XML does not return a type of values."
-	**/
+	 *
+	 * @param $hex_data
+	 * @return string
+	 */
 	static function bin2str( $hex_data )
 	{
 		
@@ -346,9 +457,12 @@ class ProgramParameter
 		
 		return $str;
 	 } //(static function bin2str())
-
-	 
-	 // ParametersToArray is deprecated. No longer needed
+	
+	
+	/**
+	 * @param null $arrParams
+	 * @return array|null
+	 */
 	 static function ParametersToArray( $arrParams = null ){
 	 	if(!is_array($arrParams ) && !( $arrParams instanceof ProgramParameter))
 	 		return null;
@@ -396,10 +510,26 @@ class ProgramParameter
 	 
 	 
 } //(class ProgramParameter)
-	
+/**
+ * Class DataStructure
+ *
+ * @package ToolkitApi
+ */	
 class DataStructure extends ProgramParameter {
-
-	// v1.4.0 added $comment as arg 5, in place of the obsolete $isReturnParam argument. Data structure return values didn't work properly before 1.4.0 anyway.
+	
+	/**
+	 * v1.4.0 added $comment as arg 5, in place of the obsolete $isReturnParam argument.
+	 * Data structure return values didn't work properly before 1.4.0 anyway.
+	 *
+	 * @param $paramsArray
+	 * @param string $struct_name
+	 * @param int $dim
+	 * @param string $comment
+	 * @param string $by
+	 * @param bool $isArray
+	 * @param null $labelLen
+	 * @param string $io
+	 */
 	function __construct( $paramsArray , $struct_name ="DataStruct", $dim=0 , $comment = '', $by='', $isArray=false, $labelLen = null ){
 		parent::__construct( "ds",  "both", $comment, $struct_name, $paramsArray , 'off', $dim, $by, $isArray, null, $labelLen );
 	}
@@ -409,11 +539,30 @@ class DataStructure extends ProgramParameter {
 //function __construct( $type,  $io, $comment='', $varName = '', $value, $varying = 'off', $dimension = 0, $by = 'ref', $isArray = false, $labelSetLen = null, $labelLen = null,
 //		$ccsidBefore = '', $ccsidAfter = '', $useHex = false)
 
-
+/**
+ * Class CharParam
+ *
+ * CharParam can require hex/ccsid conversions, which other types don't.
+ *
+ * @package ToolkitApi
+ */
 class CharParam extends ProgramParameter{
-	// todo if array. call charparm 5 times with fake field name
-	// and coming out, too. (?)
-	// CharParam can require hex/ccsid conversions, which other types don't.
+	/**
+	 * @todo if array. call charparm 5 times with fake field name and coming out, too. (?)
+	 *
+	 * @param $io
+	 * @param $size
+	 * @param string $comment
+	 * @param string $varName
+	 * @param $value
+	 * @param string $varying
+	 * @param int $dimension
+	 * @param string $by
+	 * @param bool $isArray
+	 * @param string $ccsidBefore
+	 * @param string $ccsidAfter
+	 * @param bool $useHex
+	 */
 	function __construct($io, $size , $comment,  $varName = '', $value , $varying = 'off',$dimension = 0, $by='', $isArray = false,
 			             $ccsidBefore = '', $ccsidAfter = '', $useHex = false)
 	{
@@ -423,8 +572,23 @@ class CharParam extends ProgramParameter{
 		return $this; // fluent interface
 	}
 }
-
+/**
+ * Class ZonedParam
+ *
+ * @package ToolkitApi
+ */
 class ZonedParam extends ProgramParameter{
+	/**
+	 * @param $io
+	 * @param $length
+	 * @param string $scale
+	 * @param string $comment
+	 * @param string $varName
+	 * @param string $value
+	 * @param int $dimension
+	 * @param string $by
+	 * @param bool $isArray
+	 */
 	function __construct($io, $length ,$scale , $comment,  $varName = '', $value, $dimension=0, $by='', $isArray = false)
 	{
 		$type = sprintf("%ds%d", $length, $scale);
@@ -432,8 +596,24 @@ class ZonedParam extends ProgramParameter{
 		return $this;
 	}
 }
-
+/**
+ * Class PackedDecParam
+ *
+ * @package ToolkitApi
+ */
 class PackedDecParam extends ProgramParameter {
+	/**
+	 * @param $io
+	 * @param $length
+	 * @param string $scale
+	 * @param string $comment
+	 * @param string $varName
+	 * @param string $value
+	 * @param int $dimension
+	 * @param string $by
+	 * @param bool $isArray
+	 * @param null $labelSetLen
+	 */
 	function __construct($io, $length, $scale , $comment,  $varName = '', $value,$dimension=0, $by='', $isArray = false,  $labelSetLen = null) {
     	$type = sprintf("%dp%d", $length, $scale);
 		parent::__construct( $type,  $io, $comment, $varName, $value, 'off', $dimension, $by, $isArray, $labelSetLen, null, '', '', false);
@@ -442,63 +622,174 @@ class PackedDecParam extends ProgramParameter {
 }
 
 // TODO continue wiht $isMulti
-
+/**
+ * Class Int32Param
+ *
+ * @package ToolkitApi
+ */
 class Int32Param extends ProgramParameter{
+	/**
+	 * @param $io
+	 * @param $comment
+	 * @param string $varName
+	 * @param string $value
+	 * @param int $dimension
+	 * @param string $by
+	 * @param bool $isArray
+	 * @param null $labelSetLen
+	 */
 	 function __construct($io,  $comment,  $varName = '', $value, $dimension=0, $by='', $isArray = false, $labelSetLen = null) {
 		parent::__construct(  '10i0', $io, $comment, $varName, $value, 'off', $dimension, $by, $isArray, $labelSetLen, null  );
 		return $this;
 	 }
 }
-
+/**
+ * Class SizeParam
+ *
+ * @package ToolkitApi
+ */
 class SizeParam extends Int32Param{
+	/**
+	 * @param $comment
+	 * @param string $varName
+	 * @param string $labelSetLen
+	 */
 	 function __construct($comment,  $varName = '', $labelSetLen) {
 		parent::__construct( 'in', $comment, $varName, 0, 0, '', false, $labelSetLen );
 		return $this;
 	 }
 }
 
-// size can be a pack 5 decimal, too!
+/**
+ * Class SizePackParam
+ * size can be a pack 5 decimal, too!
+ *
+ * @package ToolkitApi
+ */
 class SizePackParam extends PackedDecParam{
+	/**
+	 * @param $comment
+	 * @param string $varName
+	 * @param string $labelSetLen
+	 */
 	 function __construct($comment,  $varName = '', $labelSetLen) {
 		parent::__construct( 'in', 5, 0, $comment, $varName, 0, 0, '', false, $labelSetLen );
 		return $this;
 	 }
 }
 
-
+/**
+ * Class Int64Param
+ *
+ * @package ToolkitApi
+ */
 class Int64Param extends ProgramParameter{
+	/**
+	 * @param $io
+	 * @param $comment
+	 * @param string $varName
+	 * @param string $value
+	 * @param int $dimension
+	 * @param string $by
+	 * @param bool $isArray
+	 */
 	function __construct( $io,  $comment,  $varName = '', $value, $dimension=0, $by='', $isArray = false){
 		parent::__construct('20i0',  $io, $comment, $varName, $value, 'off', $dimension, $by, $isArray );
 		return $this;
 	}
 }
+/**
+ * Class UInt32Param
+ *
+ * @package ToolkitApi
+ */
 class UInt32Param extends ProgramParameter{
+	/**
+	 * @param $io
+	 * @param $comment
+	 * @param string $varName
+	 * @param string $value
+	 * @param int $dimension
+	 * @param string $by
+	 * @param bool $isArray
+	 */
 	 function __construct($io,  $comment,  $varName = '', $value, $dimension=0, $by='', $isArray = false) {
 		parent::__construct(  '10u0', $io, $comment, $varName, $value, 'off', $dimension, $by, $isArray );
 		return $this;
 	 }
 }
+/**
+ * Class UInt64Param
+ *
+ * @package ToolkitApi
+ */
 class UInt64Param extends ProgramParameter{
+	/**
+	 * @param $io
+	 * @param $comment
+	 * @param string $varName
+	 * @param string $value
+	 * @param int $dimension
+	 * @param string $by
+	 * @param bool $isArray
+	 */
 	function __construct( $io,  $comment,  $varName = '', $value, $dimension=0, $by='', $isArray = false){
 		parent::__construct('20u0',  $io, $comment, $varName, $value, 'off', $dimension, $by, $isArray );
 		return $this;
 	}
 }
+/**
+ * Class FloatParam
+ *
+ * @package ToolkitApi
+ */
 class FloatParam extends ProgramParameter{
+	/**
+	 * @param $io
+	 * @param $comment
+	 * @param string $varName
+	 * @param string $value
+	 * @param int $dimension
+	 * @param string $by
+	 * @param bool $isArray
+	 */
 	function __construct( $io,  $comment,  $varName = '', $value, $dimension=0, $by='', $isArray = false){
 		parent::__construct('4f', $io, $comment, $varName, $value, 'off',$dimension, $by, $isArray );
 		return $this;
 	}
 }
+/**
+ * Class RealParam
+ *
+ * @package ToolkitApi
+ */
 class RealParam extends ProgramParameter{
+	/**
+	 * @param $io
+	 * @param $comment
+	 * @param string $varName
+	 * @param string $value
+	 * @param int $dimension
+	 * @param string $by
+	 * @param bool $isArray
+	 */
 	function __construct( $io,  $comment,  $varName = '', $value, $dimension=0, $by='', $isArray = false){
 		parent::__construct('8f',  $io, $comment, $varName, $value, 'off', $dimension, $by, $isArray );
 		return $this;
 	}
 }
 
-// "hole" means, don't return the data where the hole is defined. A way to ignore large amounts of data
+/**
+ * Class HoleParam
+ * "hole" means, don't return the data where the hole is defined. A way to ignore large amounts of data
+ *
+ * @package ToolkitApi
+ */
 class HoleParam extends ProgramParameter{
+	/**
+	 * @param $length
+	 * @param string $comment
+	 */
 	function __construct( $length, $comment = 'hole'){
 		$type = sprintf("%dh", $length);
 		// note, no varname or value needed because data will be ignored.
@@ -508,15 +799,32 @@ class HoleParam extends ProgramParameter{
 }
 
 
-/*binary parameter*/
+/**
+ * Class BinParam
+ * binary parameter
+ *
+ * @package ToolkitApi
+ */
 class BinParam extends ProgramParameter {
-
+	/**
+	 * @param $io
+	 * @param $size
+	 * @param string $comment
+	 * @param string $varName
+	 * @param $value
+	 * @param int $dimension
+	 * @param string $by
+	 * @param bool $isArray
+	 */
 	function __construct ($io, $size , $comment,  $varName = '', $value, $dimension=0, $by='', $isArray = false) {
     	$type = sprintf("%dB", $size);
 		parent::__construct( $type,  $io, $comment, $varName, $value, 'off', $dimension, $by, $isArray );
 	    return $this;
 	}  //(function __construct)
-
+	/**
+	 * @param $hex_data
+	 * @return string
+	 */
 	static function  bin2str( $hex_data ){
 		return parent::bin2str($hex_data);
 	}

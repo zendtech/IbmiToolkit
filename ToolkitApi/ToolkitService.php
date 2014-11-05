@@ -5,6 +5,11 @@ include_once 'ToolkitServiceParameter.php';
 
 define('CONFIG_FILE', 'toolkit.ini');
 
+/**
+ * Class ToolkitService
+ *
+ * @package ToolkitApi
+ */
 class ToolkitService {
 	
 	const VERSION = '1.5.0'; // version number for front-end PHP toolkit
@@ -101,8 +106,17 @@ class ToolkitService {
     );
     
 	static protected $instance = NULL;
-
-    // need to define this so we get Cw object and not parent object
+	
+	/**
+	 * need to define this so we get Cw object and not parent object
+	 *
+	 * @param string $databaseNameOrResource
+	 * @param string $userOrI5NamingFlag
+	 * @param string $password
+	 * @param string $transportType
+	 * @param bool $isPersistent
+	 * @return bool|null
+	 */
     static function getInstance($databaseNameOrResource = '*LOCAL', $userOrI5NamingFlag = '', $password = '', $transportType = '', $isPersistent = false)
 	{
 	    // if instance hasn't been created yet, create one
@@ -120,16 +134,17 @@ class ToolkitService {
         	return false;
         } //(if (parent::$instance))
 	} //(getInstance)
-
 	
+	/**
+	 * Destruct
+	 */
 	public function __destruct(){
 	/* call to disconnect()  function to down connection */
 		if($this->conn == null)
 			self::$instance = NULL;
 
 	}
-
-
+	
 	/**
 	 * Return true if an instance of this object has already been created.
 	 * Return false if no instance has been instantiated.
@@ -148,7 +163,7 @@ class ToolkitService {
 			return false;
 		}
 	} //(hasInstance())
-
+	
 	/**
 	 * Return true if we are in debug mode
 	 * Return false if not
@@ -163,8 +178,18 @@ class ToolkitService {
 	    return $this->getOption('debug');
 	
     } //(isDebug())
-
-	// if passing an existing resource and naming, don't need the other params.
+	
+	/**
+	 * Protected to prevent multiple connections to i
+	 * if passing an existing resource and naming, don't need the other params.
+	 *
+	 * @param $databaseNameOrResource
+	 * @param string $userOrI5NamingFlag 0 = DB2_I5_NAMING_OFF or 1 = DB2_I5_NAMING_ON
+	 * @param string $password
+	 * @param string $transportType (http, ibm_db2, odbc)
+	 * @param bool $isPersistent
+	 * @throws \Exception
+	 */
 	protected function __construct($databaseNameOrResource , $userOrI5NamingFlag='' , $password='' , $transportType='', $isPersistent = false) {
 
 		// get settings from INI file
@@ -312,35 +337,55 @@ catch (Exception $e)
 		return $this; // for fluent interface
 		
 	} //(protected function __construct)
-
+	/**
+	 * @throws \Exception
+	 */
 	public function __clone ()	{
 		throw new Exception(" Use getInstance() function according to create a new ToolkitService object");
 	}
-
-	// whether we're using CW (compatibility wrapper) or not
+	
+	/**
+	 * whether we're using CW (compatibility wrapper) or not
+	 *
+	 * @param $isCw
+	 */
 	public function setIsCw($isCw) 
 	{
 		$this->_isCw = $isCw;
 	} //(function setIsCw)
-	
+	/**
+	 * @return bool
+	 */
 	public function getIsCw() 
 	{
 		return $this->_isCw;
 	} //(function getIsCw()
 	
-
-	// return array of valid plug sizes.
-	// public method in case an application wishes to validate.
+	/**
+	 * return array of valid plug sizes.
+	 * public method in case an application wishes to validate.
+	 *
+	 * @return array
+	 */
 	public function validPlugSizes() {
 		return array_keys($this->_dataSize);
 	} ///(validPlugSizeArray)
-
-	// valid plug sizes separated by commas. Useful for informational messages.
+	
+	/**
+	 * valid plug sizes separated by commas. Useful for informational messages.
+	 *
+	 * @return string
+	 */
 	protected function validPlugSizeList() {
 		return implode($this->validPlugSizes(), ', ');
 	}
 	
-	// return size in bytes based on plugSize.
+	/**
+	 * return size in bytes based on plugSize.
+	 *
+	 * @param $plugSize
+	 * @throws \Exception
+	 */
 	protected function plugSizeToBytes($plugSize) {
 
 		// return size in bytes based on plugSize.
@@ -352,16 +397,30 @@ catch (Exception $e)
 
 	} //(protected function plugSizeToBytes($size) )
 	
-	
+	/**
+	 * @param $transportObject
+	 */
 	protected function setTransport($transportObject) {
 		$this->_transport = $transportObject;
 	} //(protected function setTransport)
-
 	
+	/**
+	 * @return mixed
+	 */
     protected function getTransport() {
     	return $this->_transport;
     }
 	
+	/**
+	 * Choose data transport type: ibm_db2, odbc, http
+	 *
+	 * @param string $transportName 'ibm_db2' or 'odbc' or 'http'
+	 * @param string $database
+	 * @param string $user
+	 * @param string $password
+	 * @param null $options
+	 * @throws \Exception
+	 */
 	protected function chooseTransport($transportName = '') {
 		
 		if ($transportName == 'http') {
@@ -376,8 +435,16 @@ catch (Exception $e)
 		
 	} //(protected function chooseTransport($transportName = ''))
 	
-	
-	// transport type is same as db extension name when a db transport is used.
+	/**
+	 * transport type is same as db extension name when a db transport is used.
+	 *
+	 * @param string $transportType
+	 * @param $database
+	 * @param $user
+	 * @param $password
+	 * @param null $options
+	 * @throws \Exception
+	 */
 	protected function setdb( $transportType = '')
 	{
 		$transportType = trim($transportType);
@@ -417,8 +484,11 @@ catch (Exception $e)
 		
 	} //(function setdb)
 	
- 
-    // Also alias setOptions()
+	/**
+	 * Also alias setOptions()
+	 *
+	 * @param array $XmlServiceOptions
+	 */
 	public function setToolkitServiceParams ( array $XmlServiceOptions )
 	{
 		// copy incoming options to new array that we can safely manipulate
@@ -474,23 +544,38 @@ catch (Exception $e)
 		} //(foreach ($options as $optionName=>$propertyName))
         			   
 	} //(setToolkitServiceParameters)
-
-
-    // shorthand for getToolkitServiceParam()
+	
+	/**
+	 * shorthand for getToolkitServiceParam()
+	 *
+	 * @param $optionName
+	 * @return bool|void
+	 * @throws \Exception
+	 */
     public function getOption($optionName) 
     {
 	    return $this->getToolkitServiceParam($optionName);
     } //(getOption)
-
-    // shorthand for setToolkitServiceParams()
+	
+	/**
+	 * shorthand for setToolkitServiceParams()
+	 *
+	 * @param array $options
+	 */
     public function setOptions($options = array()) 
     {
 	    $this->setToolkitServiceParams($options);
 	
     } //(setOptions)
-
-
-    // get a single option value
+	
+	/**
+	 * get a single option value
+	 * return property value if property is set.
+	 *
+	 * @param $optionName
+	 * @return bool
+	 * @throws \Exception
+	 */
 	public function getToolkitServiceParam( $optionName ){
 	    		    	
         // return property value if property is set. 
@@ -509,8 +594,10 @@ catch (Exception $e)
         Throw new Exception("Invalid option requested: $optionName");
     	
 	} //(public function getToolkitServiceParam( $paramName ))
-
-   // end job if private job (internal key set); end DB transport if not persistent.
+	
+	/**
+	 * end job if private job (internal key set); end DB transport if not persistent.
+	 */
 	public function disconnect()
 	{
 		$this->PgmCall("OFF", NULL);
@@ -520,8 +607,10 @@ catch (Exception $e)
 		}    
     	$this->conn = null;
 	} //(public function disconnect())
-
-	// same as disconnect but also really close persistent database connection.
+	
+	/**
+	 * same as disconnect but also really close persistent database connection.
+	 */
 	public function disconnectPersistent()
 	{
 		$this->PgmCall("OFF", NULL);
@@ -531,7 +620,9 @@ catch (Exception $e)
 		}
 		$this->conn = null;
 	} //(public function disconnectPersistent())
-
+	/**
+	 * @param $stringToLog
+	 */
     public function debugLog($stringToLog) {
 
     	if ($this->isDebug()) {
@@ -541,19 +632,30 @@ catch (Exception $e)
 		} //(debug)
 
     } //(debugLog)
-
-
+	
+	/**
+	 * isDb2 and setDb2 may not be needed. Deprecate in future.
+	 *
+	 * @return bool
+	 */
 	public function isDb2()
 	{
 	   return $this->db2;
 	}
-
+	/**
+	 * @return bool
+	 */
 	public function setDb2()
 	{
 	   return $this->db2 = true;
 	}
-
-    // for special requests such as transport, performance, license
+	
+	/**
+	 * for special requests such as transport, performance, license
+	 *
+	 * @param $callType
+	 * @return array|bool
+	 */
     public function specialCall($callType) 
     {
 		$this->setOptions(array($callType=>true));
@@ -563,30 +665,41 @@ catch (Exception $e)
 		return $outputArray;
 	    
     } //(specialCall)
-
+	/**
+	 * @return array|bool
+	 */
     public function callTransportOnly()
 	{
 		return $this->specialCall('transport');
 	}
-
+	/**
+	 * @return array|bool
+	 */
 	public function performanceData()
 	{
 		return $this->specialCall('performance');
 	}
-
-    // return license/version information
+	
+	/**
+	 * return license/version information
+	 *
+	 * @return array|bool
+	 */
 	public function licenseXMLSERVICE()
 	{
 		return $this->specialCall('license');
 	}
-
-
-	/* pgmCall
-	 * @param string        pgmName     Name of program to call, without library
-	 * @param string        lib         Library of program. Leave blank to use library list or current library
-	 * @param array|string  InputParam  An array of ProgramParameter objects OR XML representing params, to be sent as-is.
-	 * @param array|ProgramParameter    ReturnValue Array of one parameter that's the return value parameter
-	 * @param array         options     Array of other options. The most popular is 'func' indicating the name of a subprocedure or function. 
+	
+	
+	/**
+	 * pgmCall
+	 *
+	 * @param string $pgmName Name of program to call, without library
+	 * @param string $lib Library of program. Leave blank to use library list or current library
+	 * @param null $inputParam An array of ProgramParameter objects OR XML representing params, to be sent as-is.
+	 * @param null $returnParam ReturnValue Array of one parameter that's the return value parameter
+	 * @param null $options Array of other options. The most popular is 'func' indicating the name of a subprocedure or function.
+	 * @return array|bool
 	 */
 	public function pgmCall($pgmName, 
 			                $lib,
@@ -681,10 +794,12 @@ catch (Exception $e)
 		 return $outputParamArray;
 
 	} //(function pgmCall)
-
-
-	// __toString will help people accustomed to outputting a resource as string
-	// and for testing
+	
+	/**
+	 * help people accustomed to outputting a resource as string and for testing
+	 *
+	 * @return string
+	 */
     public function __toString()
     {
     	$ipc = trim($this->getInternalKey());
@@ -695,14 +810,22 @@ catch (Exception $e)
     	return "$stringStart $ipcInfo";
 
     } //(__toString)
-	
+	/**
+	 * @return string
+	 */
 	public function getErrorMsg() {
 		return $this->errorText;
 	}
+	/**
+	 * @return string
+	 */
 	public function getErrorCode() {
 		return $this->cpfErr;
 	}
-
+	/**
+	 * @param array $OutputArray
+	 * @return bool
+	 */
 	public function getOutputParam(array $OutputArray)
 	{
 		if( !is_array($OutputArray))
@@ -713,9 +836,16 @@ catch (Exception $e)
 
         return false;
 	}
-
-	// Send any XML to XMLSERVICE toolkit. The XML doesn't have to represent a program.
-	// Was protected; made public to be usable by applications.
+	
+	/**
+	 * Send any XML to XMLSERVICE toolkit. The XML doesn't have to represent a program.
+	 * Was protected; made public to be usable by applications.
+	 *
+	 * @param $inputXml
+	 * @param bool $disconnect
+	 * @return string
+	 * @throws \Exception
+	 */
 	public function ExecuteProgram( $inputXml, $disconnect=false )
 	{
 
@@ -882,27 +1012,42 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 		return $outputXml;
 
 	} //(ExecuteProgram)
-
-	// Alias of ExecuteProgram();
-	// Send any XML to XMLSERVICE toolkit. The XML doesn't have to represent a program.
-	// Return output XML.
-	// TODO create method to parse XML appropriately no matter what type of tags (cmd/pgm etc.)
+	
+	/**
+	 * Alias of ExecuteProgram();
+	 * Send any XML to XMLSERVICE toolkit. The XML doesn't have to represent a program.
+	 *
+	 * @todo create method to parse XML appropriately no matter what type of tags (cmd/pgm etc.)
+	 *
+	 * @param $inputXml
+	 * @param bool $disconnect
+	 * @return string Return output XML.
+	 */
 	public function sendXml( $inputXml, $disconnect=false )
     {
 	    return $this->ExecuteProgram($inputXml, $disconnect);
 	
     } //(sendRequest)
-
-    
-    // factory pattern.
+	
+	/**
+	 * factory pattern.
+	 *
+	 * @return XMLWrapper
+	 */
     protected function getXmlWrapper() 
     {
     	return new XMLWrapper(array('encoding' => $this->getOption('encoding')),
 		                                   $this);
     }  //(protected function getXmlWrapper())
-    
-    // $info can be 'joblog' (joblog and additional info) or 'conf' (if custom config info set up in PLUGCONF)
-    // Return array of version, joblog, job info
+	
+	/**
+	 *
+	 * @param string $info can be 'joblog' (joblog and additional info) or 'conf' (if custom config info set up in PLUGCONF)
+	 * @param string $jobName
+	 * @param string $jobUser
+	 * @param string $jobNumber
+	 * @return bool|void
+	 */
     public function getDiagnostics($info = 'joblog', $jobName = '', $jobUser = '', $jobNumber = '') 
     {
         $xmlWrapper = $this->getXmlWrapper();
@@ -938,20 +1083,24 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
         
         
     } //(public function getDiagnostics)
-     
-
-    /**
-     * Return version number of the PHP toolkit (front-end).
-     * @return string  Version number (e.g. '1.4.0')
-     */
+	
+	/**
+	 * Return version number of the PHP toolkit (front-end).
+	 *
+	 * @return string Version number (e.g. '1.4.0')
+	 */
     static function getFrontEndVersion()
     {
         return self::VERSION;
         
     } //(static function getFrontendVersion())
-    
-    
-    // return version number of XMLSERVICE. Not static because must connect to back-end to get the version number.
+	
+	/**
+	 * return version number of XMLSERVICE. Not static because must connect to back-end
+	 * to get the version number.
+	 *
+	 * @return string Version
+	 */
     public function getBackEndVersion() {
     	
     	$diag = $this->getDiagnostics();
@@ -963,9 +1112,14 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
     	} //(if (isset($diag['version'])))
     	
     } //(public function getBackendVersion())
-    
-	// exec could be 'pase', 'pasecmd', 'system,' 'rexx', or 'cmd'
-	// $command can be a string or an array of multiple commands
+	
+	/**
+	 * CLCommand
+	 *
+	 * @param array $command string will be turned into an array
+	 * @param string $exec could be 'pase', 'pasecmd', 'system,' 'rexx', or 'cmd'
+	 * @return array|bool
+	 */
 	public function CLCommand($command, $exec = '') {
 
 		$this->XMLWrapper = new XMLWrapper(array('encoding' => $this->getOption('encoding')),
@@ -1018,19 +1172,28 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 	    } //(if success and expect data)
 
 	} //(CLCommand)
-
+	/**
+	 * @param $command
+	 * @return array|bool
+	 */
     public function CLInteractiveCommand($command) {
 
     	return $this->CLCommand($command, 'pase');
     }
-
-
+	
+	/**
+	 * @param $command
+	 * @return array|bool
+	 */
     public function paseCommand($command) {
     
     	return $this->CLCommand($command, 'pasecmd');
     }
-    
-    
+	
+	/**
+	 * @param $command
+	 * @return bool
+	 */
     public function qshellCommand($command) {
 
     	// send a command through the QSH interpreter
@@ -1068,7 +1231,7 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
     		case 'QSH0005':
     			// get status code.
     			// String will be something like: QSH0005: Command ended normally with exit status 1.
-    			// But in German: Befehl wurde normal mit AusfËhrungsstatus &1 beendet.
+    			// But in German: Befehl wurde normal mit Ausfï¿½hrungsstatus &1 beendet.
     			// look for a space (\b is word boundary), then the number, then a period OR another word boundary.
     			$pattern = '/\b([\d]+)[\b\.]/';
 		        // look for a match
@@ -1124,27 +1287,46 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 
 
     } //(qshellCommand)
-
-
-	// new. uses REXX to return output params and CPF codes
-	// Slower than 'cmd' or 'system'
-	// Sample format of command: 'RTVJOBA JOB(?) USER(?) NBR(?) CURUSER(?) SYSLIBL(?) CURLIB(?) USRLIBL(?) LANGID(?) CNTRYID(?) CCSID(?N) DFTCCSID(?N)'
+	
+	
+	/**
+	 * new. uses REXX to return output params and CPF codes
+	 * Slower than 'cmd' or 'system'
+	 *
+	 * Sample format of command: 'RTVJOBA JOB(?) USER(?) NBR(?) CURUSER(?) SYSLIBL(?) CURLIB(?) USRLIBL(?) LANGID(?) CNTRYID(?) CCSID(?N) DFTCCSID(?N)'
+	 *
+	 * @param $command
+	 * @return array|bool
+	 */
 	public function ClCommandWithOutput($command) {
 
 	    return $this->CLCommand($command, 'rexx');
 	} //(ClCommandWithOutput)
-
-	// new. uses 'system' to return CPF codes
-	// slightly slower than regular cmd but faster than rexx
-	// (Actually it's faster than cmd in recent tests. It depends, perhaps.)
-	// $command can be a string or an array.
+	
+	/**
+	 * new. uses 'system' to return CPF codes
+	 * slightly slower than regular cmd but faster than rexx
+	 * (Actually it's faster than cmd in recent tests. It depends, perhaps.)
+	 *
+	 * @param string $command can be a string or an array.
+	 * @return array|bool
+	 */
 	public function ClCommandWithCpf($command) {
 
 		return $this->CLCommand($command, 'system');
 	} //(ClCommandWithCpf)
-
-
-
+	
+	
+	/**
+	 * @param $type
+	 * @param $io
+	 * @param $comment
+	 * @param string $varName
+	 * @param string $value
+	 * @param string $varying
+	 * @param int $dimension
+	 * @return array
+	 */
 	static function AddParameter($type, $io, $comment, $varName = '', $value, $varying = 'off', $dimension = 0) {
 		return array ('type' => $type,       // storage
 					  'io' => $io,           // in/out/both
@@ -1154,64 +1336,167 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 					  'varying' => $varying, // varying on/varying off 
 					  'dim' =>   $dimension);// number of array elements
 	}
-
+	/**
+	 * @param $io
+	 * @param $size
+	 * @param $comment
+	 * @param string $varName
+	 * @param string $value
+	 * @param string $varying
+	 * @param int $dimension
+	 * @param string $by
+	 * @param bool $isArray
+	 * @param string $ccsidBefore
+	 * @param string $ccsidAfter
+	 * @param bool $useHex
+	 * @return CharParam
+	 */
     static function AddParameterChar( $io, $size , $comment,  $varName = '', $value , $varying = 'off',$dimension = 0,
     		                          $by='', $isArray = false, $ccsidBefore = '', $ccsidAfter = '', $useHex = false) {
     		return ( new CharParam( $io, $size , $comment,  $varName, $value , $varying ,$dimension, 
     				                $isArray, $ccsidBefore, $ccsidAfter, $useHex));
    	}
-
+	/**
+	 * @param $io
+	 * @param $comment
+	 * @param string $varName
+	 * @param string $value
+	 * @param int $dimension
+	 * @return Int32Param
+	 */
 	static function AddParameterInt32( $io,  $comment,  $varName = '', $value, $dimension = 0 ) {
 		return(new Int32Param ($io, $comment, $varName, $value, $dimension));
 	}
-    //Size ($comment,  $varName = '', $labelFindLen = null) {
+	/**
+	 * @param $comment
+	 * @param string $varName
+	 * @param $labelFindLen
+	 * @return SizeParam
+	 */
 	static function AddParameterSize($comment,  $varName = '', $labelFindLen ) {
 		return(new SizeParam ($comment, $varName, $labelFindLen));
 	}
-
-	//SizePack5 ($comment,  $varName = '', $labelFindLen = null) {
+	
+	/**
+	 * @param $comment
+	 * @param string $varName
+	 * @param $labelFindLen
+	 * @return SizePackParam
+	 */
 	static function AddParameterSizePack($comment,  $varName = '', $labelFindLen ) {
 		return(new SizePackParam ($comment, $varName, $labelFindLen));
 	}
-
-
+	
+	/**
+	 * @param $io
+	 * @param $comment
+	 * @param string $varName
+	 * @param string $value
+	 * @param int $dimension
+	 * @return Int64Param
+	 */
 	static function AddParameterInt64( $io,  $comment,  $varName = '', $value, $dimension = 0 ) {
 		return(new Int64Param( $io, $comment, $varName, $value, $dimension));
 	}
-
+	/**
+	 * @param $io
+	 * @param $comment
+	 * @param string $varName
+	 * @param string $value
+	 * @param int $dimension
+	 * @return UInt32Param
+	 */
 	static function AddParameterUInt32( $io,  $comment,  $varName = '', $value ,$dimension =0) {
 		return ( new  UInt32Param ($io, $comment, $varName, $value, $dimension)) ; // removed erroneous "off"
 	}
-	
+	/**
+	 * @param $io
+	 * @param $comment
+	 * @param string $varName
+	 * @param string $value
+	 * @param int $dimension
+	 * @return UInt64Param
+	 */
 	static function AddParameterUInt64( $io,  $comment,  $varName = '', $value,$dimension=0 ) {
 		return ( new UInt64Param($io, $comment, $varName, $value, $dimension));
 
 	}
+	/**
+	 * @param $io
+	 * @param $comment
+	 * @param string $varName
+	 * @param string $value
+	 * @param int $dimension
+	 * @return FloatParam
+	 */
 	static function AddParameterFloat( $io,  $comment,  $varName = '', $value,$dimension=0 ) {
 		return( new FloatParam($io, $comment, $varName, $value, $dimension));
 	}
-
+	/**
+	 * @param $io
+	 * @param $comment
+	 * @param string $varName
+	 * @param string $value
+	 * @param int $dimension
+	 * @return RealParam
+	 */
 	static function AddParameterReal( $io,  $comment,  $varName = '', $value,$dimension=0 ) {
 		return  ( new RealParam($io, $comment, $varName, $value, $dimension));
  	}
-
+	/**
+	 * @param $io
+	 * @param $length
+	 * @param $scale
+	 * @param $comment
+	 * @param string $varName
+	 * @param string $value
+	 * @param int $dimension
+	 * @return PackedDecParam
+	 */
     static function AddParameterPackDec( $io, $length ,$scale , $comment,  $varName = '', $value, $dimension=0) {
     	return (new PackedDecParam($io, $length ,$scale , $comment,  $varName, $value, $dimension));
 	}
-
+	/**
+	 * @param $io
+	 * @param $length
+	 * @param $scale
+	 * @param $comment
+	 * @param string $varName
+	 * @param string $value
+	 * @param int $dimension
+	 * @return ZonedParam
+	 */
     static function AddParameterZoned( $io, $length ,$scale , $comment,  $varName = '', $value, $dimension=0) {
     	return (new ZonedParam($io, $length ,$scale , $comment,  $varName , $value, $dimension));
 	}
-
-	// "hole" paramter is for data to ignore
+	
+	/**
+	 * "hole" paramter is for data to ignore
+	 *
+	 * @param $size
+	 * @param string $comment
+	 * @return HoleParam
+	 */
 	static function AddParameterHole( $size , $comment='hole') {
     		return ( new HoleParam( $size, $comment));
    	}
-
-
+	
+	/**
+	 * @param $io
+	 * @param $size
+	 * @param $comment
+	 * @param string $varName
+	 * @param string $value
+	 * @param int $dimension
+	 * @return BinParam
+	 */
     static function AddParameterBin( $io, $size , $comment,  $varName = '', $value,$dimension =0) {
     	return (new BinParam($io, $size , $comment,  $varName, $value,$dimension));
 	}
+	/**
+	 * @param $array
+	 * @return array
+	 */
 	static function AddParameterArray($array){
 		foreach ($array as $element)
 		{
@@ -1225,19 +1510,35 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 		}
 		return $params;
 	}
-
+	/**
+	 * @param array $parameters
+	 * @param string $name
+	 * @param int $dim
+	 * @param string $by
+	 * @param bool $isArray
+	 * @param null $labelLen
+	 * @param string $comment
+	 * @param string $io
+	 * @return DataStructure
+	 */
 	static function AddDataStruct(array $parameters, $name='struct_name', $dim=0, $by='', $isArray=false, $labelLen = null, $comment = ''){
 		return (new DataStructure($parameters, $name, $dim, $comment, $by, $isArray, $labelLen));
 	}
-
-	// added.
+	
+	/**
+	 * @return DataStructure
+	 */
 	static function AddErrorDataStruct(){
 		return (new DataStructure(self::GenerateErrorParameter(), 'errorDs', 0));
 	}
-
-	// use this one when you need a zero-byte error structure,
-	// which is useful to force errors to bubble up to joblog,
-	// where you can get more information than in the structure.
+	
+	/**
+	 * use this one when you need a zero-byte error structure, which is useful to
+	 * force errors to bubble up to joblog, where you can get more information than
+	 * in the structure.
+	 *
+	 * @return DataStructure
+	 */
 	static function AddErrorDataStructZeroBytes(){
 		return (new DataStructure(self::GenerateErrorParameterZeroBytes(), 'errorDs', 0));
 	}
@@ -1259,8 +1560,10 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
               </parm>";
 	}
 */
-	// use a zero (0) bytes length to force errors to bubble up to job. It's easier for us to get full message text from joblog that XMLSERVICE toolkit provides.
-	// Anyway, the QSNDDTAQ API doesn't have an error struct, so this way we can be consistent---get all errors in joblog.
+	/**
+	 * @param int $paramNum
+	 * @return string
+	 */
 	static function getErrorDataStructXml($paramNum = 0) {
 		$paramNumStr = ($paramNum) ? ($paramNum . '.') : '';
 		return "<parm io='both' comment='$paramNumStr Error code structure'>
@@ -1269,10 +1572,13 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
                  </ds>
               </parm>";
 	}
-
-
-
-	// this DS is common to many IBM i APIs.
+	
+	/**
+	 * this DS is common to many IBM i APIs.
+	 *
+	 * @param int $paramNum
+	 * @return string
+	 */
 	static function getListInfoApiXml($paramNum = 0)
 	{
 		$paramNumStr = ($paramNum) ? ($paramNum . '.') : '';
@@ -1293,8 +1599,13 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 		    </ds>
 		  </parm>";
 	} //(getListApiXml)
-
-	// this DS is common to many IBM i APIs.
+	
+	/**
+	 * this DS is common to many IBM i APIs.
+	 *
+	 * @param int $paramNum
+	 * @return string
+	 */
 	static function getNumberOfRecordsDesiredApiXml($paramNum = 0)
 	{
 		$paramNumStr = ($paramNum) ? ($paramNum . '.') : '';
@@ -1303,8 +1614,13 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
                   <data var='numRecsDesired' type='10i0'>0</data>
                 </parm>";
 	} //(getNumberOfRecordsDesiredApiXml)
-
-	// this DS is common to many IBM i APIs.
+	
+	/**
+	 * this DS is common to many IBM i APIs.
+	 *
+	 * @param int $paramNum
+	 * @return string
+	 */
 	static function getSortInformationApiXml($paramNum = 0)
 	{
 		$paramNumStr = ($paramNum) ? ($paramNum . '.') : '';
@@ -1317,8 +1633,14 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
                </parm>
 		";
 	} //(getSortInformationApiXml)
-
-	// this DS is common to many IBM i APIs.
+	
+	/**
+	 * this DS is common to many IBM i APIs.
+	 *
+	 * @param int $paramNum
+	 * @param $lengthOfReceiverVariable
+	 * @return string
+	 */
 	static function getDummyReceiverAndLengthApiXml($paramNum = 1, $lengthOfReceiverVariable)
 	{
 		$paramNumStr = $paramNum . '.';
@@ -1334,32 +1656,47 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
                   <data var='receiverLen' type='10i0' comment='length $lengthOfReceiverVariable'>$lengthOfReceiverVariable</data>
                 </parm>";
 	} //(getSortInformationApiXml)
-
-
+	
+	/**
+	 * @return string
+	 */
 	public function getLastError() {
 		return $this->error;
 	}
-
+	/**
+	 * @return bool
+	 */
 	public function isError() {
 		if($this->error != '')
 			return true;
 		return false;
 	}
-
+	/**
+	 * @return bool|void
+	 */
 	public function getInternalKey(){
 		return $this->getOption('internalKey');
 	}
-	
+	/**
+	 * @return bool|void
+	 */
 	public function isStateless() 
 	{
 		return $this->getOption('stateless');
 	}
-	
+	/**
+	 * @param $internalKey
+	 */
 	public function setInternalKey($internalKey) {
 		$this->setOptions(array('internalKey' => $internalKey));
 	}
-
-	// construct a string of space-delimited control keys based on properties of this class.
+	
+	/**
+	 * construct a string of space-delimited control keys based on properties of this class.
+	 *
+	 * @param bool $disconnect
+	 * @return string
+	 */
 	protected function getControlKey($disconnect = false){
 
 		$key = ''; // initialize
@@ -1454,9 +1791,10 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 		return trim($key); // trim off any extra blanks on beginning or end
 
 	} //(getControlKey)
-
-//to set a plug name use function setToolkitServiceParams('plug'=>'iPLUGR512K')
-
+	
+	/**
+	 * to set a plug name use function setToolkitServiceParams('plug'=>'iPLUGR512K')
+	 */
 	protected function VerifyPLUGName ()
 	{
 		// if plug already set, don't need to set it now.
@@ -1479,9 +1817,10 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 		$this->setOptions(array('plug' => $plug));
 
 	} //(VerifyPLUGName)
-
-
-    // Ensures that an IPC has been set. If not, generate one
+	
+	/**
+	 * Ensures that an IPC has been set. If not, generate one
+	 */
 	protected function verifyInternalKey(){
             // if we are running in stateless mode, there's no need for an IPC key.
 	    if ($this->isStateless()) {
@@ -1497,19 +1836,29 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 		}
 	} //(verifyInternalKey())
 	
-  // was protected. Changed to public.
-  // May be useful to access raw XML result 
-  // TODO make outputXml a property that is used so this method can work.
+	/**
+	 * was protected. Changed to public.
+	 * May be useful to access raw XML result
+	 * @todo make outputXml a property that is used so this method can work.
+	 *
+	 * @return mixed
+	 */
   public function getXmlOut() {
 		return $this->outputXml;
 	}
-
-  // return transport object for toolkit
+	
+	/**
+	 * return transport object for toolkit
+	 *
+	 * @return null|resource
+	 */
   public function getConnection()
   {
   	return  $this->conn;
   }
-
+	/**
+	 * @return string
+	 */
   public function generate_name()
 	{/*move to i5 side*/
 		$localtime = localtime();
@@ -1521,8 +1870,12 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 					  );
 		return $rndName;
  }
- /*creates Data structure that going to be used in lot of
-  * i5 API's for error handling                         */
+	/**
+	 * creates Data structure that going to be used in lot of
+	 * i5 API's for error handling
+	 *
+	 * @return array
+	 */
   static function GenerateErrorParameter()
   {
 	    $ErrBytes   = 144;
@@ -1538,9 +1891,14 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 		$ds[] = self::AddParameterHole('out',128, "Exception data", 'excData',  $ErrEx); // can be bad XML so make it a hole
 		return $ds;
   }
-
-  // specify zero bytes so error bubbles up to joblog where we can get description, etc.
-  // TODO return 'in'-only data structure containing the int.
+	
+	/**
+	 * specify zero bytes so error bubbles up to joblog where we can get description, etc.
+	 *
+	 * @todo return 'in'-only data structure containing the int.
+	 *
+	 * @return array
+	 */
   static function GenerateErrorParameterZeroBytes()
   {
 	    $ErrBytes   = 0;
@@ -1548,8 +1906,12 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 		$ds[] = self::AddParameterInt32('in',  "Bytes provided (zero makes errors bubble up to joblog)", 'errbytes', $ErrBytes);
 	    return $ds;
   }
-
-
+	
+	/**
+	 * @param $retPgmArr
+	 * @param $functionErrMsg
+	 * @return bool
+	 */
   	public function verify_CPFError( $retPgmArr, $functionErrMsg )
 	{
 		// it's an error if we didn't get output array at all
@@ -1581,8 +1943,15 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 				return false;
 	    }
 	} //(verify_CPFError)
-
-
+	
+	/**
+	 * err_bytes_avail is the official, reliable way to check for an error.
+	 *
+	 * @todo should this be using $this->cpfErr
+	 *
+	 * @param array $Error
+	 * @return bool
+	 */
   public function ParseErrorParameter( array $Error )
   {
   	if(!is_array($Error))
@@ -1596,15 +1965,24 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
   	}
   	return $CPFErr;
   }
-  // for sql calls via already opened connection.
-  // Clearer naming than existing getConnection();
-  // TODO Probably even better would be a name such as getTransportConn() because it could work for any transport type. 
+	/**
+	 * for sql calls via already opened connection.
+	 * Clearer naming than existing getConnection();
+	 *
+	 * @todo Probably even better would be a name such as getTransportConn() because it could work for any transport type.
+	 *
+	 * @return null|resource
+	 */ 
   public function getSQLConnection()
   {
 		return $this->getConnection(); 
    }
-
- 
+	
+	/**
+	 * @param $stmt
+	 * @return mixed
+	 * @throws \Exception
+	 */
   public function executeQuery($stmt){
   	 $Txt = $this->db->executeQuery($this->getConnection(), $stmt);
 
@@ -1617,7 +1995,10 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
   	 }
      return $Txt;
   }
-
+	/**
+	 * @param bool $isPersistent
+	 * @throws \Exception
+	 */
   	public function setIsPersistent($isPersistent = false)
 	{
 		if (is_bool($isPersistent)) {
@@ -1626,31 +2007,35 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 			throw new Exception("setIsPersistent: boolean expected");
 		}
 	} //(setIsPersistent)
-
+	/**
+	 * @return bool
+	 */
 	public function getIsPersistent()
 	{
 		return $this->_isPersistent;
 	} //(setIsPersistent)
-
-	/* Method: getJobAttributes()
+	
+	/**
+	 * Method: getJobAttributes()
 	 *
 	 * Retrieve several attributes of the current job.
-	 * Return array of attributes (key/value pairs) or false if unsuccessful.
 	 * Purpose: 1. Helps user find toolkit job; identifies libraries and CCSID used by toolkit connection
-	 *          2. The code is an example of how to get output from RTV* CL commands
+	 * 2. The code is an example of how to get output from RTV* CL commands
 	 * Sample output:
 	 * Array(
-          [JOB] => QSQSRVR
-          [USER] => QUSER
-          [NBR] => 240164
-          [CURUSER] => QTMHHTTP
-          [SYSLIBL] => QSYS       QSYS2      QHLPSYS    QUSRSYS    DBU80      QSYS38
-          [CURLIB] => *NONE
-          [USRLIBL] => QTEMP      QGPL       MYUTIL
-          [LANGID] => ENU
-          [CNTRYID] => US
-          [CCSID] => 37
-          [DFTCCSID] => 37)
+	 * [JOB] => QSQSRVR
+	 * [USER] => QUSER
+	 * [NBR] => 240164
+	 * [CURUSER] => QTMHHTTP
+	 * [SYSLIBL] => QSYS QSYS2 QHLPSYS QUSRSYS DBU80 QSYS38
+	 * [CURLIB] => *NONE
+	 * [USRLIBL] => QTEMP QGPL MYUTIL
+	 * [LANGID] => ENU
+	 * [CNTRYID] => US
+	 * [CCSID] => 37
+	 * [DFTCCSID] => 37)
+	 *
+	 * @return array|bool array of attributes (key/value pairs) or false if unsuccessful.
 	 */
 	public function getJobAttributes() {
 
@@ -1663,12 +2048,15 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
         return $outputArray;
 
 	} //(public function getJobAttributes())
-
-
-	/* classPath(). for diagnostics, return the file system absolute path of this script.
+	
+	
+	/**
+	 * classPath(). for diagnostics, return the file system absolute path of this script.
 	 * Usage: echo 'The path of ToolkitService.php is: ' . ToolkitService::classPath();
 	 * Sample output: The path of ToolkitService.php is: /usr/local/zendsvr6/share/ToolkitApiDev-1.4.0/pre140/ToolkitService.php
-	*/
+	 *
+	 * @return string
+	 */
 	static function classPath()
 	{
 		return	__FILE__;
@@ -1677,14 +2065,21 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 	
 	/**
 	 * given $this->joblog, and an array of program names that might have caused errors,
-	 * Extract the error code (CPF or similar) and message text from the joblog.
-	 * If can't find error in joblog, uses UNEXPECTED
-	 *    and text from $this->XMLWrapper->getLastError();
+	 * extract the error code (CPF or similar) and message text from the joblog.
+	 *
+	 * Include '< lveContext' because it may appear in the program spot if library does not exist.
+	 * '#mnrnrl' if program does not exist.
+	 * 'QRNXIE' for non-numeric data passed in numeric field.
+	 * '< allProgram' for when wrong number of params are passed.
+	 *
+	 * @todo instead of all these pseudo-program names, take last error from XMLSERVICE parsing, if program name itself not found.
+	 *
+	 * If can't find error in joblog, uses UNEXPECTED and text from $this->XMLWrapper->getLastError();
 	 *
 	 * Code is placed in $this->cpfErr. Text goes to $this->error.
 	 *
 	 * @param array $programsToLookFor
-	 * @return boolean    True on success, False on failure
+	 * @return boolean True on success, False on failure
 	 */
 	protected function extractErrorFromJoblog(array $programsToLookFor)
 	{
@@ -1803,15 +2198,14 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 	    
 	} //( function extractErrorFromJoblog)
 	
-	
-	
 	/**
-	 * changeCurrentUser (1.5.0+) 
+	 * changeCurrentUser (1.5.0+)
 	 * Changes the current user of the job to a specific user. All actions will be executed as this user from now on.
 	 * Otherwise known as "swap user" or the misnomer "adopt authority."
+	 *
 	 * @param string $user Generally should be uppercase
-	 * @param string $password 
-	 * @return boolean  True on success, False on failure
+	 * @param string $password
+	 * @return boolean True on success, False on failure
 	 */
 	function changeCurrentUser($user, $password)
 	{
@@ -1910,10 +2304,19 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 	
 	} //(function changeCurrentUser)
 	
-
-	// return value from toolkit config file,
-	// or a default value, or
-	// false if not found.
+	/**
+	 * return value from toolkit config file, or a default value, or false if not found.
+	 * method is static so that it can retain its value from call to call.
+	 *
+	 * @todo store in Zend Data Cache to avoid reading during each request
+	 *
+	 * @todo change getConfigValue to allow getting many at one time
+	 *
+	 * @param $heading
+	 * @param $key
+	 * @param null $default
+	 * @return bool|null
+	 */
 	static function getConfigValue($heading, $key, $default = null) {
 		// TODO store in Zend Data Cache to avoid reading during each request
 	
@@ -1939,15 +2342,28 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 
 // Class ends above.
 
-// TODO integrate these functions into toolkit class. Back-ported from CW.
-
-// keep non-OO functions for backward compatibility and CW support
+/**
+ * @todo integrate these functions into toolkit class. Back-ported from CW.
+ *
+ * keep non-OO functions for backward compatibility and CW support
+ *
+ * @param $heading
+ * @param $key
+ * @param null $default
+ * @return bool|null
+ */
 function getConfigValue($heading, $key, $default = null)
 {
     return ToolkitService::getConfigValue($heading, $key, $default);
     
 } //(function getConfigValue())
-
+/**
+ * non-OO logging function ported from CW
+ *
+ * For CW logging.
+ *
+ * @param $msg
+ */
 function logThis($msg) {
 	$logFile = getConfigValue('log','logfile');
 	if ($logFile) {
@@ -1957,7 +2373,11 @@ function logThis($msg) {
 	}
 
 } //(logThis)
-
+/**
+ * Used in logThis() above
+ *
+ * @return string
+ */
 function microDateTime()
 {
 	list($microSec, $timeStamp) = explode(" ", microtime());
