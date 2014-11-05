@@ -423,11 +423,7 @@ catch (Exception $e)
 	 * Choose data transport type: ibm_db2, odbc, http
 	 *
 	 * @param string $transportName 'ibm_db2' or 'odbc' or 'http'
-	 * @param string $database
-	 * @param string $user
-	 * @param string $password
-	 * @param null $options
-	 * @throws \Exception
+	 * @throws Exception
 	 */
 	protected function chooseTransport($transportName = '') {
 		
@@ -447,11 +443,7 @@ catch (Exception $e)
 	 * transport type is same as db extension name when a db transport is used.
 	 *
 	 * @param string $transportType
-	 * @param $database
-	 * @param $user
-	 * @param $password
-	 * @param null $options
-	 * @throws \Exception
+	 * @throws Exception
 	 */
 	protected function setdb( $transportType = '')
 	{
@@ -565,21 +557,23 @@ catch (Exception $e)
 	    return $this->getToolkitServiceParam($optionName);
     } //(getOption)
 	
+	
 	/**
-	 * shorthand for setToolkitServiceParams()
-	 *
-	 * @param array $options
+	 * retrieve full toolkit option array
+	 * 
+	 * @return array
 	 */
-
-    // retrieve full toolkit option array
     public function getOptions()
     {
     	    return $this->_options;
     	
     } //(getOption)
-    
-    
-    // shorthand for setToolkitServiceParams()
+	
+	/**
+	 * shorthand for setToolkitServiceParams()
+	 * 
+	 * @param array $options
+	 */
     public function setOptions($options = array()) 
     {
 	    $this->setToolkitServiceParams($options);
@@ -846,21 +840,26 @@ catch (Exception $e)
 	public function getErrorCode() {
 		return $this->cpfErr;
 	}
+	
 	/**
-	 * @param array $OutputArray
-	 * @return bool
+	 * @param $msg
 	 */
-
 	public function setErrorMsg($msg) {
 		$this->errorText = $msg;
 	}
 	
+	/**
+	 * @param $code
+	 */
 	public function setErrorCode($code) {
 		$this->cpfErr = $code;
 	}
 	
 	
-	
+	/**
+	 * @param array $OutputArray
+	 * @return bool
+	 */
 	public function getOutputParam(array $OutputArray)
 	{
 		if( !is_array($OutputArray))
@@ -1154,21 +1153,15 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
     	
     } //(public function getBackendVersion())
 	
-	/**
-	 * CLCommand
-	 *
-	 * @param array $command string will be turned into an array
-	 * @param string $exec could be 'pase', 'pasecmd', 'system,' 'rexx', or 'cmd'
-	 * @return array|bool
-	 */
-    
     /**
      * Return version number of the local installation of XMLSERVICE, if available.
      * Static because don't have to connect or instantiate toolkit object.
      * Uses 'exec' command to retrieve local version number.
      * Requires 1.8.0+ of XMLSERVICE and new program introduced with it: xmlver.pgm.
-     * @return string  Version number (e.g. '1.8.0')
-     */
+	 * 
+	 * @param $library
+	 * @return string Version number (e.g. '1.8.0')
+	 */
     static function getLocalBackEndVersion($library) {
 
         $cmd = "qsh -c /qsys.lib/$library.lib/xmlver.pgm";
@@ -1187,9 +1180,13 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
     } //(public function getLocalBackendVersion())
     
 	
-	
-	// exec could be 'pase', 'pasecmd', 'system,' 'rexx', or 'cmd'
-	// $command can be a string or an array of multiple commands
+	/**
+	 * CLCommand
+	 *
+	 * @param array $command string will be turned into an array
+	 * @param string $exec could be 'pase', 'pasecmd', 'system,' 'rexx', or 'cmd'
+	 * @return array|bool
+	 */
 	public function CLCommand($command, $exec = '') {
 
 		$this->XMLWrapper = new XMLWrapper(array('encoding' => $this->getOption('encoding')),
@@ -1647,15 +1644,13 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 	}
 	
 	/**
-	 * this DS is common to many IBM i APIs.
-	 *
+	 * This version will provide the error code in output rather than forcing errors to bubble up to joblog.
+	 * Since XMLSERVICE is slow at getting job log, it's faster to get the code in the API DS if available.
+	 * Pass in $paramNum to get a numeric parameter number for the comment.
+	 * 
 	 * @param int $paramNum
 	 * @return string
 	 */
-
-	// This version will provide the error code in output rather than forcing errors to bubble up to joblog.
-	// Since XMLSERVICE is slow at getting job log, it's faster to get the code in the API DS if available.
-	// Pass in $paramNum to get a numeric parameter number for the comment.
 	static function getErrorDataStructXmlWithCode($paramNum = 0) {
 	    $paramNumStr = ($paramNum) ? ($paramNum . '.') : '';
 	    return "<parm io='both' comment='$paramNumStr Error code structure'>
@@ -1668,8 +1663,12 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 	</parm>";
 	} //(getErrorDataStructXmlWithCode)
 	
-
-	// this DS is common to many IBM i APIs.
+	/**
+	 * this DS is common to many IBM i APIs.
+	 * 
+	 * @param int $paramNum
+	 * @return string
+	 */
 	static function getListInfoApiXml($paramNum = 0)
 	{
 		$paramNumStr = ($paramNum) ? ($paramNum . '.') : '';
@@ -2432,9 +2431,12 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 	
 	} //(getConfigValue)
 
-	// get operating system that PHP is running on
-	// static method so we don't have to connect to IBM i to find out
-	// and to retain value from call to call
+	/**
+	 * get operating system that PHP is running on static method so we don't have 
+	 * to connect to IBM i to find out and to retain value from call to call
+	 * 
+	 * @return string
+	 */
 	static function getPhpOperatingSystem() {
 
 		if (!isset(self::$_os)) {
@@ -2445,15 +2447,23 @@ Cause . . . . . :   Either a trigger program, external procedure, or external
 		
 	} //(static function getPhpOperatingSystem())
 	
-	// return true if PHP is running directly on IBM i, false if not.
+	/**
+	 * return true if PHP is running directly on IBM i, false if not.
+	 * 
+	 * @return bool
+	 */
 	static function isPhpRunningOnIbmI() {
 		
 		return (self::getPhpOperatingSystem() == 'OS400'); 
 		
 	} //(static function isPhpRunningOnIbmI())
 	
-	// return the CCSID of PHP, whether defined in fastcgi or in PASE (php-cli).
-	// if none defined then return false.
+	/**
+	 * return the CCSID of PHP, whether defined in fastcgi or in PASE (php-cli). 
+	 * if none defined then return false.
+	 * 
+	 * @return bool
+	 */
 	static function getPhpCcsid() {
 		if (isset($_SERVER['CCSID'])) {
 			// web/fastcgi

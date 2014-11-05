@@ -13,6 +13,10 @@ private $last_errormsg = ''; // SQL Code with message
 	 *
 	 * @todo should perhaps handle this method differently if $options are not passed
 	 *
+	 * @param $database
+	 * @param $user
+	 * @param $password
+	 * @param null $options
 	 * @return bool|resource
 	 */
 public function connect($database, $user, $password, $options = null){

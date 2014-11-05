@@ -257,14 +257,14 @@ class I5Error
     	$err = $this->getI5Error();
         return "i5Error: num={$err['num']} cat={$err['cat']} msg=\"{$err['msg']}\" desc=\"{$err['desc']}\"";
     } //(__toString)
-
+	
 	/**
 	 * Set error information for last action.
 	 *
-	 * @param int    $errNum    Error number (according to old toolkit). Zero/false if no error
-	 * @param int    $errCat    Category of error
-	 * @param string $errMsg    Error message (often a CPF code but sometimes just a message)
-	 * @param string $errDesc   Longer description of error
+	 * @param int $errNum Error number (according to old toolkit). Zero/false if no error
+	 * @param int|string $errCat Category of error
+	 * @param string $errMsg Error message (often a CPF code but sometimes just a message)
+	 * @param string $errDesc Longer description of error
 	 * @return void
 	 */
 	public function setI5Error($errNum, $errCat = I5_CAT_PHP, $errMsg = '', $errDesc = '') {
@@ -333,15 +333,16 @@ class DataDescription
                                  I5_INOUT => 'both',
                                  I5_BYVAL    => 'val'
                                 );
-
-
+	
+	
 	/**
 	 * Constructor takes an object name (program, data queue, user space) and array-based data description
 	 * and does some conversions.
-	 * @param string    $objName        name of program, data queue, etc. lib/pgm(svcfunc) or the like.
-	 * @param array    $dataDescription array of parameter definitions
-	 * @param I5Error  $errorObj        during validation we may set properties of this object.
-	 * @param ServiceToolkit $connection   connection object for toolkit
+	 *
+	 * @param string $objName name of program, data queue, etc. lib/pgm(svcfunc) or the like.
+	 * @param array $dataDescription array of parameter definitions
+	 * @param ServiceToolkit|ToolkitService $connection connection object for toolkit
+	 * @internal param I5Error $errorObj during validation we may set properties of this object.
 	 */
 	public function __construct($objName, array $dataDescription, ToolkitService $connection)
 	{

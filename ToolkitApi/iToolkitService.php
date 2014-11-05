@@ -1407,10 +1407,12 @@ class SystemValues   {
 			return false;
 		
 	} //(systemValuesList)
+	
 	/**
 	 * @todo QWCRSVAL to work with 2 tiers while retaining good performance
 	 *
 	 * @param $sysValueName
+	 * @return bool
 	 */
 	public function getSystemValue($sysValueName) {
 		

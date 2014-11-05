@@ -19,14 +19,19 @@ class ToolkitPcml
 	protected $_countRefNames = array(); // names of countRef fields (fields containing counts to return from programs)
 
 	protected $_countersAndCounted = array(); // 'CarCount' => 'Cars'.  counter also used as label.
- 
 	
+	/**
+	 * @return array
+	 */
 	public function getDescription() 
 	{
 		return $this->_description;
 		
 	}
 	
+	/**
+	 * @param array $countersAndCounted
+	 */
 	public function setCountersAndCounted($countersAndCounted = array()) 
 	{
 		$this->_countersAndCounted = $countersAndCounted;
@@ -35,8 +40,11 @@ class ToolkitPcml
 	
 	/**
 	 * Constructor takes a PCML string and converts to an array-based new toolkit parameter array.
-	 * @param string    $pcml              The string of PCML
-	 * @param ToolkitService $connection   connection object for toolkit
+	 *
+	 * @param string $pcml The string of PCML
+	 * @param ToolkitService $connection connection object for toolkit
+	 * @param array $countersAndCounted
+	 * @throws Exception
 	 */
 	public function __construct($pcml, ToolkitService $connection, $countersAndCounted = array())
 	{
@@ -148,14 +156,22 @@ class ToolkitPcml
                                 );
 
 
-	// When we discover a "CountRef" reference in an old toolkit data description,
-	// retain the name for later use.
+	/**
+	 * When we discover a "CountRef" reference in an old toolkit data description, 
+	 * retain the name for later use.
+	 * 
+	 * @param $name
+	 */
 	protected function addCountRefName($name) {
 		// add name to our array.
 		$this->_countRefNames[] = $name;
 	} //(addCountRefName)
 	
-	// return array of all names of countRef fields that we have found.
+	/**
+	 * return array of all names of countRef fields that we have found.
+	 * 
+	 * @return array
+	 */
 	protected function getCountRefNames() {
 		return $this->_countRefNames;
 	} //(getCountRefNames())
@@ -175,7 +191,12 @@ class ToolkitPcml
 	public function getConnection() {
 		return $this->_connection;
 	}
-
+	
+	/**
+	 * @param $path
+	 * @return array
+	 * @throws Exception
+	 */
 	public function splitPcmlProgramPath($path) {
 		// given a program path that MAY be qualified by a library and slash,
 		// such as /QSYS.LIB/*LIBL.LIB/MYPGM.PGM
@@ -236,8 +257,12 @@ class ToolkitPcml
     } //(splitPcmlProgramPath)
 	
 	
-
-    // given a single ->data or ->struct element, return a parameter object in the new toolkit style.
+	/**
+	 * given a single ->data or ->struct element, return a parameter object in the new toolkit style.
+	 * 
+	 * @param SimpleXmlElement $dataElement
+	 * @return ProgramParameter
+	 */
     public function singlePcmlToParam(SimpleXmlElement $dataElement)
     {
     
@@ -456,8 +481,14 @@ class ToolkitPcml
     	return $param;
     	
     } //(singlePcmlToParam)
-    
-    // given an XML object containing a PCML program definition, return an old toolkit style of data description array.
+	
+	/**
+	 * given an XML object containing a PCML program definition, return an old toolkit 
+	 * style of data description array.
+	 * 
+	 * @param SimpleXMLElement $xmlObj
+	 * @return array
+	 */
     public function pcmlToArray(SimpleXMLElement $xmlObj) {
     
     	$dataDescription = array();

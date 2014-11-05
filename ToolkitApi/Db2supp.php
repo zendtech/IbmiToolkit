@@ -150,6 +150,7 @@ protected function setErrorMsg($errorMsg) {
 	 *
 	 * @param $conn
 	 * @param $sql
+	 * @param $bindArray
 	 * @return bool
 	 */
 public function execXMLStoredProcedure( $conn, $sql, $bindArray )										

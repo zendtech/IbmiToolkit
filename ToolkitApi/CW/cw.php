@@ -2472,13 +2472,16 @@ function i5_spool_list($description = array(), $connection = null)
     
 
 } //(i5_spool_list)
-    
-    /**
-     * Description: Gets spool file data from the queue.
-     * Return Values: next spool file data array in the list, or false if queue is empty.
-     * The data will be formated using SPLF0300 format. See following link for more details: http://publib.boulder.ibm.com/infocenter/iseries/v5r4/index.jsp?topic=/apis/QUSLSPL.htm
-     * Arguments: Spool_list resource received from i5_spool_list
-     */
+
+/**
+ * Description: Gets spool file data from the queue.
+ * Return Values: next spool file data array in the list, or false if queue is empty.
+ * The data will be formated using SPLF0300 format. See following link for more details: http://publib.boulder.ibm.com/infocenter/iseries/v5r4/index.jsp?topic=/apis/QUSLSPL.htm
+ * Arguments: Spool_list resource received from i5_spool_list
+ *
+ * @param null $list
+ * @return bool
+ */
 function i5_spool_list_read(&$list = null)
 {
     return listRead($list);
@@ -3284,22 +3287,23 @@ function i5_dtaq_receive($queue, $operatorOrTimeout = '', $key = '', $timeout = 
     
         
 } //(i5_dtaq_receive)
-    
-    /**
-     * bool i5_dtaq_send(resource queue, string key, mixed data)
-     * Description: Puts data to the data queue.
-     * Return Values: False if could not be written because of error, true otherwise.
-     * Arguments:
-     * queue - resource received from dtaq_open
-     * key - key value to look for
-     * data - data to put into the queue
-     * The data should conform to the description format, and can be either in flat array or key->value pair array.
-     * Yes, "flat array" should work. This is a single-level array description, in which case the data will be just a string value or some scalar value.
-     *
-     * @param $queue
-     * @param string $key
-     * @param $data
-     */
+
+/**
+ * bool i5_dtaq_send(resource queue, string key, mixed data)
+ * Description: Puts data to the data queue.
+ * Return Values: False if could not be written because of error, true
+ * otherwise. Arguments: queue - resource received from dtaq_open key - key
+ * value to look for data - data to put into the queue The data should conform
+ * to the description format, and can be either in flat array or key->value
+ * pair array. Yes, "flat array" should work. This is a single-level array
+ * description, in which case the data will be just a string value or some
+ * scalar value.
+ *
+ * @param $queue
+ * @param string $key
+ * @param $data
+ * @return bool
+ */
 function i5_dtaq_send($queue, $key='', $data)
 {
     if (!$queue) {
