@@ -25,7 +25,17 @@ class ToolkitServiceCw extends ToolkitService
        parent::__construct($database, $userOrI5NamingFlag, $password, $extensionPrefix, $isPersistent);
     }
 
-    // need to define this so we get Cw object and not parent object
+    /**
+     * need to define this so we get Cw object and not parent object
+     * 
+     * @param string $databaseNameOrResource
+     * @param string $userOrI5NamingFlag
+     * @param string $password
+     * @param string $extensionPrefix
+     * @param bool $isPersistent
+     * @param bool $forceNew
+     * @return bool|null
+     */
     static function getInstance($databaseNameOrResource = '*LOCAL', $userOrI5NamingFlag = '', $password = '', $extensionPrefix = '', $isPersistent = false, $forceNew = false)
     {
         // if we're forcing a new instance, close db conn first if exists.
@@ -37,7 +47,7 @@ class ToolkitServiceCw extends ToolkitService
         // if we're forcing a new instance, or an instance hasn't been created yet, create one
         if ($forceNew || self::$instance == NULL) {
             $toolkitService = __CLASS__;
-            self::$instance=new $toolkitService($databaseNameOrResource, $userOrI5NamingFlag, $password, $extensionPrefix, $isPersistent);
+            self::$instance = new $toolkitService($databaseNameOrResource, $userOrI5NamingFlag, $password, $extensionPrefix, $isPersistent);
         }
         
         if (self::$instance) {
@@ -70,29 +80,44 @@ class ToolkitServiceCw extends ToolkitService
             return false;
         }
     }
-
+    
+    /**
+     * @param $num
+     */
     public function setPrivateConnNum($num)
     {
         $this->_privateConnNum = $num;
     }
-
+    
+    /**
+     * @return null
+     */
     public function getPrivateConnNum()
     {
         return $this->_privateConnNum;
     }
-
-    // establish whether the connection is new or not. Used by i5_get_property()
+    
+    /**
+     * establish whether the connection is new or not. Used by i5_get_property()
+     * 
+     * @param bool $isNew
+     */
     public function setIsNewConn($isNew = true)
     {
         $this->_isNewConn = $isNew;
     }
-
+    
+    /**
+     * @return bool
+     */
     public function isNewConn()
     {
         return $this->_isNewConn;
     }
-
-    // when script ends, non-persistent connection should close
+    
+    /**
+     * when script ends, non-persistent connection should close
+     */
     public function __destruct()
     {
         /* call to disconnect()  function to down connection */
@@ -125,12 +150,15 @@ class ToolkitServiceCw extends ToolkitService
         // TODO get from Verify_CPFError or the other one
         return $this->CPFErr;
     }
-
+    
     /**
      * After calling a program or command, we can export output as variables.
      * This method creates an array that can later be extracted into variables.
      * param array $outputDesc   Format of output params 'CODE'=>'CODEvar' where the value becomes a PHP var name
      * param array $outputValues     Optional. Array of output values to export
+     *
+     * @param array $outputDesc
+     * @param array $outputValues
      * @return boolean  true on success, false on some error
      */
     public function setOutputVarsToExport(array $outputDesc, array $outputValues)
@@ -154,14 +182,22 @@ class ToolkitServiceCw extends ToolkitService
 
         return true;
     }
-
+    
+    /**
+     * @return array
+     */
     public function getOutputVarsToExport()
     {
         return $this->_outputVarsToExport;
     }
 
-    // pass in array of job attributes => values to update in the current job.
-    // returns true on success, false on failure (failure probably means lack of authority).
+    /**
+     * pass in array of job attributes => values to update in the current job.
+     * returns true on success, false on failure (failure probably means lack of authority).
+     * 
+     * @param array $attrs
+     * @return bool
+     */
     public function changeJob(array $attrs)
     {
         $cmdString = 'CHGJOB';
@@ -179,7 +215,10 @@ class I5Error
 {
     static $instance = null;
     static protected $_i5Error = array();
-
+    
+    /**
+     * @return null
+     */
     static function getInstance()
     {
         if(self::$instance == NULL){
@@ -191,14 +230,21 @@ class I5Error
             return self::$instance;
         }
     }
-
+    
+    /**
+     * 
+     */
     protected function __construct()
     {
         // initialize
         $this->setI5Error(0, 0, '', '');
     }
-
-    // __toString will make it easy to output an error via echo or print
+    
+    /**
+     * __toString will make it easy to output an error via echo or print
+     * 
+     * @return string
+     */
     public function __toString()
     {
         $err = $this->getI5Error();
@@ -209,7 +255,7 @@ class I5Error
      * Set error information for last action.
      *
      * @param int    $errNum    Error number (according to old toolkit). Zero/false if no error
-     * @param int    $errCat    Category of error
+     * @param string    $errCat    Category of error
      * @param string $errMsg    Error message (often a CPF code but sometimes just a message)
      * @param string $errDesc   Longer description of error
      * @return void
@@ -278,14 +324,15 @@ class DataDescription
                                  I5_INOUT => 'both',
                                  I5_BYVAL    => 'val'
                                 );
-
+    
     /**
      * Constructor takes an object name (program, data queue, user space) and array-based data description
      * and does some conversions.
-     * @param string    $objName        name of program, data queue, etc. lib/pgm(svcfunc) or the like.
-     * @param array    $dataDescription array of parameter definitions
-     * @param I5Error  $errorObj        during validation we may set properties of this object.
-     * @param ServiceToolkit $connection   connection object for toolkit
+     *
+     * @param string $objName name of program, data queue, etc. lib/pgm(svcfunc) or the like.
+     * @param array $dataDescription array of parameter definitions
+     * @param ServiceToolkit|ToolkitService $connection connection object for toolkit
+     * @internal param I5Error $errorObj during validation we may set properties of this object.
      */
     public function __construct($objName, array $dataDescription, ToolkitService $connection)
     {
@@ -299,98 +346,155 @@ class DataDescription
 
         $this->setConnection($connection);
     }
-
-    // keep it for safekeeping
+    
+    /**
+     * keep it for safekeeping
+     * 
+     * @param string $originalObjName
+     */
     protected function setOriginalObjName($originalObjName = '')
     {
         $this->_originalObjName = $originalObjName;
     }
-
+    
+    /**
+     * @return string
+     */
     protected function getOriginalObjName()
     {
         return $this->_originalObjName;
     }
 
-    // When we discover a "CountRef" reference in an old toolkit data description,
-    // retain the name for later use.
+    /**
+     * When we discover a "CountRef" reference in an old toolkit data description, 
+     * retain the name for later use.
+     * 
+     * @param $name
+     */
     protected function addCountRefName($name)
     {
         // add name to our array.
         $this->_countRefNames[] = $name;
     }
-
-    // return array of all names of countRef fields that we have found.
+    
+    /**
+     * return array of all names of countRef fields that we have found.
+     * 
+     * @return array
+     */
     protected function getCountRefNames()
     {
         return $this->_countRefNames;
     }
-
-    // returns "old toolkit" data description
+    
+    /**
+     * returns "old toolkit" data description
+     * 
+     * @return array
+     */
     public function getOriginalDescription()
     {
         return $this->_description;
     }
 
-    // resets "old toolkit" data description
-    // Accepts one parm, an array.
+    /**
+     * resets "old toolkit" data description
+     * Accepts one parm, an array.
+     * 
+     * @param $desc
+     */
     public function setOriginalDescription($desc)
     {
         $this->_description = $desc;
     }
-
+    
+    /**
+     * @param $objInfo
+     */
     protected function setObjInfo($objInfo)
     {
         $this->_objInfoArray = $objInfo;
     }
-
+    
+    /**
+     * @return array
+     */
     public function getObjInfo()
     {
         return $this->_objInfoArray;
     }
-
+    
+    /**
+     * @param array $pgmOutput
+     */
     protected function setPgmOutput($pgmOutput = array())
     {
         $this->_pgmOutput = $pgmOutput;
     }
     
+    /**
+     * @return array
+     */
     public function getPgmOutput()
     {
         return $this->_pgmOutput;
     }
-
+    
+    /**
+     * @param array $inputValues
+     */
     protected function setInputValues($inputValues = array())
     {
         $this->_inputValues = $inputValues;
     }
-
+    
+    /**
+     * @param bool $isReceiverOnly
+     */
     public function setIsReceiverOnly($isReceiverOnly = false)
     {
         // turn this on when want to use default input variables because we're only RECEIVING data from a program call.
         $this->_isReceiverOnly = $isReceiverOnly;
     }
-
+    
+    /**
+     * @return bool
+     */
     public function getIsReceiverOnly()
     {
         return $this->_isReceiverOnly;
     }
-
+    
+    /**
+     * @param bool $isSingleLevelSimpleValue
+     */
     public function setIsSingleLevelSimpleValue($isSingleLevelSimpleValue = false)
     {
         // turn this on when want to accept a parameter that's a single-level description array with a single value.
         $this->_isSingleLevelSimpleValue = $isSingleLevelSimpleValue;
     }
-
+    
+    /**
+     * @return bool
+     */
     public function getIsSingleLevelSimpleValue()
     {
         return $this->_isSingleLevelSimpleValue;
     }
-
-    // if null, assume we only want a description, no values.
+    
+    /**
+     * if null, assume we only want a description, no values.
+     * 
+     * @return array
+     */
     public function getInputValues()
     {
         return $this->_inputValues;
     }
-
+    
+    /**
+     * @param null $conn
+     */
     protected function setConnection($conn = null)
     {
         $this->_connection = $conn;
@@ -479,6 +583,7 @@ class DataDescription
     /**
      * Given an array key name, recursively search the input values array
      * and return the value associated with the key name provided.
+     * 
      * @param string $searchKey   key to search for
      * @return string|array|null  value found in input array for array key. null if failed
      */
@@ -505,30 +610,29 @@ class DataDescription
         // $connection->logThis("findValueInArray: searchKey: $searchKey. no value found");
         return null;
     }
-
+    
     /**
-     *   Process a single parameter definition, converting from old toolkit to new toolkit style.
+     * Process a single parameter definition, converting from old toolkit to new toolkit style.
      *
-     *   * Each description item contains:
-         * Name - name of the field
-    Type - type of the field, can be one of Data types
-    Length
-        for CHAR, BYTE - integer describing length. Length can be number or name of the variable holding the length in the data
-    structure.
-        for PACKED, ZONED - string "NUMBER.NUMBER" defining length and precision
-        for STRUCT - array containing data definition of the structure
-            Data structure is defined via PHP as follows:
-            DSName - name of the parameter
-            DSParm (optional) - array of the parameter of the Data structure. Each parameter is defined by a data definition in the same
-                   format as described here.
-        for INT, FLOAT - ignored
-    IO - can be one of I/O values (I5_IN|I5_OUT, I5_INOUT). Default is I5_IN
-    count (optional) - repetition count if the field is an array
-    countRef (optional) - reference to the repetition count if the field is an array
-    
-    return: array of new or, if a problem, false.
-    
-    */
+     * Each description item contains:
+     * Name - name of the field
+     * Type - type of the field, can be one of Data types
+     * Length
+     * for CHAR, BYTE - integer describing length. Length can be number or name of the variable holding the length in the data structure.
+     * for PACKED, ZONED - string "NUMBER.NUMBER" defining length and precision
+     * for STRUCT - array containing data definition of the structure
+     * Data structure is defined via PHP as follows:
+     * DSName - name of the parameter
+     * DSParm (optional) - array of the parameter of the Data structure. Each parameter is defined by a data definition in the same format as described here.
+     * for INT, FLOAT - ignored
+     * IO - can be one of I/O values (I5_IN|I5_OUT, I5_INOUT). Default is I5_IN
+     * count (optional) - repetition count if the field is an array
+     * countRef (optional) - reference to the repetition count if the field is an array
+     *
+     * @param array $oldDataDescription
+     * @param null $inputValues
+     * @return bool|DataStructure|ProgramParameter array of new or, if a problem, false.
+     */
     protected function oldToNewDescriptionItem($oldDataDescription = array(), $inputValues = null)
     {
         // pass in old, return new
@@ -1024,14 +1128,24 @@ class DataDescription
             return false;
         }
     }
-
-    // proxies to full function.
+    
+    /**
+     * proxies to full function.
+     * 
+     * @return mixed
+     */
     public function getOutput()
     {
         return $this->getConnection()->getOutputVarsToExport();
     }
-
-    // search through entire input array for the value indicated by name.
+    
+    /**
+     * search through entire input array for the value indicated by name.
+     * 
+     * @param $name
+     * @param $inputArray
+     * @return bool
+     */
     protected function findInputValueByName( $name, $inputArray )
     {
         foreach($inputArray as $key=>$value){
@@ -1049,7 +1163,7 @@ class DataDescription
     }
 }
 
-/*
+/**
  * Additional functionality for parsing PCML
  */
 class DataDescriptionPcml extends DataDescription
