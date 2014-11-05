@@ -5,7 +5,9 @@ require_once 'cwclasses.php';
 define('DB2_DEFAULT_USER', 'QTMHHTTP');
 define('TO_BE_IMPLEMENTED', '999');
 
-
+/**
+ * @param string $dieOutput
+ */
 function d($dieOutput = 'x')
 {
     if (is_array($dieOutput) || is_object($dieOutput)) {
@@ -16,7 +18,13 @@ function d($dieOutput = 'x')
     die($str);
 }
 
-// create unique IPC code
+/**
+ * create unique IPC code
+ *
+ * @param $user
+ * @param int $connNum
+ * @return string
+ */
 function makeIpc($user, $connNum = 0) {
     $ipcUser = ($user) ? $user : DB2_DEFAULT_USER;
     
@@ -29,7 +37,11 @@ function makeIpc($user, $connNum = 0) {
     return $ipc;
 } //(makeIpc)
 
-
+/**
+ * @param $objName
+ * @param string $defaultLib
+ * @return array
+ */
 function splitLibObj($objName, $defaultLib = '') {
     // given an object name that MAY be qualified by a library and slash and perhaps a function,
     // such as "xxx/yyy(zzzz)".
@@ -76,9 +88,12 @@ function splitLibObj($objName, $defaultLib = '') {
 
 /**
  * Creates and logs a new piece of activity and error.
+ *
  * @see I5Error::setI5Error()
- * @param string $errMsg    Error message (often a CPF code but sometimes just a message)
- * @param string $errDesc   Longer description of error
+ * @param $errNum
+ * @param string $errCat
+ * @param string $errMsg Error message (often a CPF code but sometimes just a message)
+ * @param string $errDesc Longer description of error
  * @return void
  */
 function i5ErrorActivity($errNum, $errCat = I5_CAT_PHP, $errMsg = '', $errDesc = '')
@@ -96,9 +111,10 @@ function i5ErrorActivity($errNum, $errCat = I5_CAT_PHP, $errMsg = '', $errDesc =
 
 /**
  * Shortcut to i5ErrorActivity when an "AS400" or CPF error occurred.
+ *
  * @see I5ErrorActivity()
- * @param string $errMsg    Error message (often a CPF code but sometimes just a message)
- * @param string $errDesc   Longer description of error
+ * @param string $errMsg Error message (often a CPF code but sometimes just a message)
+ * @param string $errDesc Longer description of error
  * @return void
  */
 function i5CpfError($errMsg = '', $errDesc = '')
@@ -110,7 +126,9 @@ function i5CpfError($errMsg = '', $errDesc = '')
 
 /**
  * Shortcut to i5ErrorActivity when no error occurred. Clears error condition.
+ *
  * @see I5ErrorActivity()
+ *
  * @return void
  */
 function noError()
@@ -120,12 +138,17 @@ function noError()
     
 } //(noError)
 
-
-
-
-// return toolkit object on success, false on error
-// if 'persistent' passed in options, do a persistent conn.
-// if CW_EXISTING_TRANSPORT_RESOURCE passed in options, use it as database conn.
+/**
+ * return toolkit object on success, false on error
+ * if 'persistent' passed in options, do a persistent conn.
+ * if CW_EXISTING_TRANSPORT_RESOURCE passed in options, use it as database conn.
+ *
+ * @param string $host
+ * @param string $user
+ * @param string $password
+ * @param array $options
+ * @return mixed
+ */
 function i5_connect($host='', $user='', $password='', $options=array()) {
     
 		
@@ -517,7 +540,16 @@ function i5_connect($host='', $user='', $password='', $options=array()) {
     return $tkit;
     
 } //(i5_connect)
-
+/**
+ * For persistent connections it's all about the IPC key. Try to call i5_connect's
+ * guts but specify the key.
+ *
+ * @param $host
+ * @param $user
+ * @param $password
+ * @param array $options
+ * @return mixed
+ */
 function i5_pconnect($host, $user, $password, $options = array()) {
     
     // for private conns, it's all about the IPC key. Try to call i5_connect's guts but specify the key.
@@ -530,7 +562,11 @@ function i5_pconnect($host, $user, $password, $options = array()) {
     return $conn;
     
 } //(i5_pconnect)
-
+/**
+ * @param int $property
+ * @param $tkit
+ * @return bool
+ */
 function i5_get_property($property, $tkit) {
     // $property is integer
     
@@ -559,7 +595,14 @@ function i5_get_property($property, $tkit) {
     
 } //(i5_get_property)
 
-// close job. not really necessary unless want to close it before script end.
+/**
+ * Close job. not really necessary unless want to close it before script end.
+ *
+ * this should run automatically when script ends.
+ *
+ * @param ToolkitServiceCw $connection
+ * @return bool
+ */
 function i5_close(&$connection = null) {
     
     // this should run automatically when script ends.
@@ -582,7 +625,12 @@ function i5_close(&$connection = null) {
     return true;
     
 } //(i5_close)
-
+/**
+ * End job even if persistent connection.
+ *
+ * @param ToolkitServiceCw $connection
+ * @return bool
+ */
 function i5_pclose(&$connection = null) {
     // end job even if persistent connection.
     
@@ -600,14 +648,13 @@ function i5_pclose(&$connection = null) {
     
 } //(i5_pclose)
 
-
-
 /**
  * Changes authority of the connection to a specific user. All actions will be executed as this user from now on.
+ *
  * @param string $user
  * @param string $password
- * @param ToolkitServiceCw [optional] $connection, the result of i5_connect(), or omit
- * @return boolean  True on success, False on failure
+ * @param ToolkitServiceCw $connection [optional] the result of i5_connect(), or omit
+ * @return boolean True on success, False on failure
  */
 function i5_adopt_authority($user, $password, $connection = null)
 {
@@ -737,23 +784,20 @@ function i5_adopt_authority($user, $password, $connection = null)
     
 } //(i5_adopt_authority)
 
-
-// ERROR handling
-
 /**
  * Get array of error information for most recent action. Both numeric and descriptive string indexes are provided.
+ *
  * Example:
- * [0] => 312                                                         
- * [1] => 9                                                           
- * [2] => CPF2292                                                     
- * [3] => *SECADM required to create or change user profiles.         
- * [num] => 312                                                       
- * [cat] => 9                                                         
- * [msg] => CPF2292                                                   
- * [desc] => *SECADM required to create or change user profiles.      
+ * [0] => 312
+ * [1] => 9
+ * [2] => CPF2292
+ * [3] => *SECADM required to create or change user profiles.
+ * [num] => 312
+ * [cat] => 9
+ * [msg] => CPF2292
+ * [desc] => *SECADM required to create or change user profiles.
  *
  * @return array Error info for most recent action. See above for example.
- * @param ToolkitServiceCw $connection Optional connection object (not used)
  */
 function i5_error($connection = null)
 {   
@@ -762,12 +806,10 @@ function i5_error($connection = null)
     
 } //(i5_error)
 
-
 /**
  * Returns error number for most recent action.
- * @return int     Error number equivalent to index 0 or 'num' from i5_error()
- *                 Zero if no error
- * @param ToolkitServiceCw $connection Optional connection object
+ *
+ * @return int Error number equivalent to index 0 or 'num' from i5_error() Zero if no error
  */
 function i5_errno($connection = null)
 {
@@ -777,14 +819,11 @@ function i5_errno($connection = null)
 
 } //(i5_errno)
 
-
-
 /**
  * Returns error message or code for most recent action.
- * @return string  Message equivalent to index 2 or 'msg' from i5_error()
- *                 It's often a CPF code.
- *                 Blank if no error
- * @param ToolkitServiceCw $connection Optional connection object
+ * @return string Message equivalent to index 2 or 'msg' from i5_error()
+ * It's often a CPF code.
+ * Blank if no error
  */
 function i5_errormsg($connection = null)
 {
@@ -800,20 +839,20 @@ function i5_errormsg($connection = null)
 
 /**
  * i5_command: Call a command with optional input/output parameters
- *             Can also call a program that has no parameters
+ * Can also call a program that has no parameters
  * @param string $cmdString Basic command that can contain parameters or not, as desired
  * @param array $input Optional array of name => value pairs
  * The name describes the call input parameters. Names should match IBM i CL command parameter names.
  * If the array is empty or not provided, no input parameters are given.
  * Strings are not quoted; this is the user's responsibility.
  * If the value is an array, the list of contained values is passed in a space-delimited string.
- * @param array $output   Optional information about how to get output from the command.
- *                            if value is a string, it's the name of PHP variable to receive the value.
- *                             example:  array('userlibl'=>'usrlibl')
- *                            if value is an array, it's in the form: array($varName, 'type')
- *                             examples: array('syslibl' => array('syslibl', 'char(165)'))
- *                                       array('ccsid'   => array('myccsid', 'dec(5 0)'))
- *                         Note: the old toolkit seemed to use the lengths (165), (5 0) but we will ignore lengths. "dec" is used, if present.
+ * @param array $output Optional information about how to get output from the command.
+ * if value is a string, it's the name of PHP variable to receive the value.
+ * example: array('userlibl'=>'usrlibl')
+ * if value is an array, it's in the form: array($varName, 'type')
+ * examples: array('syslibl' => array('syslibl', 'char(165)'))
+ * array('ccsid' => array('myccsid', 'dec(5 0)'))
+ * Note: the old toolkit seemed to use the lengths (165), (5 0) but we will ignore lengths. "dec" is used, if present.
  * @param ToolkitServiceCw $connection Optional connection object
  * @return boolean for success/failure
  */
@@ -945,13 +984,13 @@ function i5_command($cmdString, $input = array(), $output = array(), $connection
     
 } //(i5_command)
 
-// return object or false
 /**
  * Enter description here ...
- * @param string         $pgmName     Lib/Pgm or Pgm or Lib/Pgm(svcfunc)
- * @param array          $description Array of program parameter info
- * @param ServiceToolkit $connection  Optional toolkit object
- * @return DataDescription|boolean    On success, an object containing program definition information, or false on failure
+ *
+ * @param string $pgmName Lib/Pgm or Pgm or Lib/Pgm(svcfunc)
+ * @param array $description Array of program parameter info
+ * @param ServiceToolkit $connection Optional toolkit object
+ * @return DataDescription|boolean On success, an object containing program definition information, or false on failure
  */
 function i5_program_prepare($pgmName, $description, $connection = null) {
 
@@ -998,13 +1037,13 @@ function i5_program_prepare($pgmName, $description, $connection = null) {
 */    
 } //(i5_program_prepare)
 
-/*Description: Opens a program PCML file and prepares it to be run.
-Return Values: Resource if open succeeded, false if open failed.
-Arguments:
-description - String of PCML with program and parameter information
-connection - Result of i5_connect
-*/
-// return object or false
+/**
+ * return object or false
+ *
+ * @param string $description Opens a program PCML file and prepares it to be run.
+ * @param $connection Results of i5_connect
+ * @return bool|\DataDescriptionPcml
+ */
 function i5_program_prepare_PCML($description = null, $connection = null) {
     /*i5ErrorActivity(TO_BE_IMPLEMENTED, 0, "To be implemented", "To be implemented");
     return false;
@@ -1036,15 +1075,14 @@ function i5_program_prepare_PCML($description = null, $connection = null) {
     
 } //(i5_program_prepare_PCML)
 
-
 /**
  * Call a program based on a prepare done before.
- * @param DataDescription $program   Program object created in the preparation stage.
- * @param array           $params    Input params with key=>value pairs (possibly nested),
- *                                   keys matching what was specified in prepare stage.
- * @param array            $retvals  Output params (optional)
- *                                   Fields get created based on names of output parms.
- * @return boolean         True if successful, false if not.
+ * @param DataDescription $program Program object created in the preparation stage.
+ * @param array $params Input params with key=>value pairs (possibly nested),
+ * keys matching what was specified in prepare stage.
+ * @param array $retvals Output params (optional)
+ * Fields get created based on names of output parms.
+ * @return boolean True if successful, false if not.
  */
 function i5_program_call(DataDescription $program, $params, $retvals = array()) {
 
@@ -1085,12 +1123,11 @@ function i5_program_call(DataDescription $program, $params, $retvals = array()) 
         return false;
     }// (if success)
 } //(i5_program_call)
-    
-    
-// do NOT need ReturnValue unless func returns values as function return, which the old toolkit doesn't seem to support.
 
-
-// pass in pgm object. no return value
+/**
+ * @param $pgm
+ * @return bool
+ */
 function i5_program_close(&$pgm) {
      
     // Not much to do here. Set program object to null.
@@ -1100,8 +1137,13 @@ function i5_program_close(&$pgm) {
     return true;
 } //(i5_program_close)
 
-
-// return string or false
+/**
+ * return string or false
+ *
+ * @param $name
+ * @param null $connection
+ * @return bool|void
+ */
 function i5_get_system_value($name, $connection = null) {
     
     if (!$connection = verifyConnection($connection)) {
@@ -1129,10 +1171,46 @@ function i5_get_system_value($name, $connection = null) {
     
 } //(i5_get_system_value)
 
-
-
-// for internal use
-// $fieldInfo is an array with array indexes 'var', 'type', 'comment'
+/**
+ * for internal use
+ *
+ * Job Log Constants (i5_jobLog_list) array elements constants
+ * I5_LOBJ_MESSAGE_SEVERITY
+ * I5_LOBJ_MESSAGE_IDENTIFIER
+ * I5_LOBJ_MESSAGE_FILELIBRARY
+ * I5_LOBJ_TIMESENT_MICRO
+ * I5_LOBJ_MESSAGE_TYPE
+ * I5_LOBJ_DATASENT
+ * I5_LOBJ_MESSAGE_FILENAME
+ * I5_LOBJ_TIMESENT
+ * I5_LOBJ_ALERTOPT
+ * I5_LOBJ_MSGDTA
+ * I5_LOBJ_MSGHLPDTAFMT
+ * I5_LOBJ_SNDTYPE
+ * I5_LOBJ_SNDPROC
+ * I5_LOBJ_RCVMOD
+ * I5_LOBJ_PROBLEMID
+ * I5_LOBJ_RQSLVL
+ * I5_LOBJ_RPLDATA1
+ * I5_LOBJ_MSGHLP
+ * I5_LOBJ_DFTRPLY
+ * I5_LOBJ_SNDPGM
+ * I5_LOBJ_RCVTYPE
+ * I5_LOBJ_RCVPROC
+ * I5_LOBJ_RPLYSTS
+ * I5_LOBJ_TXTCCSID
+ * I5_LOBJ_MSG
+ * I5_LOBJ_MSGHLPDTA
+ * I5_LOBJ_SNDNAME
+ * I5_LOBJ_SNDMOD
+ * I5_LOBJ_RCVPROG
+ * I5_LOBJ_MSGFILE
+ * I5_LOBJ_RQSSTS
+ * I5_LOBJ_DATACCSID
+ *
+ * @param array $fieldInfo indexes 'var', 'type', 'comment'
+ * @return string
+ */
 function joblogRepeatingFieldXml($fieldInfo) {
     
     $xml = '';
@@ -1155,78 +1233,42 @@ function joblogRepeatingFieldXml($fieldInfo) {
     return $xml;
     
 } //(joblogRepeatingFieldXml($fieldInfo))
-         
 
-
-/*
- * Job Log Constants (i5_jobLog_list) array elements constants
-I5_LOBJ_MESSAGE_SEVERITY
-I5_LOBJ_MESSAGE_IDENTIFIER
-I5_LOBJ_MESSAGE_FILELIBRARY
-I5_LOBJ_TIMESENT_MICRO
-I5_LOBJ_MESSAGE_TYPE
-I5_LOBJ_DATASENT
-I5_LOBJ_MESSAGE_FILENAME
-I5_LOBJ_TIMESENT
-I5_LOBJ_ALERTOPT
-I5_LOBJ_MSGDTA
-I5_LOBJ_MSGHLPDTAFMT
-I5_LOBJ_SNDTYPE
-I5_LOBJ_SNDPROC
-I5_LOBJ_RCVMOD
-I5_LOBJ_PROBLEMID
-I5_LOBJ_RQSLVL
-I5_LOBJ_RPLDATA1
-I5_LOBJ_MSGHLP
-I5_LOBJ_DFTRPLY
-I5_LOBJ_SNDPGM
-I5_LOBJ_RCVTYPE
-I5_LOBJ_RCVPROC
-I5_LOBJ_RPLYSTS
-I5_LOBJ_TXTCCSID
-I5_LOBJ_MSG
-I5_LOBJ_MSGHLPDTA
-I5_LOBJ_SNDNAME
-I5_LOBJ_SNDMOD
-I5_LOBJ_RCVPROG
-I5_LOBJ_MSGFILE
-I5_LOBJ_RQSSTS
-I5_LOBJ_DATACCSID
-*/
-
-
-/*
+/**
  * Description: Opens job log.
  *
  * Gets a job log for a SPECIFIC JOB.
  *
-Return Values: The resource for fetching job log list if OK; false if failed.
-Arguments:
- elements - JobName, JobUser, JobNumber, (default is current job)
-            MaxMessage (which does NOTHING in old toolkit. Ignored completely.), Direction
- connection - Result of i5_connect
-Use i5_jobLog_list_read function to retrieve the job entries from this handle.
-/*
- * define('I5_JOBNAME', 'jobName');
-define('I5_USERNAME', 'username');
-define('I5_JOBNUMBER', 'jobnumber');
-define('I5_MAXMESSAGE', 'maxMessage'); // tested this in old toolkit. it's ignored--does nothing in old toolkit.
-The maximum number of messages to be returned. (-1 means all)
-define('I5_DIRECTION', 'direction');
-The direction to list messages. You must use one of these directions:
-*NEXT     Returns messages that are newer than the message specified by the starting message key field.
-*PRV     Returns messages that are older than the messages specified by the starting message key field.
-
-See http://publib.boulder.ibm.com/infocenter/iseries/v5r4/index.jsp?topic=%2Fapis%2FQMHLJOBL.htm
-API: QMHLJOBL (List job log messages)
-
-old toolkit enforced this rule:
-either all three are blank (current job), or all three must be supplied.
-if some are blank, get:
-CPF3658, job name not specified: Either job name 'A10A' is blank, user name 'ASEIDEN' is blank, or job number '' is blank.  None of these fields can contain blank
-With one exception: if only username is supplied, and the others are blank, ignore the username and provide current job's log.
-(That's what i5 toolkit does)
+ * Return Values: The resource for fetching job log list if OK; false if failed.
+ * Arguments:
+ * elements - JobName, JobUser, JobNumber, (default is current job)
+ * MaxMessage (which does NOTHING in old toolkit. Ignored completely.), Direction
+ * connection - Result of i5_connect
+ * Use i5_jobLog_list_read function to retrieve the job entries from this handle.
  *
+ * define('I5_JOBNAME', 'jobName');
+ * define('I5_USERNAME', 'username');
+ * define('I5_JOBNUMBER', 'jobnumber');
+ * define('I5_MAXMESSAGE', 'maxMessage'); // tested this in old toolkit. it's ignored--does nothing in old toolkit.
+ * The maximum number of messages to be returned. (-1 means all)
+ * define('I5_DIRECTION', 'direction');
+ * The direction to list messages. You must use one of these directions:
+ * *NEXT Returns messages that are newer than the message specified by the starting message key field.
+ * *PRV Returns messages that are older than the messages specified by the starting message key field.
+ *
+ * See http://publib.boulder.ibm.com/infocenter/iseries/v5r4/index.jsp?topic=%2Fapis%2FQMHLJOBL.htm
+ * API: QMHLJOBL (List job log messages)
+ *
+ * old toolkit enforced this rule:
+ * either all three are blank (current job), or all three must be supplied.
+ * if some are blank, get:
+ * CPF3658, job name not specified: Either job name 'A10A' is blank, user name 'ASEIDEN' is blank, or job number '' is blank. None of these fields can contain blank
+ * With one exception: if only username is supplied, and the others are blank, ignore the username and provide current job's log.
+ * (That's what i5 toolkit does)
+ *
+ * @param array $elements
+ * @param null $connection
+ * @return ListFromApi
  */
 function i5_jobLog_list($elements = array() , $connection = null)
 {
@@ -1449,54 +1491,54 @@ $repeatingXml;
     
 } //(i5_joblog_list)
 
-
-/*
+/**
+ * pass list by reference so its current element can be advanced
  *
  * Description: Get an array for a job log entry.
- Return Values: Array with the message element if OK, false if failed.
- Arguments: list - Resource returned by i5_jobLog_list function
- 
- I5_USERNAME=>'QSYS'
-define('I5_JOBNAME', 'jobName');
-define('I5_USERNAME', 'username');
-define('I5_JOBNUMBER', 'jobnumber');
-define('I5_MAXMESSAGE', 'maxMessage');
-define('I5_DIRECTION', 'direction');
-define('I5_USERDATA', 'userdata');
-define('I5_OUTQ', 'outq');
-define('I5_STATUS', 'status');
-define('I5_JOBTYPE', 'jobType');
-
-LOGS LOGS LOGS LOGS
-
+ * Return Values: Array with the message element if OK, false if failed.
+ * Arguments: list - Resource returned by i5_jobLog_list function
+ *
+ * I5_USERNAME=>'QSYS'
+ * define('I5_JOBNAME', 'jobName');
+ * define('I5_USERNAME', 'username');
+ * define('I5_JOBNUMBER', 'jobnumber');
+ * define('I5_MAXMESSAGE', 'maxMessage');
+ * define('I5_DIRECTION', 'direction');
+ * define('I5_USERDATA', 'userdata');
+ * define('I5_OUTQ', 'outq');
+ * define('I5_STATUS', 'status');
+ * define('I5_JOBTYPE', 'jobType');
+ *
+ * LOGS LOGS LOGS LOGS
+ *
+ * @param null $list
+ * @return bool
  */
-// pass list by reference so its current element can be advanced
 function i5_jobLog_list_read(&$list = null)
 {
-    return listRead($list);    
-    
-/* output all this stuff
- *  echo " - ".$data[I5_LOBJ_MSGDTA]."<BR>";
-
-   if (isset($data[I5_LOBJ_MSGHLP]))
-
-    echo $data[I5_LOBJ_MSGHLP]."<BR>";
- */
-} //(i5_joblog_list_read)
-
-/*
- * Description: Close handle received from i5_jobLog_list().
-Return Values: Boolean success value
-Arguments: list - Job list handle as returned by i5_jobLog_list(), passed by reference so it can be closed
- */
+    return listRead($list);
+}
+    /**
+     * Description: Close handle received from i5_jobLog_list().
+     * Return Values: Boolean success value
+     * Arguments: list - Job list handle as returned by i5_jobLog_list(), passed by reference so it can be closed
+     *
+     * @param null $list
+     * @return bool
+     */
 function i5_jobLog_list_close(&$list = null)
 {
    return listClose($list);   
     
 } //(i5_joblog_list_close)
-
-// Check that we have an instance of the toolkit object, either passed in or available from the toolkit.
-// Return that instance, or false.
+    
+    /**
+     * Check that we have an instance of the toolkit object, either passed in or available from the toolkit.
+     * Return that instance, or false.
+     *
+     * @param ToolkitServiceCw $connection
+     * @return bool|null
+     */
 function verifyConnection($connection = null) {
     // if conn passed and non-null but it's bad
     if ($connection && !is_a($connection, 'ToolkitService')) {
@@ -1523,9 +1565,13 @@ function verifyConnection($connection = null) {
     // A good connection. Return it.
     return $connection;
 } //(verifyConnection)
-
-
-// split but, unlike Zend PHP wrapper, keep original indexes.
+    
+    /**
+     * split but, unlike Zend PHP wrapper, keep original indexes.
+     *
+     * @param $JobListString
+     * @return array
+     */
 function splitJobStringIntoArray($JobListString)
     {            
         // fill jobList with one array entry per job,
@@ -1541,41 +1587,41 @@ function splitJobStringIntoArray($JobListString)
         return $jobList;
     }
     
-
-
-// Active jobs
-/*
- * Description: Open active job list.
-Return Values: The resource for fetching job list if OK and false if failed.
-An empty list is considered successful.
-Arguments:
- elements - JobName, JobUser, JobNumber (*ALL is OK for these), JobType, (default is current job)
- Direction (I don't think Direction is correct)
- connection - Result of i5_connect
- 
-  I5_USERNAME=>'QSYS'
-define('I5_JOBNAME', 'jobName');
-define('I5_USERNAME', 'username');
-define('I5_JOBNUMBER', 'jobnumber');
-define('I5_MAXMESSAGE', 'maxMessage');
-define('I5_DIRECTION', 'direction');
-define('I5_USERDATA', 'userdata');
-define('I5_OUTQ', 'outq');
-define('I5_STATUS', 'status');
-define('I5_JOBTYPE', 'jobType'); (actually status)
-
-job type
-*     This value lists all job types.
-A     The job is an autostart job.
-B     The job is a batch job.
-I     The job is an interactive job.
-M     The job is a subsystem monitor job.
-R     The job is a spooled reader job.
-S     The job is a system job.
-W     The job is a spooled writer job.
-X     The job is the start-control-program-function (SCPF) system job.
-
- */
+    /**
+     * Description: Open active job list.
+     * Return Values: The resource for fetching job list if OK and false if failed.
+     * An empty list is considered successful.
+     * Arguments:
+     * elements - JobName, JobUser, JobNumber (*ALL is OK for these), JobType, (default is current job)
+     * Direction (I don't think Direction is correct)
+     * connection - Result of i5_connect
+     *
+     * I5_USERNAME=>'QSYS'
+     * define('I5_JOBNAME', 'jobName');
+     * define('I5_USERNAME', 'username');
+     * define('I5_JOBNUMBER', 'jobnumber');
+     * define('I5_MAXMESSAGE', 'maxMessage');
+     * define('I5_DIRECTION', 'direction');
+     * define('I5_USERDATA', 'userdata');
+     * define('I5_OUTQ', 'outq');
+     * define('I5_STATUS', 'status');
+     * define('I5_JOBTYPE', 'jobType'); (actually status)
+     *
+     * job type
+     * * This value lists all job types.
+     * A The job is an autostart job.
+     * B The job is a batch job.
+     * I The job is an interactive job.
+     * M The job is a subsystem monitor job.
+     * R The job is a spooled reader job.
+     * S The job is a system job.
+     * W The job is a spooled writer job.
+     * X The job is the start-control-program-function (SCPF) system job.
+     *
+     * @param array $elements
+     * @param null $connection
+     * @return ListFromApi
+     */
 function i5_job_list($elements = array(), $connection = null)
 {
     if (!$connection = verifyConnection($connection)) {
@@ -1959,38 +2005,44 @@ function i5_job_list($elements = array(), $connection = null)
     return $listObj;
         
 } //(i5_job_list)
-
-/*
- * Description: Get an array for an active job entry.
- Return Values: Array with the job entry element if OK, false if failed.
- Arguments: List - Resource returned by i5_job_list function
- */
+    
+    /**
+     * Description: Get an array for an active job entry.
+     * Return Values: Array with the job entry element if OK, false if failed.
+     * Arguments: List - Resource returned by i5_job_list function
+     *
+     * @param null $list
+     * @return bool
+     */
 function i5_job_list_read(&$list = null)
 {
     return listRead($list);
     
 } //(i5_job_list_read)
-
-/*
- * Description: Close handle received from i5_job_list(). Return Values: Boolean success value
- * Arguments:  list- Job list handle as returned by 15_job_list()
- */
+    
+    /**
+     * Description: Close handle received from i5_job_list(). Return Values: Boolean success value
+     * Arguments: list- Job list handle as returned by 15_job_list()
+     *
+     * @param null $list
+     * @return bool
+     */
 function i5_job_list_close(&$list= null)
 {
     return listClose($list);
         
 } //(i5_job_list_close)
-
-
-// TODO get better error codes even though a service program is used. Try job log.
-
-/**
- * Creates data area
- * @param string $name      Lib/Name of data area to create (lib is optional)
- * @param int $size         Size in bytes    
- * @param ToolkitServiceCw $connection
- * @return boolean          True if successful, false if not.
- */
+    
+    /**
+     * Creates data area
+     *
+     * @todo get better error codes even though a service program is used. Try job log.
+     *
+     * @param string $name Lib/Name of data area to create (lib is optional)
+     * @param int $size Size in bytes
+     * @param ToolkitServiceCw $connection
+     * @return boolean True if successful, false if not.
+     */
 function i5_data_area_create($name, $size, $connection = null) {
  
     if (!$connection = verifyConnection($connection)) {
@@ -2027,16 +2079,16 @@ function i5_data_area_create($name, $size, $connection = null) {
     return true;
     
 } //(i5_data_area_create)
-
-
-/**
- * Reads data from data area. Offset and length can be optional together.
- * @param string $name                               Name of data area
- * @param int|ToolkitServiceCw $offsetOrConnection   Offset to read from (omit to read all) OR connection    
- * @param int $length                                Length of data to read (-1 means all)
- * @param ToolkitServiceCw $connection
- * @return string|boolean   Returns data if read successful, false if read failed (including when offset is wrong)
- */
+    
+    /**
+     * Reads data from data area. Offset and length can be optional together.
+     *
+     * @param string $name Name of data area
+     * @param int|ToolkitServiceCw $offsetOrConnection Offset to read from (omit to read all) OR connection
+     * @param int $length Length of data to read (-1 means all)
+     * @param ToolkitServiceCw $connection
+     * @return string|boolean Returns data if read successful, false if read failed (including when offset is wrong)
+     */
 function i5_data_area_read($name, $offsetOrConnection = null, $length = null, $connection = null)
 {
     
@@ -2106,17 +2158,17 @@ function i5_data_area_read($name, $offsetOrConnection = null, $length = null, $c
     }
     
 } //(i5_data_area_read)
-
-
-/**
- * Writes data to data area. Offset and length can be specified together, as a pair, or not at all.
- * @param string $name      Name of data area
- * @param string $value     Data to write    
- * @param int|ToolkitServiceCw $offsetOrConnection   Offset a which to write data (omit to start from beginning) OR connection
- * @param int $length       Length of data to write. "If value is shorter than length it is padded to the length. If it's longer it is truncated."
- * @param ToolkitServiceCw $connection
- * @return boolean          True on success, false on failure
- */
+    
+    /**
+     * Writes data to data area. Offset and length can be specified together, as a pair, or not at all.
+     *
+     * @param string $name Name of data area
+     * @param string $value Data to write
+     * @param int|ToolkitServiceCw $offsetOrConnection Offset a which to write data (omit to start from beginning) OR connection
+     * @param int $length Length of data to write. "If value is shorter than length it is padded to the length. If it's longer it is truncated."
+     * @param ToolkitServiceCw $connection
+     * @return boolean True on success, false on failure
+     */
 function i5_data_area_write($name, $value, $offsetOrConnection = null, $length = null, $connection = null)
 {
     if (isset($length)) {
@@ -2175,14 +2227,13 @@ function i5_data_area_write($name, $value, $offsetOrConnection = null, $length =
     return true;
     
 } //(i5_data_area_write)
-
-
-/**
- * Deletes data area
- * @param string $name      Name of data area to delete. Possibly lib/name.
- * @param ToolkitServiceCw $connection
- * @return boolean          True if successful, false if not.
- */
+    
+    /**
+     * Deletes data area
+     * @param string $name Name of data area to delete. Possibly lib/name.
+     * @param ToolkitServiceCw $connection
+     * @return boolean True if successful, false if not.
+     */
 function i5_data_area_delete($name, $connection = null)
 {
   	if (!$connection = verifyConnection($connection)) {
@@ -2211,22 +2262,21 @@ function i5_data_area_delete($name, $connection = null)
     return true;
     
 } //(i5_data_area_delete)
-
-
-// spool files
-
-/*Description: Create an spool file lists, of certain output queue or for all queues.
- Return Values: resource if OK, false if failed
- Arguments:
- description - The data by which the sppol files will be filtered, array with following keys:
- username - username that created the job
- UNDOCUMENTED: jobnumber, jobname, too!!!!! but if specify jobname, must specify all three (name, number, user)
-      "*" for all three will give current job.
-  outq - qualified (optional library included) name for the output queue containing the spool file
- userdata - the user-supplied key data for the spool file.
- All keys are optional and can be provided together
- connection - result of i5_connect.
-*/
+    
+    /**
+     * Description: Create an spool file lists, of certain output queue or for all queues.
+     * Return Values: resource if OK, false if failed
+     * Arguments:
+     * UNDOCUMENTED: jobnumber, jobname, too!!!!! but if specify jobname, must specify all three (name, number, user)
+     * "*" for all three will give current job.
+     * outq - qualified (optional library included) name for the output queue containing the spool file
+     * userdata - the user-supplied key data for the spool file.
+     * All keys are optional and can be provided together
+     *
+     * @param array $description The data by which the sppol files will be filtered, array with following keys: username - username that created the job
+     * @param null $connection result of i5_connect
+     * @return ListFromApi
+     */
 function i5_spool_list($description = array(), $connection = null)
 {
     if (!$connection = verifyConnection($connection)) {
@@ -2422,38 +2472,46 @@ function i5_spool_list($description = array(), $connection = null)
     
 
 } //(i5_spool_list)
-
-/*Description: Gets spool file data from the queue.
-Return Values: next spool file data array in the list, or false if queue is empty.
-The data will be formated using SPLF0300 format. See following link for more details: http://publib.boulder.ibm.com/infocenter/iseries/v5r4/index.jsp?topic=/apis/QUSLSPL.htm
-Arguments: Spool_list resource received from i5_spool_list*/
+    
+    /**
+     * Description: Gets spool file data from the queue.
+     * Return Values: next spool file data array in the list, or false if queue is empty.
+     * The data will be formated using SPLF0300 format. See following link for more details: http://publib.boulder.ibm.com/infocenter/iseries/v5r4/index.jsp?topic=/apis/QUSLSPL.htm
+     * Arguments: Spool_list resource received from i5_spool_list
+     */
 function i5_spool_list_read(&$list = null)
 {
     return listRead($list);
     
 } //(i5_spool_list_read)
-
-/*void i5_spool_list_close(resource spool_list)
-Description: Free spool list resource
-Return Values: Boolean success value*/
+    
+    /**
+     * void i5_spool_list_close(resource spool_list)
+     *
+     * @param null $list
+     * @return bool
+     */
 function i5_spool_list_close($list = null)
 {
     return listClose($list);
     
 } //(i5_spool_list_close)
-
-/*string i5_spool_get_data(string spool_name, string jobname, string username, integer job_number, integer spool_id [,string filename])
-Description: Get the data from the spool file.
-Return Values: If no filename passed as parameter, a string on success, false on failure. If filename passed, return true on success, false on failure.
-Arguments:
- spool_name - The spool file name
- job_name - The name of the job that created the file
- job_number - The number of the job that created the file
- username - The username of the job that created the file
- spool_id - ID of the spool file in the queue
-            (NOTE: *LAST is ignored by old toolkit and new toolkit. Gets converted to a 1.)
- filename - IFS filename to store the data. If not provided, the data is returned as string
-*/
+    
+    /**
+     * string i5_spool_get_data(string spool_name, string jobname, string username, integer job_number, integer spool_id [,string filename])
+     * Description: Get the data from the spool file.
+     * Return Values: If no filename passed as parameter, a string on success, false on failure. If filename passed, return true on success, false on failure.
+     * Arguments:
+     *
+     * @param string $spoolName The spool file name
+     * @param string $jobName The name of the job that created the file
+     * @param string $userName The username of the job that created the file
+     * @param string $jobNumber The number of the job that created the file
+     * @param string $spoolNumber ID of the spool file in the queue (NOTE: *LAST is ignored by old toolkit and new toolkit. Gets converted to a 1.)
+     * @param string $fileName IFS filename to store the data. If not provided, the data is returned as string
+     * @param null $connection
+     * @return bool|string
+     */
 function i5_spool_get_data($spoolName, $jobName, $userName, $jobNumber, $spoolNumber, $fileName = '', $connection = null)
 {
     if (!$connection = verifyConnection($connection)) {
@@ -2601,12 +2659,14 @@ function i5_spool_get_data($spoolName, $jobName, $userName, $jobNumber, $spoolNu
  name - Name or wildcard of objects to read, default is "*ALL".
  type - Object type to fetch (*ALL or I5_ALL_OBJECTS for all)
  connection - Connection - result of i5_connect*/
-/**
- * @param string                  $library
- * @param string[optional]        $name
- * @param string[optional]        $type
- * @param i5_Connection[optional] $connection
- */
+    
+    /**
+     * @param $library
+     * @param string $name
+     * @param string $type
+     * @param null $connection
+     * @return bool|ListFromApi
+     */
 function i5_objects_list($library, $name = '*ALL', $type = '*ALL', $connection = null)
 {
 
@@ -2795,16 +2855,19 @@ indicator' type='1a' />
     return $objectList;    
 */    
 } //(i5_objects_list)
-
-/*array i5_objects_list_read (resource list)
- Description: Get an array for an object list entries.
- Return Values: Array with the object element if OK; false if failed.
- Arguments: List - Resource returned by i5_objects_list
-
-*/
-
-// generic list reader
-// pass list by reference so its current element can be advanced
+    
+    /**
+     * array i5_objects_list_read (resource list)
+     * Description: Get an array for an object list entries.
+     * Return Values: Array with the object element if OK; false if failed.
+     * Arguments: List - Resource returned by i5_objects_list
+     *
+     * generic list reader
+     * pass list by reference so its current element can be advanced
+     *
+     * @param $list
+     * @return bool
+     */
 function listRead(&$list)
 {
     $connection = $list->getConn();
@@ -2838,8 +2901,13 @@ function listRead(&$list)
     
     
 } //(listRead)
-// generic list close-er
-// pass list by reference so list can be deactivated
+    /**
+     * generic list close-er
+     * pass list by reference so list can be deactivated
+     *
+     * @param $list
+     * @return bool
+     */
 function listClose(&$list)
 {
 
@@ -2867,39 +2935,50 @@ function listClose(&$list)
     return $success;
 
 } //(listClose)
-
-// pass list by reference so its current element can be advanced
+    
+    /**
+     * pass list by reference so its current element can be advanced
+     *
+     * @param $list
+     * @return bool
+     */
 function i5_objects_list_read(&$list)
 {
     return listRead($list);
     
 } //(i5_objects_list_read)
-
-/*bool i5_ objects_list_close (resource handle)
- Description: Close handle received from i5_ objects_list ().
- Return Values: Boolean success value
- Arguments: handle - Object list handle as returned by i5_ objects_list ()
-*/
+    
+    /**
+     * bool i5_ objects_list_close (resource handle)
+     * Description: Close handle received from i5_ objects_list ().
+     * Return Values: Boolean success value
+     * Arguments: handle - Object list handle as returned by i5_ objects_list ()
+     */
 function i5_objects_list_close(&$list)
 {
     return listClose($list);
     
 } //(i5_objects_list_close)
 
-
 // data queues
 // Note: there's no "dtaq_create" or "dtaq_delete" in the old toolkit.
-
-
-/*resource i5_dtaq_prepare(string name, array description [,int key][,resource connection])
- Description: Opens a data queue with optional description.
- Return Values: Resource if OK, false if failed.
- Arguments:
- $name - The queue name
- $description - Data description in format defined by program_prepare. For more, see PHP Toolkit Data Description.
- [$key - key size - for keyed DataQ (can be omitted)]
- [$connection - Connection - result of i5_connect]
-*/
+    
+    /**
+     * resource i5_dtaq_prepare(string name, array description [,int key][,resource connection])
+     * Description: Opens a data queue with optional description.
+     * Return Values: Resource if OK, false if failed.
+     * Arguments:
+     * $name - The queue name
+     * $description - Data description in format defined by program_prepare. For more, see PHP Toolkit Data Description.
+     * [$key - key size - for keyed DataQ (can be omitted)]
+     * [$connection - Connection - result of i5_connect]
+     *
+     * @param $name
+     * @param $description
+     * @param int $keySizeOrConnection
+     * @param ToolkitServiceCw $connection
+     * @return DataDescription
+     */
 function i5_dtaq_prepare($name, $description, $keySizeOrConnection = 0, ToolkitServiceCw $connection = null)
 {
 
@@ -3014,21 +3093,27 @@ function i5_dtaq_prepare($name, $description, $keySizeOrConnection = 0, ToolkitS
     return $descObj;
     
 } //(i5_dtaq_prepare)
-
-/*mixed i5_dtaq_receive(resource queue[, string/int operator, string key][, int timeout])
- Description: Reads data from the data queue.
- Return Values: False if could not read because of error or timeout, the data read from the queue otherwise.
- Arguments:
- queue - resource received from dtaq_open
- operator:
- "EQ"
- "GT"
- "LT"
- "GE"
- "LE"
- key- key value to look for
- timeout - timeout value in seconds
-*/
+    
+    /**
+     * mixed i5_dtaq_receive(resource queue[, string/int operator, string key][, int timeout])
+     * Description: Reads data from the data queue.
+     * Return Values: False if could not read because of error or timeout, the data read from the queue otherwise.
+     * Arguments:
+     * queue - resource received from dtaq_open
+     * operator:
+     * "EQ"
+     * "GT"
+     * "LT"
+     * "GE"
+     * "LE"
+     * key- key value to look for
+     * timeout - timeout value in seconds
+     *
+     * @param $queue
+     * @param string $operatorOrTimeout
+     * @param string $key
+     * @param int $timeout
+     */
 function i5_dtaq_receive($queue, $operatorOrTimeout = '', $key = '', $timeout = 0)
 {
     // if <=2 params are received, the second one is timeout.
@@ -3199,17 +3284,22 @@ function i5_dtaq_receive($queue, $operatorOrTimeout = '', $key = '', $timeout = 
     
         
 } //(i5_dtaq_receive)
-
-/*bool i5_dtaq_send(resource queue, string key, mixed data)
- Description: Puts data to the data queue.
- Return Values: False if could not be written because of error, true otherwise.
- Arguments:
- queue - resource received from dtaq_open
- key - key value to look for
- data - data to put into the queue
-The data should conform to the description format, and can be either in flat array or key->value pair array.
-Yes, "flat array" should work. This is a single-level array description, in which case the data will be just a string value or some scalar value.
-*/
+    
+    /**
+     * bool i5_dtaq_send(resource queue, string key, mixed data)
+     * Description: Puts data to the data queue.
+     * Return Values: False if could not be written because of error, true otherwise.
+     * Arguments:
+     * queue - resource received from dtaq_open
+     * key - key value to look for
+     * data - data to put into the queue
+     * The data should conform to the description format, and can be either in flat array or key->value pair array.
+     * Yes, "flat array" should work. This is a single-level array description, in which case the data will be just a string value or some scalar value.
+     *
+     * @param $queue
+     * @param string $key
+     * @param $data
+     */
 function i5_dtaq_send($queue, $key='', $data)
 {
     if (!$queue) {
@@ -3322,12 +3412,16 @@ function i5_dtaq_send($queue, $key='', $data)
     }
 
 } //(i5_dtaq_send)
-
-/*bool i5_dtaq_close(resource queue)
- Description: Free program resource handle.
- Return Values: Bool success value.
- Arguments: queue - (pass by reference so it can be changed) resource received from dtaq_open
-*/
+    
+    /**
+     * bool i5_dtaq_close(resource queue)
+     * Description: Free program resource handle.
+     * Return Values: Bool success value.
+     * Arguments: queue - (pass by reference so it can be changed) resource received from dtaq_open
+     *
+     * @param $queue
+     * @return bool
+     */
 function i5_dtaq_close(&$queue)
 {
   noError();
@@ -3336,16 +3430,21 @@ function i5_dtaq_close(&$queue)
 } //(i5_dtaq_close)
 
 // user spaces
-
-
-/*resource i5_userspace_prepare(string name, array description [, resource connection]).
- Description: Opens a user space and prepares it to be run.
- Return Values: Resource if open succeeded, false if open failed.
- Arguments:
- name - User space name in library/object format
- description - Data description in format defined by program_prepare. See PHP Toolkit Data Description.
- connection - Result of i5_connect
-*/
+    
+    /**
+     * resource i5_userspace_prepare(string name, array description [, resource connection]).
+     * Description: Opens a user space and prepares it to be run.
+     * Return Values: Resource if open succeeded, false if open failed.
+     * Arguments:
+     * name - User space name in library/object format
+     * description - Data description in format defined by program_prepare. See PHP Toolkit Data Description.
+     * connection - Result of i5_connect
+     *
+     * @param $name
+     * @param $description
+     * @param null $connection
+     * @return bool|DataDescription
+     */
 function i5_userspace_prepare($name, $description, $connection = null)
 {
     // if conn not passed in, get instance of toolkit. If can't be obtained, return false.
@@ -3378,22 +3477,21 @@ function i5_userspace_prepare($name, $description, $connection = null)
     return $descObj;
 
 } //(i5_userspace_prepare)
-
-/*bool i5_userspace_put(resource user space, params)
- Description: Add user space data
- Return Values: Boolean success value.
- Arguments:
- user - space User Space resource opened by i5_userspace_prepare
- params - Input params according to description. If given as flat array, then parameters are assigned in order (not sure about this)
-*/
-/**
- * Write date to a user space based on a prepare done before.
- * @param DataDescription $userspace   Userspace object created in the preparation stage.
- * @param array           $params      Input params with key=>value pairs (possibly nested),
- *                                     keys matching what was specified in prepare stage.
- * @return boolean        True if successful, false if not.
- */
-
+    
+    /**
+     * bool i5_userspace_put(resource user space, params)
+     * Description: Add user space data
+     * Return Values: Boolean success value.
+     * Arguments:
+     * user - space User Space resource opened by i5_userspace_prepare
+     * params - Input params according to description. If given as flat array, then parameters are assigned in order (not sure about this)
+     *
+     * Write date to a user space based on a prepare done before.
+     * @param DataDescription $userspace Userspace object created in the preparation stage.
+     * @param array $params Input params with key=>value pairs (possibly nested),
+     * keys matching what was specified in prepare stage.
+     * @return boolean True if successful, false if not.
+     */
 function i5_userspace_put($userspace, $params)
 {
     
@@ -3469,15 +3567,16 @@ function i5_userspace_put($userspace, $params)
         return true;
     }        
 } //(i5_userspace_put)
-
-/*resource i5_userspace_get(resource user space, array params)
- Description: Retrieve user space data.
- Return Values: Boolean success value.
- Arguments:
- user space - User Space resource opened by i5_userspace_prepare
- params - output params with php variable names.
-POSSIBLY offset, too: Offset from the beginning of the user space, of the data to get. Not documented in Zend documentation.
-*/
+    
+    /**
+     * resource i5_userspace_get(resource user space, array params)
+     * Retrieve user space data.
+     *
+     * @param $userspace User Space resource opened by i5_userspace_prepare
+     * @param $params output params with php variable names.
+     * @param int $offset Offset from the beginning of the user space, of the data to get. Not documented in Zend documentation.
+     * @return bool
+     */
 function i5_userspace_get($userspace, $params, $offset = 1)
 {
     // check parameters
@@ -3569,31 +3668,37 @@ function i5_userspace_get($userspace, $params, $offset = 1)
     } //(if no errors)
     
 } //(i5_userspace_get)
-
-/*bool i5_userspace_create(properties[, resource connection]).
- Description: Creates a new user space object.
- Return Values: Boolean success value
- Arguments:
- properties -
- I5_INITSIZE - The initial size of the user space being created. This value must be from 1 byte to 16, 776, 704 bytes.
- I5_DESCRIPTION - user space description
- I5_INIT_VALUE - The initial value of all bytes in the user space.
- I5_EXTEND_ATTRIBUT - extended attribute. The extended attribute must be a valid *NAME. For example, an object type of *FILE has an extended attribute of PF (physical file), LF (logical file), DSPF (display file), SAVF (save file), and so on.
- I5_AUTHORITY - The authority you give users who do not have specific private or group authority to the user space
- I5_LIBNAME - Library name where the user space is located
- I5_NAME - User space name (10 char max)
- connection - Result of i5_connect
-
-*example:
-$property = array(
-I5_INITSIZE=>10,
-I5_DESCRIPTION=>"Created by PHP",
-I5_INIT_VALUE=>"A",
-I5_EXTEND_ATTRIBUT=>"File",
-I5_AUTHORITY=>"*ALL",
-I5_LIBNAME=>"PHPDEMO",
-I5_NAME=>"USERSPACE"
-);*/    
+    
+    /**
+     * bool i5_userspace_create(properties[, resource connection]).
+     * Description: Creates a new user space object.
+     * Return Values: Boolean success value
+     * Arguments:
+     * properties -
+     * I5_INITSIZE - The initial size of the user space being created. This value must be from 1 byte to 16, 776, 704 bytes.
+     * I5_DESCRIPTION - user space description
+     * I5_INIT_VALUE - The initial value of all bytes in the user space.
+     * I5_EXTEND_ATTRIBUT - extended attribute. The extended attribute must be a valid *NAME. For example, an object type of *FILE has an extended attribute of PF (physical file), LF (logical file), DSPF (display file), SAVF (save file), and so on.
+     * I5_AUTHORITY - The authority you give users who do not have specific private or group authority to the user space
+     * I5_LIBNAME - Library name where the user space is located
+     * I5_NAME - User space name (10 char max)
+     * connection - Result of i5_connect
+     *
+     * example:
+     * $property = array(
+     * I5_INITSIZE=>10,
+     * I5_DESCRIPTION=>"Created by PHP",
+     * I5_INIT_VALUE=>"A",
+     * I5_EXTEND_ATTRIBUT=>"File",
+     * I5_AUTHORITY=>"*ALL",
+     * I5_LIBNAME=>"PHPDEMO",
+     * I5_NAME=>"USERSPACE"
+     * );
+     *
+     * @param array $properties
+     * @param null $connection
+     * @return bool
+     */
 function i5_userspace_create($properties = array(), $connection = null)
 {
     if (!$connection = verifyConnection($connection)) {
@@ -3637,17 +3742,22 @@ function i5_userspace_create($properties = array(), $connection = null)
         return true;
     } //(if !$success))
 } //(i5_userspace_create)
-
-// note: i5_userspace_delete does not exist in old toolkit
-
-// 
+    
+    /**
+     * note: i5_userspace_delete does not exist in old toolkit
+     *
+     * @return bool
+     */
 function i5_open() {
     i5ErrorActivity(TO_BE_IMPLEMENTED, 0, "Record level access has not been implemented.", "Record level access has not been implemented.");
 	return false;
 } //(i5_open())
-
-
-// i5_output() returns variables from i5_program_call, i5_userspace_get, and sometimes i5_command.
+    
+    /**
+     * i5_output() returns variables from i5_program_call, i5_userspace_get, and sometimes i5_command.
+     *
+     * @return bool
+     */
 function i5_output() {
 
 	// get connection
@@ -3659,12 +3769,12 @@ function i5_output() {
 	return $connection->getOutputVarsToExport();
 	
 } //(i5_output())
-
-
-/**
- * Return version number of CW and PHP toolkit front-end.
- */
+    
+    /**
+     * Return version number of CW and PHP toolkit front-end.
+     * 
+     * @return string
+     */
 function i5_version() {
-	return ToolkitService::getFrontEndVersion();
+    return ToolkitService::getFrontEndVersion();
 }
-

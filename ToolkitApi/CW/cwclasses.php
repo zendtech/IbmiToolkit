@@ -18,14 +18,31 @@ class ToolkitServiceCw extends ToolkitService
 {
 
 	static $instance = null;
-
+	
+	/**
+	 * @param $database
+	 * @param string $userOrI5NamingFlag
+	 * @param string $password
+	 * @param string $extensionPrefix
+	 * @param bool $isPersistent
+	 * @throws Exception
+	 */
     public function __construct($database, $userOrI5NamingFlag, $password, $extensionPrefix, $isPersistent = false)
     {
        parent::__construct($database, $userOrI5NamingFlag, $password, $extensionPrefix, $isPersistent);
 
     } //(__construct())
 
-    // need to define this so we get Cw object and not parent object
+	/**
+	 * need to define this so we get Cw object and not parent object
+	 * 
+	 * @param string $databaseNameOrResource
+	 * @param string $userOrI5NamingFlag
+	 * @param string $password
+	 * @param string $extensionPrefix
+	 * @param bool $isPersistent
+	 * @return bool|null
+	 */
     static function getInstance($databaseNameOrResource = '*LOCAL', $userOrI5NamingFlag = '', $password = '', $extensionPrefix = '', $isPersistent = false, $forceNew = false)
 	{
 		
@@ -43,8 +60,8 @@ class ToolkitServiceCw extends ToolkitService
             // instance exists
         	    return self::$instance;
         } else {
-        	    // some problem
-        	    return false;
+        	// some problem
+        	return false;
         } //(if (parent::$instance))
 	} //(getInstance)
 
@@ -71,27 +88,40 @@ class ToolkitServiceCw extends ToolkitService
 		}
 
 	} //(hasInstance())
-
-
+	
+	/**
+	 * @param $num
+	 */
 	public function setPrivateConnNum($num) {
 		$this->_privateConnNum = $num;
 	} //(setPrivateConnNum)
-
+	
+	/**
+	 * @return null
+	 */
 	public function getPrivateConnNum() {
 		return $this->_privateConnNum;
 	} //(setPrivateConnNum)
 
-	// establish whether the connection is new or not. Used by i5_get_property()
+	/**
+	 * establish whether the connection is new or not. Used by i5_get_property()
+	 * 
+	 * @param bool $isNew
+	 */
 	public function setIsNewConn($isNew = true) {
 		$this->_isNewConn = $isNew;
 	} //(setPrivateConnNum)
-
+	
+	/**
+	 * @return bool
+	 */
 	public function isNewConn() {
 		return $this->_isNewConn;
 	} //(setPrivateConnNum)
 
-
-    // when script ends, non-persistent connection should close
+	/**
+	 * when script ends, non-persistent connection should close
+	 */
     public function __destruct()
     {
 	    /* call to disconnect()  function to down connection */
@@ -116,8 +146,6 @@ class ToolkitServiceCw extends ToolkitService
         
 	} //(__destruct)
 
-
-
 	/**
 	 * Get the most recent system error code, if available.
 	 * TODO this may not work because CPFs are done at a class level (data areas etc.)
@@ -132,10 +160,11 @@ class ToolkitServiceCw extends ToolkitService
     /**
      * After calling a program or command, we can export output as variables.
      * This method creates an array that can later be extracted into variables.
-     * param array $outputDesc   Format of output params 'CODE'=>'CODEvar' where the value becomes a PHP var name
-     * param array $outputValues     Optional. Array of output values to export
-     * @return boolean  true on success, false on some error
-     */
+	 * 
+	 * @param array $outputDesc Format of output params 'CODE'=>'CODEvar' where the value becomes a PHP var name
+	 * @param array $outputValues Optional. Array of output values to export
+	 * @return bool true on success, false on some error
+	 */
     public function setOutputVarsToExport(array $outputDesc, array $outputValues) {
 
       // for each piece of output, export it according to var name given in $outputDesc.
@@ -158,14 +187,21 @@ class ToolkitServiceCw extends ToolkitService
 
         return true;
     } //(exportPgmOutputVars)
-
+	
+	/**
+	 * @return array
+	 */
 	public function getOutputVarsToExport() {
 		return $this->_outputVarsToExport;
 	}
 
-
-	// pass in array of job attributes => values to update in the current job.
-	// returns true on success, false on failure (failure probably means lack of authority).
+	/**
+	 * pass in array of job attributes => values to update in the current job.
+	 * returns true on success, false on failure (failure probably means lack of authority).
+	 * 
+	 * @param array $attrs
+	 * @return bool
+	 */
 	public function changeJob(array $attrs)
 	{
 		$cmdString = 'CHGJOB';
@@ -182,13 +218,16 @@ class ToolkitServiceCw extends ToolkitService
 /**
  * Class to handle errors in a manner similar to the old toolkit.
  * Singleton class because we only hold on to the last error (one).
-  *
+ *
  */
 class I5Error
 {
 	static $instance = null;
 	static protected $_i5Error = array();
-
+	
+	/**
+	 * @return null
+	 */
     static function getInstance()
 	{
 		if(self::$instance == NULL){
@@ -199,14 +238,20 @@ class I5Error
         	return self::$instance;
         }
 	} //(getInstance)
-
+	
+	/**
+	 * 
+	 */
 	protected function __construct() {
 		// initialize
 		$this->setI5Error(0, 0, '', '');
 	}
 
-
-	// __toString will make it easy to output an error via echo or print
+	/**
+	 * __toString will make it easy to output an error via echo or print
+	 * 
+	 * @return string
+	 */
     public function __toString()
     {
     	$err = $this->getI5Error();
@@ -312,84 +357,139 @@ class DataDescription
 
 	} //(__construct)
 
-	// keep it for safekeeping
+	/**
+	 * keep it for safekeeping
+	 * 
+	 * @param string $originalObjName
+	 */
 	protected function setOriginalObjName($originalObjName = '') {
 	    $this->_originalObjName = $originalObjName;
 	}
-
+	
+	/**
+	 * @return string
+	 */
 	protected function getOriginalObjName() {
 	    return $this->_originalObjName;
 	}
 
-	// When we discover a "CountRef" reference in an old toolkit data description,
-	// retain the name for later use.
+	/**
+	 * When we discover a "CountRef" reference in an old toolkit data description, 
+	 * retain the name for later use.
+	 * 
+	 * @param $name
+	 */
 	protected function addCountRefName($name) {
 		// add name to our array.
 		$this->_countRefNames[] = $name;
 	} //(addCountRefName)
 
-	// return array of all names of countRef fields that we have found.
+	/**
+	 * return array of all names of countRef fields that we have found.
+	 * 
+	 * @return array
+	 */
 	protected function getCountRefNames() {
 		return $this->_countRefNames;
 	} //(getCountRefNames())
 
-	// returns "old toolkit" data description
+	/**
+	 * returns "old toolkit" data description
+	 * 
+	 * @return array
+	 */
 	public function getOriginalDescription() {
 	    return $this->_description;
 	}
 
-	// resets "old toolkit" data description
-	// Accepts one parm, an array.
+	/**
+	 * resets "old toolkit" data description
+	 * Accepts one parm, an array.
+	 * 
+	 * @param $desc
+	 */
 	public function setOriginalDescription($desc) {
 	    $this->_description = $desc;
 	}
-
-
+	
+	/**
+	 * @param $objInfo
+	 */
 	protected function setObjInfo($objInfo) {
 		$this->_objInfoArray = $objInfo;
 	}
-
-
+	
+	/**
+	 * @return array
+	 */
 	public function getObjInfo() {
 		return $this->_objInfoArray;
 	}
-
+	
+	/**
+	 * @param array $pgmOutput
+	 */
 	protected function setPgmOutput($pgmOutput = array()) {
 		$this->_pgmOutput = $pgmOutput;
 	}
+	
+	/**
+	 * @return array
+	 */
 	public function getPgmOutput() {
 		return $this->_pgmOutput;
 	}
-
+	
+	/**
+	 * @param array $inputValues
+	 */
 	protected function setInputValues($inputValues = array()) {
 
 		$this->_inputValues = $inputValues;
 	}
-
+	
+	/**
+	 * @param bool $isReceiverOnly
+	 */
 	public function setIsReceiverOnly($isReceiverOnly = false) {
         // turn this on when want to use default input variables because we're only RECEIVING data from a program call.
 		$this->_isReceiverOnly = $isReceiverOnly;
 	}
-
+	
+	/**
+	 * @return bool
+	 */
 	public function getIsReceiverOnly() {
 		return $this->_isReceiverOnly;
 	}
-
+	
+	/**
+	 * @param bool $isSingleLevelSimpleValue
+	 */
 	public function setIsSingleLevelSimpleValue($isSingleLevelSimpleValue = false) {
         // turn this on when want to accept a parameter that's a single-level description array with a single value.
 		$this->_isSingleLevelSimpleValue = $isSingleLevelSimpleValue;
 	}
-
+	
+	/**
+	 * @return bool
+	 */
 	public function getIsSingleLevelSimpleValue() {
 		return $this->_isSingleLevelSimpleValue;
 	}
 
-
-	// if null, assume we only want a description, no values.
+	/**
+	 * if null, assume we only want a description, no values.
+	 * 
+	 * @return array
+	 */
 	public function getInputValues() {
 		return $this->_inputValues;
 	}
-
+	
+	/**
+	 * @param null $conn
+	 */
 	protected function setConnection($conn = null) {
 	    $this->_connection = $conn;
 	}
@@ -402,9 +502,6 @@ class DataDescription
 	    return $this->_connection;
 	}
 
-
-
-
 	/**
 	 * Validate that the array is correct with correct data types, etc.
 	 * @return boolean   True if validates successfully, false if any invalid elements.
@@ -415,7 +512,12 @@ class DataDescription
 
 		return true;
 	}
-
+	
+	/**
+	 * @param $path
+	 * @return array
+	 * @throws Exception
+	 */
 	public function splitPcmlProgramPath($path) {
 	// given a program path that MAY be qualified by a library and slash,
     // such as /QSYS.LIB/*LIBL.LIB/MYPGM.PGM
@@ -480,6 +582,7 @@ class DataDescription
 	 * Given an array key name, recursively search the input values array
 	 * and return the value associated with the key name provided.
 	 * @param string $searchKey   key to search for
+	 * @param array $valueArray
 	 * @return string|array|null  value found in input array for array key. null if failed
 	 */
 	protected function findValueInArray($searchKey, $valueArray) {
@@ -531,6 +634,11 @@ countRef (optional) - reference to the repetition count if the field is an array
 return: array of new or, if a problem, false.
 
 */
+	/**
+	 * @param array $oldDataDescription
+	 * @param null $inputValues
+	 * @return bool|DataStructure|ProgramParameter
+	 */
     protected function oldToNewDescriptionItem($oldDataDescription = array(), $inputValues = null) {
 		// pass in old, return new
 
@@ -1060,12 +1168,22 @@ return: array of new or, if a problem, false.
 
 	} //(function callProgram)
 
-	// proxies to full function.
+	/**
+	 * proxies to full function.
+	 * 
+	 * @return mixed
+	 */
 	public function getOutput() {
 		return $this->getConnection()->getOutputVarsToExport();
 	}
 
-	// search through entire input array for the value indicated by name.
+	/**
+	 * search through entire input array for the value indicated by name.
+	 * 
+	 * @param $name
+	 * @param $inputArray
+	 * @return bool
+	 */
 	protected function findInputValueByName( $name, $inputArray ) {
         foreach($inputArray as $key=>$value){
             if($key === $name) { // use === because plain == allowed numeric indexes to be equal to names
@@ -1091,10 +1209,13 @@ return: array of new or, if a problem, false.
  */
 class DataDescriptionPcml extends DataDescription
 {
+	
 	/**
 	 * Constructor takes a PCML string and converts to an array-based old toolkit data description string.
-	 * @param string    $pcml              The string of PCML
-	 * @param ServiceToolkit $connection   connection object for toolkit
+	 *
+	 * @param string $pcml The string of PCML
+	 * @param ServiceToolkit|ToolkitService $connection connection object for toolkit
+	 * @throws Exception
 	 */
 	public function __construct($pcml, ToolkitService $connection)
 	{
@@ -1213,7 +1334,13 @@ class DataDescriptionPcml extends DataDescription
     // maintain an array of pcml structures
     protected $_pcmlStructs = array();
 
-	// given a single ->data or ->struct element, return an array containing its contents as old toolkit-style data description.
+	/**
+	 * given a single ->data or ->struct element, return an array containing its 
+	 * contents as old toolkit-style data description.
+	 * 
+	 * @param SimpleXmlElement $dataElement
+	 * @return array
+	 */
 	public function singlePcmlToArray(SimpleXmlElement $dataElement)
 	{
 
@@ -1382,8 +1509,14 @@ class DataDescriptionPcml extends DataDescription
 		return $element;
 
 	} //(singlePcmlToArray)
-
-	// given an XML object containing a PCML program definition, return an old toolkit style of data description array.
+	
+	/**
+	 * given an XML object containing a PCML program definition, return an old toolkit 
+	 * style of data description array.
+	 * 
+	 * @param SimpleXMLElement $xmlObj
+	 * @return array
+	 */
 	public function pcmlToArray(SimpleXMLElement $xmlObj) {
 
 		$dataDescription = array();

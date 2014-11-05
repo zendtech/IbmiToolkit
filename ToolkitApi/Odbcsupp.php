@@ -1,10 +1,20 @@
-<?php 
+<?php
+/**
+ * Class odbcsupp
+ *
+ * @package ToolkitApi
+ */
 class odbcsupp {
 
 private $last_errorcode = ''; // SQL State
 private $last_errormsg = ''; // SQL Code with message
 	
-// 'persistent' is one option
+	/**
+	 *
+	 * @todo should perhaps handle this method differently if $options are not passed
+	 *
+	 * @return bool|resource
+	 */
 public function connect($database, $user, $password, $options = null){
 	
 	$connectFunc = 'odbc_connect'; // default
@@ -27,26 +37,41 @@ public function connect($database, $user, $password, $options = null){
   }  //(if is resource)
   
 } //(function connect)
-
+	
+	/**
+	 * @param $conn
+	 */
 public function disconnect( $conn ){
 
 	if(is_resource($conn))
 		odbc_close($conn);
 
 }
-
-
+	
+	/**
+	 * @return string
+	 */
 public function getErrorCode(){
 
 	return $this->last_errorcode;
 }
-
-// added
+	
+	/**
+	 * @return string
+	 */
 public function getErrorMsg(){
 
 	return $this->last_errormsg;
 }
-
+	
+	/**
+	 * set error code and message based on last odbc connection/prepare/execute error.
+	 *
+	 * @todo: consider using GET DIAGNOSTICS for even more message text:
+	 * http://publib.boulder.ibm.com/infocenter/iseries/v5r4/index.jsp?topic=%2Frzala%2Frzalafinder.htm
+	 *
+	 * @param null $conn
+	 */
 protected function setError($conn = null) {
 	// set error code and message based on last odbc connection/prepare/execute error.
 
@@ -64,18 +89,30 @@ protected function setError($conn = null) {
 	} //(if ($stmt))
 
 } //(setStmtError($stmt = null))
-
+	
+	/**
+	 * @param $errorCode
+	 */
 protected function setErrorCode($errorCode) {
 	$this->last_errorcode = $errorCode;
 }
-
-
+	
+	/**
+	 * @param $errorMsg
+	 */
 protected function setErrorMsg($errorMsg) {
 	$this->last_errormsg = $errorMsg;
 }
-
-
-/* this function used for special stored procedure call only  */
+	
+	
+	/**
+	 * this function used for special stored procedure call only
+	 *
+	 * @param $conn
+	 * @param $stmt
+	 * @param $bindArray
+	 * @return string
+	 */
 public function execXMLStoredProcedure( $conn, $stmt, $bindArray )										
 {
 
@@ -128,8 +165,12 @@ public function execXMLStoredProcedure( $conn, $stmt, $bindArray )
 	}//!$disconnect
 	return $outputXML;
 }
-
-
+	
+	/**
+	 * @param $conn
+	 * @param $stmt
+	 * @return array
+	 */
 public function executeQuery($conn,  $stmt ){
 
   	 $crsr = odbc_exec($conn, $stmt);	  
