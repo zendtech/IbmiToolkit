@@ -778,8 +778,9 @@ class DataDescription
                 // Look up its value (could be another data structure or a single value)
                 // in the input array, based on data structure name.
                 $dsData = $this->findValueInArray($dsName, $inputValues);
-
-                if (!$dsData) {
+                // Compare with null since this is what findValueInArray returns on error
+                // this will prevent things such as empty arrays from causing errors
+                if ($dsData === null) {
                     // ds has no description to match value!
                     i5ErrorActivity(I5_ERR_PARAMNOTFOUND, I5_CAT_PHP, "Requested parameter '$dsName' does not exist in the input data", "Requested parameter $dsName does not exist in the input data");
                     return false;
