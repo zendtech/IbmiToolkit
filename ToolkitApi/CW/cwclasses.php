@@ -585,7 +585,7 @@ class DataDescription
      * and return the value associated with the key name provided.
      * 
      * @param string $searchKey   key to search for
-     * @return string|array|null  value found in input array for array key. null if failed
+     * @return string|array|false  value found in input array for array key. false if failed
      */
     protected function findValueInArray($searchKey, $valueArray)
     {
@@ -594,7 +594,7 @@ class DataDescription
         // ensure that array is not empty
         if (!count($valueArray)) {
              i5ErrorActivity(I5_ERR_PHP_TYPEPARAM, I5_CAT_PHP, "Array of input values must not be empty", "Array of input values must not be empty");
-             return null;
+             return false;
         }
 
         foreach ($valueArray as $key=>$value) {
@@ -608,7 +608,7 @@ class DataDescription
 
         // if failed, return null
         // $connection->logThis("findValueInArray: searchKey: $searchKey. no value found");
-        return null;
+        return false;
     }
     
     /**
@@ -778,8 +778,9 @@ class DataDescription
                 // Look up its value (could be another data structure or a single value)
                 // in the input array, based on data structure name.
                 $dsData = $this->findValueInArray($dsName, $inputValues);
-
-                if (!$dsData) {
+                // Compare with false since this is what findValueInArray returns on error
+                // this will prevent things such as empty arrays from causing errors
+                if ($dsData === false) {
                     // ds has no description to match value!
                     i5ErrorActivity(I5_ERR_PARAMNOTFOUND, I5_CAT_PHP, "Requested parameter '$dsName' does not exist in the input data", "Requested parameter $dsName does not exist in the input data");
                     return false;

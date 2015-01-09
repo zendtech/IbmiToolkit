@@ -2266,9 +2266,11 @@ function i5_spool_list($description = array(), $connection = null)
         
         // if outq is not *ALL, it should have a library name
         if (($outq != '*ALL') && empty($outqLibName)) {
+        	// Try *LIBL
+        	$outqLibName = '*LIBL';
             // if no libname, result set will be empty, so might as well alert the user.
-            i5ErrorActivity(I5_ERR_PHP_ELEMENT_MISSING, I5_CAT_PHP, 'Missing outq library', 'You specified an outq but did not qualify it with a library name.');
-            return false;
+            //i5ErrorActivity(I5_ERR_PHP_ELEMENT_MISSING, I5_CAT_PHP, 'Missing outq library', 'You specified an outq but did not qualify it with a library name.');
+           // return false;
         }
     }
     
@@ -2755,7 +2757,8 @@ function listRead(&$list)
         // we simply have no more records to receive.
         $errorCode = $connection->getErrorCode();
         if ($errorCode == '' || $errorCode == 'GUI0006' || $errorCode == 'GUI0001') {
-            i5ErrorActivity(I5_ERR_BEOF, I5_CAT_PHP, 'No more entries.', 'No more entries.');
+        	// EOF is not an error, just clogs the log, completely normal, happens to everyone...
+            //i5ErrorActivity(I5_ERR_BEOF, I5_CAT_PHP, 'No more entries.', 'No more entries.');        	
         } else {
             // a real error.
              i5CpfError($errorCode, $connection->getErrorMsg());
