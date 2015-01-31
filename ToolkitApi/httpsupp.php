@@ -38,6 +38,9 @@ class httpsupp
     protected $_user;
     protected $_pw;
     protected $_debug;
+    //ssl variables
+    protected $_sslcafile;
+    protected $_servername;
     
     /**
      * @param string $ipc route to XMLSERVICE job (/tmp/xmlibmdb2)
@@ -45,11 +48,13 @@ class httpsupp
      * @param string $url URL to xmlcgi.pgm (example: http://ibmi/cgi-bin/xmlcgi.pgm )
      * @param string $debug *in|*out|*all (*in - dump XML input (call)) (*out - dump XML output (return)) (*all - dump XML input/output)
      */
-    public function __construct($ipc='/tmp/xmldb2', $ctl='*sbmjob', $url='http://example.com/cgi-bin/xmlcgi.pgm', $debug='*none')
+    public function __construct($ipc='/tmp/xmldb2', $ctl='*sbmjob', $url='http://example.com/cgi-bin/xmlcgi.pgm', $debug='*none', $sslcafile=null, $servername=null )
     {
         $this->setIpc($ipc);
         $this->setCtl($ctl);
         $this->setUrl($url);
+        $this->setSSLCAFile($sslcafile);
+        $this->setServerName($servername);
         $this->_debug = $debug;
     }
 
@@ -74,13 +79,31 @@ class httpsupp
                 )
         );
         
-        $opts = array('http' =>
-                array(
-                        'method'  => 'POST',
-                        'header'  => 'Content-type: application/x-www-form-urlencoded',
-                        'content' => $postdata
-                )
+        $opts = array(
+            'http' =>
+            array(
+                'method'  => 'POST',
+                'header'  => 'Content-type: application/x-www-form-urlencoded\r\n'.
+                             'Content-Length: ' . strlen($postdata) . '\r\n',
+                'content' => $postdata
+            )
         );
+        
+        if (substr($this->getUrl(), 0, 8) == "https://")
+        {
+            
+            //If this the URL is HTTPS, then Add SSL to options to support a 
+            //secure connection.
+            //Explanation of Options: http://phpsecurity.readthedocs.org/en/latest/Transport-Layer-Security-%28HTTPS-SSL-and-TLS%29.html
+            $opts['ssl'] =   array(
+                'verify_peer'   => true, //Require verification of SSL certificate used.
+                'cafile'        => $this->getSSLCAFile(),  //__DIR__ . '/cacert.pem'  //Location of Certificate Authority file on local filesystem which should be used with the verify_peer context option to authenticate the identity of the remote peer. PEM or CRT file. You can use this file: http://curl.haxx.se/ca/cacert.pem 
+                'verify_depth'  => 5, // Abort if the certificate chain is too deep.
+                'CN_match'      => $this->getServerName(), //EX: secure.example.com
+                'disable_compression' => true,
+                'SNI_enabled'         => true,
+                'ciphers'             => 'ALL!EXPORT!EXPORT40!EXPORT56!aNULL!LOW!RC4');
+        }
     
         $context  = stream_context_create($opts);
         // execute (call IBM i)
@@ -182,6 +205,42 @@ class httpsupp
     public function getUrl()
     {
         return $this->_url;
+    }
+    /**
+     * @param string $sslcafile\
+     */
+    public function setSSLCAFile($sslcafile = null)
+    {
+        if(substr($this->getUrl(), 0, 8) == "https://" && $sslcafile==null)
+        {
+            throw new Exception('No SSL CA File specified.  Must pass in CA File to constructor to use https url');
+        }
+        $this->_sslcafile = $sslcafile;
+    }
+
+    /**
+     * @return null
+     */
+    public function getSSLCAFile()
+    {
+        return $this->_sslcafile;
+    }
+    
+    /**
+     * @param string $servername\
+     */
+    public function setServerName($servername = null)
+    {
+        if($servername==null)
+        {
+            $servername=$_SERVER['SERVER_NAME'];
+        }
+        $this->_servername = $servername;
+    }
+
+    public function getServerName()
+    {
+        return $this->_servername;
     }
     
     /**
