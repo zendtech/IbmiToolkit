@@ -231,7 +231,7 @@ class httpsupp
      */
     public function setServerName($servername = null)
     {
-        if($servername==null)
+        if($servername==null && isset($_SERVER['SERVER_NAME']))
         {
             $servername=$_SERVER['SERVER_NAME'];
         }
