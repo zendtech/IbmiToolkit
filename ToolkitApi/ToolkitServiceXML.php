@@ -34,7 +34,7 @@ class XMLWrapper
      * @param string $options
      * @param ToolkitService $ToolkitSrvObj
      */
-    public function __construct($options ='', ToolkitService $ToolkitSrvObj = null)
+    public function __construct($options ='', $ToolkitSrvObj = null)
     {
         if (is_string($options)) {
             // $options is a string so it must be encoding (assumption for backwards compatibility)
