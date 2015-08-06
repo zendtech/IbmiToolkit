@@ -40,5 +40,7 @@ spl_autoload_register(function($class){
     if (is_readable($file)) {
         require_once $file;
         return;
+    } else {
+        throw new Exception("File Not Found");
     }
 });
