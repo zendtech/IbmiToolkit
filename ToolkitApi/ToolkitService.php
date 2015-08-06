@@ -27,16 +27,6 @@ class ToolkitService
         return new ToolkitApi\Toolkit($databaseNameOrResource, $userOrI5NamingFlag, $password, $transportType, $isPersistent);
     }
 
-    /**
-     * Destruct
-     */
-    public function __destruct()
-    {
-        // if no transport then remove toolkit instance as well.
-        if(!isset($this->conn) || $this->conn == null) {
-            self::$instance = NULL;
-        }
-    }
 }
 
 /**

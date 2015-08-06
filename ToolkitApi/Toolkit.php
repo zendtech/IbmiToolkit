@@ -103,8 +103,6 @@ class Toolkit
                                  "10M"  => 10000000,
                                  "15M"  => 15000000);
 
-    static protected $instance = NULL;
-
     protected $serviceParams;
     protected $optionalParamNames;
     protected $execStartTime;
