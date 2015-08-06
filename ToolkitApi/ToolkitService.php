@@ -1,6 +1,4 @@
 <?php
-namespace ToolkitApi;
-
 include_once 'ToolkitServiceSet.php';
 include_once 'autoload.php';
 
