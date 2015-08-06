@@ -1,36 +1,15 @@
 <?php
+namespace ToolkitApi;
 include_once 'ToolkitServiceSet.php';
-include_once 'autoload.php';
-
-use ToolkitApi\XMLWrapper;
-use ToolkitApi\ProgramParameter;
-use ToolkitApi\httpsupp;
-use ToolkitApi\db2supp;
-use ToolkitApi\odbcsupp;
-
-use ToolkitApi\CharParam; // part of ToolkitServiceParameter.php
-use ToolkitApi\Int32Param; // part of ToolkitServiceParameter.php
-use ToolkitApi\SizeParam; // part of ToolkitServiceParameter.php
-use ToolkitApi\SizePackParam; // part of ToolkitServiceParameter.php
-use ToolkitApi\Int64Param; // part of ToolkitServiceParameter.php
-use ToolkitApi\UInt32Param; // part of ToolkitServiceParameter.php
-use ToolkitApi\UInt64Param; // part of ToolkitServiceParameter.php
-use ToolkitApi\FloatParam; // part of ToolkitServiceParameter.php
-use ToolkitApi\RealParam; // part of ToolkitServiceParameter.php
-use ToolkitApi\PackedDecParam; // part of ToolkitServiceParameter.php
-use ToolkitApi\ZonedParam; // part of ToolkitServiceParameter.php
-use ToolkitApi\HoleParam; // part of ToolkitServiceParameter.php
-use ToolkitApi\BinParam; // part of ToolkitServiceParameter.php
-use ToolkitApi\DataStructure; // part of ToolkitServiceParameter.php
 
 define('CONFIG_FILE', 'toolkit.ini');
 
 /**
- * Class ToolkitService
+ * Class Toolkit
  *
  * @package ToolkitApi
  */
-class ToolkitService
+class Toolkit
 {
     const VERSION =  "1.6.1"; // version number for front-end PHP toolkit
 
@@ -130,63 +109,6 @@ class ToolkitService
     protected $optionalParamNames;
     protected $execStartTime;
 
-    /**
-     * need to define this so we get Cw object and not parent object
-     *
-     * @param string $databaseNameOrResource
-     * @param string $userOrI5NamingFlag
-     * @param string $password
-     * @param string $transportType
-     * @param bool $isPersistent
-     * @return bool|null
-     */
-    static function getInstance($databaseNameOrResource = '*LOCAL', $userOrI5NamingFlag = '', $password = '', $transportType = '', $isPersistent = false)
-    {
-        // if instance hasn't been created yet, create one
-        if (self::$instance == NULL) {
-            $toolkitService = __CLASS__;
-            self::$instance = new $toolkitService($databaseNameOrResource, $userOrI5NamingFlag, $password, $transportType, $isPersistent);
-        }
-
-        if (self::$instance) {
-            // we have an instance
-            return self::$instance;
-        } else {
-            // some problem
-            // only if CW setError(I5_ERR_NOTCONNECTED, I5_CAT_PHP, 'Cannot get a connection', 'Cannot get a connection');
-            return false;
-        }
-    }
-
-    /**
-     * Destruct
-     */
-    public function __destruct()
-    {
-        // if no transport then remove toolkit instance as well.
-        if(!isset($this->conn) || $this->conn == null) {
-            self::$instance = NULL;
-        }
-    }
-
-    /**
-     * Return true if an instance of this object has already been created.
-     * Return false if no instance has been instantiated.
-     *
-     * Useful when users need to know if a "toolkit connection" has already been made.
-     * Usage:
-     * $isConnected = ToolkitService::hasInstance();
-     *
-     * @return boolean
-     */
-    static function hasInstance()
-    {
-        if (isset(self::$instance) && is_object(self::$instance)) {
-            return true;
-        } else {
-            return false;
-        }
-    }
 
     /**
      * Return true if we are in debug mode
@@ -212,7 +134,7 @@ class ToolkitService
      * @param bool $isPersistent
      * @throws \Exception
      */
-    protected function __construct($databaseNameOrResource, $userOrI5NamingFlag = '0', $password = '', $transportType = '', $isPersistent = false)
+    public function __construct($databaseNameOrResource, $userOrI5NamingFlag = '0', $password = '', $transportType = '', $isPersistent = false)
     {
         $this->execStartTime = '';
 
