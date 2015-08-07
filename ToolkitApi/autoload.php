@@ -4,6 +4,7 @@ spl_autoload_register(function($class){
 
     // Define classmap
     $classmap = array(
+        'ToolkitApi\Toolkit'            => __DIR__ . DIRECTORY_SEPARATOR . 'Toolkit.php',
         'ToolkitApi\db2supp'            => __DIR__ . DIRECTORY_SEPARATOR . 'Db2supp.php',
         'ToolkitApi\httpsupp'           => __DIR__ . DIRECTORY_SEPARATOR . 'httpsupp.php',
         'ToolkitApi\DateTimeApi'        => __DIR__ . DIRECTORY_SEPARATOR . 'iToolkitService.php',
