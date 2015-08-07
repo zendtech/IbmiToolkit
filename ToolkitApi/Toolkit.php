@@ -170,7 +170,7 @@ class Toolkit
             $this->_i5NamingFlag = $userOrI5NamingFlag;
             $schemaSep = ($this->_i5NamingFlag) ? '/' : '.';
             $this->setOptions(array('schemaSep' => $schemaSep));
-
+            $this->chooseTransport('ibm_db2');
             if ($this->isDebug()) {
                 $this->debugLog("Re-using existing db connection with schema separator: $schemaSep");
             }
@@ -331,19 +331,15 @@ class Toolkit
      * Choose data transport type: ibm_db2, odbc, http
      *
      * @param string $transportName 'ibm_db2' or 'odbc' or 'http'
-     * @param string $database
-     * @param string $user
-     * @param string $password
-     * @param null $options
      * @throws \Exception
      */
-    protected function chooseTransport($transportName = '', $database = '', $user = '', $password = '', $options = null)
+    protected function chooseTransport($transportName = '')
     {
         if ($transportName == 'http') {
             $transport = new httpsupp();
             $this->setTransport($transport);
         } else {
-            $this->setDb($transportName, $database, $user, $password, $options);
+            $this->setDb($transportName);
         }
     }
 
@@ -351,13 +347,9 @@ class Toolkit
      * transport type is same as db extension name when a db transport is used.
      *
      * @param string $transportType
-     * @param $database
-     * @param $user
-     * @param $password
-     * @param null $options
      * @throws \Exception
      */
-    protected function setDb($transportType = '', $database, $user, $password, $options = null)
+    protected function setDb($transportType = '')
     {
         $transportType = trim($transportType);
 
@@ -372,13 +364,13 @@ class Toolkit
 
         if ($extensionName === 'ibm_db2') {
                 $this->setOptions(array('plugPrefix' => 'iPLUG'));
-                $this->db = new db2supp($database, $user, $password, $options);
+                $this->db = new db2supp();
 
                 $this->setDb2(); // not used in toolkit anymore but keep for backwards compat.
         } elseif ($extensionName === 'odbc') {
                 //for odbc will be different default stored procedure call
                 $this->setOptions(array('plugPrefix' => 'iPLUGR')); // "R" = "result set" which is how ODBC driver returns param results
-                $this->db = new odbcsupp($database, $user, $password, $options);
+                $this->db = new odbcsupp();
         }
 
         // transport, too, to be generic
@@ -2369,7 +2361,7 @@ class Toolkit
  */
 function getConfigValue($heading, $key, $default = null)
 {
-    return ToolkitService::getConfigValue($heading, $key, $default);
+    return Toolkit::getConfigValue($heading, $key, $default);
 }
 
 /**

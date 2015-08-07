@@ -10,38 +10,24 @@ class odbcsupp
 {
     private $last_errorcode;
     private $last_errormsg;
-    private $database;
-    private $user;
-    private $password;
-    private $options;
-
-    /**
-     * @param $database
-     * @param $user
-     * @param $password
-     * @param null $options
-     */
-    public function __construct($database, $user, $password, $options = null)
-    {
-        $this->database = $database;
-        $this->user = $user;
-        $this->password = $password;
-        $this->options = $options;
-    }
 
     /**
      * 
      * @todo should perhaps handle this method differently if $options are not passed
      *
+     * @param $database
+     * @param $user
+     * @param $password
+     * @param null $options
      * @return bool|resource
      */
-    public function connect()
+    public function connect($database, $user, $password, $options = null)
     {
-        if ($this->options) {
-            if ((isset($this->options['persistent'])) && $this->options['persistent']) {
-                $conn = odbc_pconnect($this->database, $this->user, $this->password);
+        if ($options) {
+            if ((isset($options['persistent'])) && $options['persistent']) {
+                $conn = odbc_pconnect($database, $user, $password);
             } else {
-                $conn = odbc_connect($this->database, $this->user, $this->password);
+                $conn = odbc_connect($database, $user, $password);
             }
 
             if (is_resource($conn)) {
