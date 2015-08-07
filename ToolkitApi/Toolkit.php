@@ -642,7 +642,8 @@ class Toolkit
         // send XML to XMLSERVICE
         $outputXml = $this->sendXml($inputXml, $disconnect);
 
-        if (!$outputXml) {
+        if ($outputXml != '') {
+
             $outputParamArray = $this->XMLWrapper->getParamsFromXml($outputXml);
 
             // didn't get expected return, search logs to find out why
@@ -822,6 +823,14 @@ class Toolkit
             $sql =  "call {$toolkitLib}{$schemaSep}{$plug}(?,?,?)";
         }
 
+        $bindArray = array(
+            'internalKey' => $internalKey,
+            'controlKey' => $controlKeyString,
+            'inputXml' => $inputXml,
+            'outputXml' => '',
+            'disconnect' => $disconnect
+        );
+
         // if debug mode, log control key, stored procedure statement, and input XML.
         if ($this->isDebug()) {
             $this->debugLog("\nExec start: " . date("Y-m-d H:i:s") . "\nVersion of toolkit front end: " . self::getFrontEndVersion() ."\nIPC: '" . $this->getInternalKey() . "'. Control key: $controlKeyString\nStmt: $sql with transport: $transportType\nInput XML: $inputXml\n");
@@ -829,7 +838,8 @@ class Toolkit
         }
 
         // can return false if prepare or exec failed.
-        if (!$this->db->execXMLStoredProcedure($this->conn, $sql)) {
+        $outputXml = $this->db->execXMLStoredProcedure($this->conn, $sql, $bindArray);
+        if (!$outputXml) {
             // if false returned, was a database error (stored proc prepare or execute error)
             // @todo add ODBC SQL State codes
 
@@ -852,13 +862,7 @@ class Toolkit
             } //(debug)
         }
 
-        return array(
-            "internalKey"=> $internalKey,
-            "controlKey" => $controlKeyString,
-            "inputXml" => $inputXml,
-            "outputXml"=> '',
-            "disconnect"=>$disconnect
-        );
+        return $outputXml;
     }
 
     protected function getErrorReason($plugSize)

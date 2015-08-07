@@ -136,39 +136,47 @@ class db2supp
      * @param $sql
      * @return bool
      */
-    public function execXMLStoredProcedure($conn, $sql)
+    public function execXMLStoredProcedure($conn, $sql, $bindArray)
     {
+
+        $internalKey = $bindArray['internalKey'];
+        $controlKey = $bindArray['controlKey'];
+        $inputXml = $bindArray['inputXml'];
+        $outputXml = $bindArray['outputXml'];
+
         // @todo see why error doesn't properly bubble up to top level.
         $crsr = @db2_prepare($conn, $sql);
-        
         if (!$crsr) {
             $this->setStmtError();
             return false;
         }
-    
+
         // stored procedure takes four parameters. Each 'name' will be bound to a real PHP variable
         $params = array(
-                       array('position' => 1, 'name' => "internalKey", 'inout' => DB2_PARAM_IN),
-                       array('position' => 2, 'name' => "controlKey",  'inout' => DB2_PARAM_IN),
-                       array('position' => 3, 'name' => "inputXml",    'inout' => DB2_PARAM_IN),
-                       array('position' => 4, 'name' => "outputXml",   'inout' => DB2_PARAM_OUT),
-                       );
+            array('position' => 1, 'name' => "internalKey", 'inout' => DB2_PARAM_IN),
+            array('position' => 2, 'name' => "controlKey",  'inout' => DB2_PARAM_IN),
+            array('position' => 3, 'name' => "inputXml",    'inout' => DB2_PARAM_IN),
+            array('position' => 4, 'name' => "outputXml",   'inout' => DB2_PARAM_OUT),
+        );
         
         // bind the four parameters
         foreach ($params as $param) {
-            if (!db2_bind_param($crsr, $param['position'], $param['name'], $param['inout'])) {
+            $ret = db2_bind_param ($crsr, $param['position'], $param['name'], $param['inout']);
+            if (!$ret) {
                 // unable to bind a param. Set error and exit
                 $this->setStmtError($crsr);
                 return false;
             }
         }
-    
-        if (!@db2_execute($crsr)) {
+
+        $ret = @db2_execute($crsr);
+        if (!$ret) {
+            // execution of XMLSERVICE stored procedure failed.
             $this->setStmtError($crsr);
             return false;
         }
-        
-        return true;
+
+        return $outputXml;
     }
 
     /**
