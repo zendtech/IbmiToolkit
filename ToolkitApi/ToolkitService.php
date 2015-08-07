@@ -2,8 +2,6 @@
 include_once 'ToolkitServiceSet.php';
 include_once 'autoload.php';
 
-define('CONFIG_FILE', 'toolkit.ini');
-
 /**
  * Class ToolkitService
  *
