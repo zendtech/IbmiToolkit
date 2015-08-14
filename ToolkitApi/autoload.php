@@ -37,11 +37,16 @@ spl_autoload_register(function($class){
         'ToolkitApi\XMLWrapper'         => __DIR__ . DIRECTORY_SEPARATOR . 'ToolkitServiceXML.php',
     );
 
-    $file = $classmap[$class];
-    if (is_readable($file)) {
-        require_once $file;
-        return;
-    } else {
-        throw new Exception("File Not Found");
+    if (!in_array($class,$classmap))
+    {
+        throw new Exception("Class $class isn't defined in classmap");
     }
+
+    $file = $classmap[$class];
+    if (!is_readable($file)) {
+        throw new Exception("File $file Not Found");
+    }
+
+    require_once $file;
+    return;
 });
