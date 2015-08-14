@@ -177,9 +177,9 @@ class Toolkit
         } elseif ($transportType == 'http') {
             $databaseName = $databaseNameOrResource;
             $user = $userOrI5NamingFlag;
-            $this->chooseTransport($transportType, $databaseName, $user);
+            $this->chooseTransport('http');
             $transport = $this->getTransport();
-            $conn = $transport->connect();
+            $conn = $transport->connect($databaseName, $user, $password, array('persistent'=>$this->getIsPersistent()));
         } else {
             $databaseName = $databaseNameOrResource;
             $user = $userOrI5NamingFlag;
@@ -190,9 +190,9 @@ class Toolkit
             }
 
             $this->setIsPersistent($isPersistent);
-            $this->chooseTransport($transportType, $databaseName, $user, $password, array('persistent'=>$this->getIsPersistent()));
+            $this->chooseTransport($transportType);
             $transport = $this->getTransport();
-            $conn = $transport->connect();
+            $conn = $transport->connect($databaseName, $user, $password, array('persistent'=>$this->getIsPersistent()));
 
             if ($this->isDebug()) {
                 $durationCreate = sprintf('%f', microtime(true) - $this->execStartTime);
