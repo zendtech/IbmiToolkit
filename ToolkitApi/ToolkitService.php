@@ -1,7 +1,7 @@
 <?php
-include_once 'ToolkitServiceSet.php';
 include_once 'autoload.php';
 
+use ToolkitApi\Toolkit;
 /**
  * Class ToolkitService
  *
@@ -22,7 +22,7 @@ class ToolkitService
      */
     static function getInstance($databaseNameOrResource = '*LOCAL', $userOrI5NamingFlag = '', $password = '', $transportType = '', $isPersistent = false)
     {
-        return new ToolkitApi\Toolkit($databaseNameOrResource, $userOrI5NamingFlag, $password, $transportType, $isPersistent);
+        return new Toolkit($databaseNameOrResource, $userOrI5NamingFlag, $password, $transportType, $isPersistent);
     }
 
 }
@@ -39,7 +39,7 @@ class ToolkitService
  */
 function getConfigValue($heading, $key, $default = null)
 {
-    return ToolkitService::getConfigValue($heading, $key, $default);
+    return Toolkit::getConfigValue($heading, $key, $default);
 }
 
 /**
