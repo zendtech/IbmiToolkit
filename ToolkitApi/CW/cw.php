@@ -1,6 +1,6 @@
 <?php
 use ToolkitApi\CW\ToolkitServiceCw;
-use ToolkitApi\ToolkitService;
+use ToolkitApi\Toolkit;
 use ToolkitApi\CW\DataDescription;
 use ToolkitApi\CW\DataDescriptionPcml;
 use ToolkitApi\CW\I5Error;
@@ -3400,15 +3400,15 @@ function i5_userspace_put($userspace, $params)
     $sendStructure = $newInputParams[0];
 
     $toolkitParams = array();
-    $toolkitParams[] =  ToolkitService::AddParameterChar ('in', 20,"User space name and lib",'usfullname', $usObj->getUSFullName() );    
-    $toolkitParams[] =  ToolkitService::AddParameterInt32('in', "Starting position",'pos_from', 1);
-    $toolkitParams[] =  ToolkitService::AddParameterSize("Length of data",'dataLen', $labelForSizeOfInputData);
+    $toolkitParams[] =  Toolkit::AddParameterChar ('in', 20,"User space name and lib",'usfullname', $usObj->getUSFullName() );
+    $toolkitParams[] =  Toolkit::AddParameterInt32('in', "Starting position",'pos_from', 1);
+    $toolkitParams[] =  Toolkit::AddParameterSize("Length of data",'dataLen', $labelForSizeOfInputData);
     // update "label for size of structure" in structure, so XMLSERVICE can get its size
     $sendStructure->setParamLabelLen($labelForSizeOfInputData);
     $toolkitParams[] = $sendStructure;
     
-    $toolkitParams[] =  ToolkitService::AddParameterChar('in', 1, "Force changes to auxiliary storage",'aux_storage' ,'0');
-    $toolkitParams[] =  ToolkitService::AddErrorDataStructZeroBytes();
+    $toolkitParams[] =  Toolkit::AddParameterChar('in', 1, "Force changes to auxiliary storage",'aux_storage' ,'0');
+    $toolkitParams[] =  Toolkit::AddErrorDataStructZeroBytes();
     
     // write to the user space
     $conn->PgmCall('QUSCHGUS', 'QSYS', $toolkitParams);
@@ -3493,13 +3493,13 @@ function i5_userspace_get($userspace, $params, $offset = 1)
     $receiveStructure = $newInputParams[0];
         
     $toolkitParams = array();
-    $toolkitParams[] = ToolkitService::AddParameterChar('in', 20,  "User space name and library", 'userspacename', $usObj->getUSFullName());    
-    $toolkitParams[] = ToolkitService::AddParameterInt32('in',  "From position", 'position_from', $offset);
-    $toolkitParams[] = ToolkitService::AddParameterSize("Length of data",'dataLen', $labelForSizeOfInputData);
+    $toolkitParams[] = Toolkit::AddParameterChar('in', 20,  "User space name and library", 'userspacename', $usObj->getUSFullName());
+    $toolkitParams[] = Toolkit::AddParameterInt32('in',  "From position", 'position_from', $offset);
+    $toolkitParams[] = Toolkit::AddParameterSize("Length of data",'dataLen', $labelForSizeOfInputData);
     // update "label for size of structure" in structure, so XMLSERVICE can get its size
     $receiveStructure->setParamLabelLen($labelForSizeOfInputData);
     $toolkitParams[] = $receiveStructure;//$receiveDs[] =
-    $toolkitParams[] = ToolkitService::AddErrorDataStructZeroBytes();
+    $toolkitParams[] = Toolkit::AddErrorDataStructZeroBytes();
     // read from the user space
     $retPgmArr = $conn->PgmCall('QUSRTVUS', 'QSYS', $toolkitParams);    
 
@@ -3632,5 +3632,5 @@ function i5_output()
  */
 function i5_version()
 {
-    return ToolkitService::getFrontEndVersion();
+    return Toolkit::getFrontEndVersion();
 }

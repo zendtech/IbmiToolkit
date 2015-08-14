@@ -5,9 +5,9 @@ namespace ToolkitApi\CW;
 
 // toolkit path should be defined in PHP.INI. Default: /usr/local/zendsvr/share/ToolkitApi
 
-require_once 'CW/cwconstants.php';
+require_once __DIR__.'/cwconstants.php';
 
-use ToolkitApi\ToolkitService;
+use ToolkitApi\Toolkit;
 use ToolkitApi\DataStructure;
 use ToolkitApi\ProgramParameter;
 
@@ -16,7 +16,7 @@ use ToolkitApi\ProgramParameter;
  *                  with specific Compatibility Wrapper (CW) features.
  * @author aseiden
  */
-class ToolkitServiceCw extends ToolkitService
+class ToolkitServiceCw extends Toolkit
 {
     static $instance = null;
 
@@ -63,12 +63,12 @@ class ToolkitServiceCw extends ToolkitService
      * Return true if an instance of this object has already been created.
      * Return false if no instance has been instantiated.
      *
-     * Same as the method in ToolkitService.php.
+     * Same as the method in ToolkitApi\Toolkit.
      * Cwclasses has its own instance variable so we need this method here, too.
      *
      * Useful when users need to know if a "toolkit connection" has already been made.
      * Usage:
-     * $isConnected = ToolkitService::hasInstance();
+     * $isConnected = Toolkit::hasInstance();
      *
      * @return boolean
      */
@@ -331,10 +331,10 @@ class DataDescription
      *
      * @param string $objName name of program, data queue, etc. lib/pgm(svcfunc) or the like.
      * @param array $dataDescription array of parameter definitions
-     * @param ServiceToolkit|ToolkitService $connection connection object for toolkit
+     * @param ServiceToolkit|Toolkit $connection connection object for toolkit
      * @internal param I5Error $errorObj during validation we may set properties of this object.
      */
-    public function __construct($objName, array $dataDescription, ToolkitService $connection)
+    public function __construct($objName, array $dataDescription, Toolkit $connection)
     {
         if (is_string($objName)) {
             $this->setOriginalObjName($objName);
@@ -502,7 +502,7 @@ class DataDescription
 
     /**
      * Return toolkit object that was passed in
-     * @return ToolkitService
+     * @return Toolkit
      */
     public function getConnection()
     {
@@ -1198,10 +1198,10 @@ class DataDescriptionPcml extends DataDescription
      * Constructor takes a PCML string and converts to an array-based old toolkit data description string.
      *
      * @param string $pcml The string of PCML
-     * @param ToolkitService $connection connection object for toolkit
+     * @param Toolkit $connection connection object for toolkit
      * @throws \Exception
      */
-    public function __construct($pcml, ToolkitService $connection)
+    public function __construct($pcml, Toolkit $connection)
     {
         $this->setConnection($connection);
 
