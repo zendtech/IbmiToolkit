@@ -1,4 +1,6 @@
 <?php
+require_once 'ToolkitService.php';
+
 class_alias('ToolkitApi\DateTimeApi','DateTimeApi');
 class_alias('ToolkitApi\ListFromApi','ListFromApi');
 class_alias('ToolkitApi\UserSpace','UserSpace');
