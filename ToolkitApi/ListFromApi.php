@@ -18,11 +18,11 @@ class ListFromApi
      * @param $totalRecords
      * @param $receiverDs
      * @param $lengthOfReceiverVariable
-     * @param ToolkitService $ToolkitSrvObj
+     * @param Toolkit $ToolkitSrvObj
      */
-    public function __construct($requestHandle, $totalRecords, $receiverDs, $lengthOfReceiverVariable, ToolkitService $ToolkitSrvObj = null)
+    public function __construct($requestHandle, $totalRecords, $receiverDs, $lengthOfReceiverVariable, Toolkit $ToolkitSrvObj = null)
     {
-        if ($ToolkitSrvObj instanceof ToolkitService) {
+        if ($ToolkitSrvObj instanceof Toolkit) {
             $this->ToolkitSrvObj = $ToolkitSrvObj;
         }
 
@@ -34,7 +34,7 @@ class ListFromApi
     }
 
     /**
-     * @return ToolkitService
+     * @return Toolkit
      */
     public function getConn()
     {
@@ -80,7 +80,7 @@ class ListFromApi
             <parm io='in' comment='6. Starting record' >
             <data var='startingRecordNum' comment='First entry number to put in receiver var. If getting one record at a time, increment this each time.' type='10i0'>$nextRecordToRequest</data>
             </parm>\n" .
-            ToolkitService::getErrorDataStructXmlWithCode(7); // param number 7
+            Toolkit::getErrorDataStructXmlWithCode(7); // param number 7
 
         // was getErrorDataStructXml
         // pass param xml directly in.
@@ -122,7 +122,7 @@ class ListFromApi
 
         $paramXml = "<parm io='in' comment='1. request handle'>
                       <data var='requestHandle' comment='Request handle: binary/hex' type='4b'>$requestHandle</data>
-                    </parm>\n" . ToolkitService::getErrorDataStructXml(2); // param number 2
+                    </parm>\n" . Toolkit::getErrorDataStructXml(2); // param number 2
 
         // pass param xml directly in.
         $this->ToolkitSrvObj->PgmCall($apiPgm, $apiLib, $paramXml);
