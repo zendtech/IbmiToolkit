@@ -35,9 +35,13 @@ spl_autoload_register(function($class){
         'ToolkitApi\HoleParam'          => __DIR__ . DIRECTORY_SEPARATOR . 'ToolkitServiceParameter.php',
         'ToolkitApi\BinParam'           => __DIR__ . DIRECTORY_SEPARATOR . 'ToolkitServiceParameter.php',
         'ToolkitApi\XMLWrapper'         => __DIR__ . DIRECTORY_SEPARATOR . 'ToolkitServiceXML.php',
+        'ToolkitApi\Cw\ToolkitServiceCw' => __DIR__ . DIRECTORY_SEPARATOR . 'CW' . DIRECTORY_SEPARATOR . 'ToolkitServiceCw.php',
+        'ToolkitApi\CW\I5Error'         => __DIR__ . DIRECTORY_SEPARATOR . 'CW' . DIRECTORY_SEPARATOR . 'I5Error.php',
+        'ToolkitApi\CW\DataDescription' => __DIR__ . DIRECTORY_SEPARATOR . 'CW' . DIRECTORY_SEPARATOR . 'DataDescription.php',
+        'ToolkitApi\CW\DataDescriptionPcml' => __DIR__ . DIRECTORY_SEPARATOR . 'CW' . DIRECTORY_SEPARATOR . 'DataDescriptionPcml.php',
     );
 
-    if (!in_array($class,$classmap))
+    if (!array_key_exists($class,$classmap))
     {
         throw new Exception("Class $class isn't defined in classmap");
     }

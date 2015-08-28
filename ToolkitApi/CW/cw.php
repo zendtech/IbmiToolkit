@@ -1,8 +1,6 @@
 <?php
 use ToolkitApi\CW\ToolkitServiceCw;
 use ToolkitApi\Toolkit;
-use ToolkitApi\CW\DataDescription;
-use ToolkitApi\CW\DataDescriptionPcml;
 use ToolkitApi\CW\I5Error;
 use ToolkitApi\SystemValues;
 use ToolkitApi\ListFromApi;
@@ -796,7 +794,7 @@ function i5_errormsg()
  * @param ToolkitServiceCw $connection Optional connection object
  * @return boolean for success/failure
  */
-function i5_command($cmdString, $input = array(), $output = array(), ToolkitServiceCw $connection)
+function i5_command($cmdString, $input = array(), $output = array(), ToolkitServiceCw $connection = null)
 {
     // if conn not passed in, get instance of toolkit. If can't be obtained, return false.
     if (!$connection = verifyConnection($connection)) {
@@ -925,7 +923,7 @@ function i5_command($cmdString, $input = array(), $output = array(), ToolkitServ
  * @param string $pgmName Lib/Pgm or Pgm or Lib/Pgm(svcfunc)
  * @param array $description Array of program parameter info
  * @param ServiceToolkit $connection  Optional toolkit object
- * @return DataDescription|boolean On success, an object containing program definition information, or false on failure
+ * @return \ToolkitApi\CW\DataDescription|boolean On success, an object containing program definition information, or false on failure
  */
 function i5_program_prepare($pgmName, $description, $connection = null)
 {
@@ -956,7 +954,7 @@ function i5_program_prepare($pgmName, $description, $connection = null)
     }
     
     // use object that can transform and check description for us.
-    $descObj = new DataDescription($pgmName, $description, $connection);
+    $descObj = new \ToolkitApi\CW\DataDescription($pgmName, $description, $connection);
 
     noError();
     return $descObj;
@@ -967,7 +965,7 @@ function i5_program_prepare($pgmName, $description, $connection = null)
  *
  * @param string $description Opens a program PCML file and prepares it to be run.
  * @param $connection Results of i5_connect
- * @return bool|\DataDescriptionPcml
+ * @return bool|\ToolkitApi\CW\DataDescriptionPcml
  */
 function i5_program_prepare_PCML($description = null, $connection = null)
 {
@@ -991,7 +989,7 @@ function i5_program_prepare_PCML($description = null, $connection = null)
     }
 
     // use object that can transform and check description for us.
-    $descObj = new DataDescriptionPcml($description, $connection);
+    $descObj = new \ToolkitApi\CW\DataDescriptionPcml($description, $connection);
 
     noError();
     
@@ -1000,14 +998,14 @@ function i5_program_prepare_PCML($description = null, $connection = null)
 
 /**
  * Call a program based on a prepare done before.
- * @param DataDescription $program   Program object created in the preparation stage.
+ * @param \ToolkitApi\CW\DataDescription $program   Program object created in the preparation stage.
  * @param array           $params    Input params with key=>value pairs (possibly nested),
  *                                   keys matching what was specified in prepare stage.
  * @param array            $retvals  Output params (optional)
  *                                   Fields get created based on names of output parms.
  * @return boolean         True if successful, false if not.
  */
-function i5_program_call(ToolkitApi\CW\DataDescription $program, $params, $retvals = array())
+function i5_program_call(\ToolkitApi\CW\DataDescription $program, $params, $retvals = array())
 {
     // @todo check type of $program and give toolkit-like messages
     $inputValues = $params;
@@ -1462,13 +1460,14 @@ function i5_jobLog_list_close(&$list = null)
 function verifyConnection(ToolkitServiceCw $connection = null)
 {
     // if conn passed and non-null but it's bad
-    if ($connection && !is_a($connection, 'ToolkitServiceCw')) {
+    if ($connection && !is_a($connection, 'ToolkitApi\CW\ToolkitServiceCw')) {
+//    if ($connection && ($connection instanceof ToolkitServiceCw)){
         i5ErrorActivity(I5_ERR_PHP_HDLCONN, I5_CAT_PHP, 'Connection handle invalid', 'Connection handle invalid');
         return false;
         
     } elseif (!$connection) {
         // not passed in or null.
-        
+
         // Check if a connection was started. User should start a connection before trying to use it.
         if (!ToolkitServiceCw::hasInstance()) {
             i5ErrorActivity(I5_ERR_PHP_HDLDFT, I5_CAT_PHP, 'No default connection found.', 'Connection has not been initialized. Please connect before using this function.');
@@ -2843,7 +2842,7 @@ function i5_objects_list_close(&$list)
  * @param $description
  * @param int $keySizeOrConnection
  * @param ToolkitServiceCw $connection
- * @return DataDescription
+ * @return \ToolkitApi\CW\DataDescription
  */
 function i5_dtaq_prepare($name, $description, $keySizeOrConnection = 0, ToolkitServiceCw $connection = null)
 {
@@ -2945,7 +2944,7 @@ function i5_dtaq_prepare($name, $description, $keySizeOrConnection = 0, ToolkitS
     }
     
     // use object that can transform and check description for us.
-    $descObj = new DataDescription($name, $description, $connection);
+    $descObj = new \ToolkitApi\CW\DataDescription($name, $description, $connection);
     
     $descObj->setIsSingleLevelSimpleValue($isSingleLevelSimpleValue);
     
@@ -3296,7 +3295,7 @@ function i5_dtaq_close(&$queue)
  * @param $name
  * @param $description
  * @param null $connection
- * @return bool|DataDescription
+ * @return bool|ToolkitApi\CW\DataDescription
  */
 function i5_userspace_prepare($name, $description, $connection = null)
 {
@@ -3327,7 +3326,7 @@ function i5_userspace_prepare($name, $description, $connection = null)
     }
     
     // use object that can transform and check description for us.
-    $descObj = new DataDescription($name, $description, $connection);
+    $descObj = new \ToolkitApi\CW\DataDescription($name, $description, $connection);
 
     noError();
     return $descObj;
@@ -3342,7 +3341,7 @@ function i5_userspace_prepare($name, $description, $connection = null)
  * params - Input params according to description. If given as flat array, then parameters are assigned in order (not sure about this)
  * 
  * Write date to a user space based on a prepare done before.
- * @param DataDescription $userspace   Userspace object created in the preparation stage.
+ * @param \ToolkitApi\CW\DataDescription $userspace   Userspace object created in the preparation stage.
  * @param array           $params      Input params with key=>value pairs (possibly nested),
  *                                     keys matching what was specified in prepare stage.
  * @return boolean        True if successful, false if not.
