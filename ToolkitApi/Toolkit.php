@@ -159,13 +159,12 @@ class Toolkit
 
         // get transport type from options, wherever it came from.
         $transportType = $this->getOption('transportType');
-
         if ($this->isDebug()) {
             $this->debugLog("Creating new conn with database: '$databaseNameOrResource', user or i5 naming flag: '$userOrI5NamingFlag', transport: '$transportType', persistence: '$isPersistent'\n");
         }
 
         // do we have a DB resource "by user" or do we create one
-        if (is_resource($databaseNameOrResource)) {
+        if ($transportType === 'ibm_db2' && is_resource($databaseNameOrResource)) {
             $conn = $databaseNameOrResource;
             $this->_i5NamingFlag = $userOrI5NamingFlag;
             $schemaSep = ($this->_i5NamingFlag) ? '/' : '.';
@@ -174,10 +173,10 @@ class Toolkit
             if ($this->isDebug()) {
                 $this->debugLog("Re-using existing db connection with schema separator: $schemaSep");
             }
-        } elseif ($transportType == 'http') {
+        } elseif ($transportType === 'http' || $transportType === 'https') {
             $databaseName = $databaseNameOrResource;
             $user = $userOrI5NamingFlag;
-            $this->chooseTransport('http');
+            $this->chooseTransport($transportType);
             $transport = $this->getTransport();
             $conn = $transport->connect($databaseName, $user, $password, array('persistent'=>$this->getIsPersistent()));
         } else {
@@ -335,11 +334,32 @@ class Toolkit
      */
     protected function chooseTransport($transportName = '')
     {
-        if ($transportName == 'http') {
-            $transport = new httpsupp();
-            $this->setTransport($transport);
-        } else {
-            $this->setDb($transportName);
+        switch($transportName)
+        {
+            case 'http':
+                $transport = new httpsupp();
+                $transport->setUrl(
+                    $this->getOption('httpTransportUrl')
+                );
+                $this->setTransport($transport);
+                break;
+            case 'https':
+                $transport = new httpsupp();
+
+                // Set SSL certificate authority file
+                $sslCaFile = $this->getConfigValue('transport', 'sslCaFile');
+                $transport->setSSLCAFile($sslCaFile);
+
+                // Set server name
+                $serverName = $this->getConfigValue('transport', 'serverName');
+                $transport->setServerName($serverName);
+                $transport->setUrl(
+                    $this->getOption('httpTransportUrl')
+                );
+                $this->setTransport($transport);
+                break;
+            default:
+                $this->setDb($transportName);
         }
     }
 
@@ -760,9 +780,7 @@ class Toolkit
 
         // If a database transport
         if (isset($this->db) && $this->db) {
-
             $result = $this->makeDbCall($internalKey, $plugSize, $controlKeyString, $inputXml, $disconnect);
-
         } else {
             // Not a DB transport. At this time, assume HTTP transport (which doesn't use a plug, by the way. uses outbytesize)
             $transport = $this->getTransport();
