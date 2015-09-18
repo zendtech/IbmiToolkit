@@ -6,7 +6,7 @@ use ToolkitApi\Toolkit;
 /**
  * Additional functionality for parsing PCML
  */
-class DataDescriptionPcml extends \ToolkitApi\CW\DataDescription
+class DataDescriptionPcml extends DataDescription
 {
     // array of simple types, PCML to old toolkit. Used in singlePcmlToArray().
     protected $_pcmlTypeMap = array('char'          => I5_TYPE_CHAR,
