@@ -279,7 +279,7 @@ function i5_connect($host='localhost', $user='', $password='', $options=array())
     $transportType = ''; // empty is ok.
     $iniTransportType = isset( $options [CW_TRANSPORT_TYPE]) ? $options [CW_TRANSPORT_TYPE] : getConfigValue('transport', 'transportType', 'ibm_db2');
     if ($iniTransportType) {
-        $validTransports = array ('ibm_db2', 'odbc', 'http');
+        $validTransports = array ('ibm_db2', 'odbc', 'http', 'https');
         if (!in_array($iniTransportType, $validTransports)) {
             // invalid transport specified.
             $errmsg = "Invalid CW_TRANSPORT_TYPE option ({$iniTransportType}). Omit or choose between " . explode(', ', $validTransports) . ".";
@@ -608,7 +608,7 @@ function i5_pclose(ToolkitServiceCw &$connection)
  * @param ToolkitServiceCw $connection [optional] the result of i5_connect(), or omit
  * @return boolean  True on success, False on failure
  */
-function i5_adopt_authority($user, $password, ToolkitServiceCw $connection)
+function i5_adopt_authority($user, $password, ToolkitServiceCw $connection=null)
 {
     // if conn not passed in, get instance of toolkit. If can't be obtained, return false.
     if (!$connection = verifyConnection($connection)) {
@@ -2075,7 +2075,7 @@ function i5_data_area_read($name, $offsetOrConnection = null, $length = null, $c
  * @param ToolkitServiceCw $connection
  * @return boolean          True on success, false on failure
  */
-function i5_data_area_write($name, $value, $offsetOrConnection = null, $length = null, ToolkitServiceCw $connection)
+function i5_data_area_write($name, $value, $offsetOrConnection = null, $length = null, ToolkitServiceCw $connection=null)
 {
     if (isset($length)) {
         // assume offset and length are both provided, since they come as a pair.
