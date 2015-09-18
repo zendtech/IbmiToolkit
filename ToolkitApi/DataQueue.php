@@ -93,7 +93,7 @@ class DataQueue
             $this->DataQueueLib,$this->DataQueueName,
             $MaxLen, $DataQType, $AdditionalSetting, $Authority);
 
-        if (!$this->ToolkitService->CLCommand($cmd)) {
+        if (!$this->Toolkit->CLCommand($cmd)) {
             $this->ErrMessage =  "Create Data Queue failed.". $this->Toolkit->getLastError();
             throw new \Exception($this->ErrMessage);
         }
