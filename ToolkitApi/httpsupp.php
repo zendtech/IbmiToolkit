@@ -91,7 +91,6 @@ class httpsupp
         
         if (substr($this->getUrl(), 0, 8) == "https://")
         {
-            
             //If this the URL is HTTPS, then Add SSL to options to support a 
             //secure connection.
             //Explanation of Options: http://phpsecurity.readthedocs.org/en/latest/Transport-Layer-Security-%28HTTPS-SSL-and-TLS%29.html
@@ -112,7 +111,7 @@ class httpsupp
         if (!$linkall) {
             die('HTTP transport URL was not set');
         }
-        
+
         $clobOut = file_get_contents($linkall, false, $context);
         $clobOut = $this->driverJunkAway($clobOut);
         
@@ -206,14 +205,16 @@ class httpsupp
     {
         return $this->_url;
     }
+
     /**
-     * @param string $sslcafile\
+     * @param null $sslcafile
+     * @throws \Exception
      */
     public function setSSLCAFile($sslcafile = null)
     {
         if(substr($this->getUrl(), 0, 8) == "https://" && $sslcafile==null)
         {
-            throw new Exception('No SSL CA File specified.  Must pass in CA File to constructor to use https url');
+            throw new \Exception('No SSL CA File specified.  Must pass in CA File to use https url');
         }
         $this->_sslcafile = $sslcafile;
     }
