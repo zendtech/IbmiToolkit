@@ -12,24 +12,6 @@ class db2supp
 {
     private $last_errorcode;
     private $last_errormsg;
-    private $database;
-    private $user;
-    private $password;
-    private $options;
-
-    /**
-     * @param $database
-     * @param $user
-     * @param $password
-     * @param null $options
-     */
-    public function __construct($database, $user, $password, $options = null)
-    {
-        $this->database = $database;
-        $this->user = $user;
-        $this->password = $password;
-        $this->options = $options;
-    }
 
     /**
      * 
@@ -37,24 +19,28 @@ class db2supp
      * @todo Throw in your "transport/adapter" framework for a real OO look and feel ....
      * Throw new Exception("Fail execute ($sql) ".db2_stmt_errormsg(),db2_stmt_error());
      * ... and retrieve via try/catch + Exception methods.
-     * 
+     *
+     * @param $database
+     * @param $user
+     * @param $password
+     * @param null $options 'persistent' is one option
      * @return bool
      */
-    public function connect()
+    public function connect($database, $user, $password, $options = null)
     {
         // Compensate for older ibm_db2 driver that may not do this check.
-        if ($this->user && empty($this->password)) {
+        if ($user && empty($password)) {
             $this->setErrorCode('08001');
             $this->setErrorMsg('Authorization failure on distributed database connection attempt. SQLCODE=-30082');
             
             return false;
         }
         
-        if ($this->options) {
-            if ((isset($this->options['persistent'])) && $this->options['persistent']) {
-                $conn = db2_pconnect($this->database, $this->user, $this->password);
+        if ($options) {
+            if ((isset($options['persistent'])) && $options['persistent']) {
+                $conn = db2_pconnect($database, $user, $password);
             } else {
-                $conn = db2_connect($this->database, $this->user, $this->password);
+                $conn = db2_connect($database, $user, $password);
             }
             
             if (is_resource($conn)) {
@@ -150,39 +136,47 @@ class db2supp
      * @param $sql
      * @return bool
      */
-    public function execXMLStoredProcedure($conn, $sql)
+    public function execXMLStoredProcedure($conn, $sql, $bindArray)
     {
+
+        $internalKey = $bindArray['internalKey'];
+        $controlKey = $bindArray['controlKey'];
+        $inputXml = $bindArray['inputXml'];
+        $outputXml = $bindArray['outputXml'];
+
         // @todo see why error doesn't properly bubble up to top level.
         $crsr = @db2_prepare($conn, $sql);
-        
         if (!$crsr) {
             $this->setStmtError();
             return false;
         }
-    
+
         // stored procedure takes four parameters. Each 'name' will be bound to a real PHP variable
         $params = array(
-                       array('position' => 1, 'name' => "internalKey", 'inout' => DB2_PARAM_IN),
-                       array('position' => 2, 'name' => "controlKey",  'inout' => DB2_PARAM_IN),
-                       array('position' => 3, 'name' => "inputXml",    'inout' => DB2_PARAM_IN),
-                       array('position' => 4, 'name' => "outputXml",   'inout' => DB2_PARAM_OUT),
-                       );
+            array('position' => 1, 'name' => "internalKey", 'inout' => DB2_PARAM_IN),
+            array('position' => 2, 'name' => "controlKey",  'inout' => DB2_PARAM_IN),
+            array('position' => 3, 'name' => "inputXml",    'inout' => DB2_PARAM_IN),
+            array('position' => 4, 'name' => "outputXml",   'inout' => DB2_PARAM_OUT),
+        );
         
         // bind the four parameters
         foreach ($params as $param) {
-            if (!db2_bind_param($crsr, $param['position'], $param['name'], $param['inout'])) {
+            $ret = db2_bind_param ($crsr, $param['position'], $param['name'], $param['inout']);
+            if (!$ret) {
                 // unable to bind a param. Set error and exit
                 $this->setStmtError($crsr);
                 return false;
             }
         }
-    
-        if (!@db2_execute($crsr)) {
+
+        $ret = @db2_execute($crsr);
+        if (!$ret) {
+            // execution of XMLSERVICE stored procedure failed.
             $this->setStmtError($crsr);
             return false;
         }
-        
-        return true;
+
+        return $outputXml;
     }
 
     /**

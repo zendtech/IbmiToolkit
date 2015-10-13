@@ -241,9 +241,10 @@ if ($doPcml) {
 		$output = array('START' => 'START', 'RESULT' => 'RESULT');
 		echo 'About to do simple PCML program call.<BR>';
 		$success = i5_program_call($pgmHandle, $input, $output);
+        $result = $output['RESULT'];
 	
 		if ($success) {
-			echo "Success. Output variables: START: $start. RESULT: $RESULT.";
+			echo "Success. Output variables: START: $start. RESULT: $result.";
 		} else {
 			echo "Problem calling PCML-described program. Error: " . print_r(i5_error(), true);
 		}
