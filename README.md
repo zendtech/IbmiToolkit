@@ -1,5 +1,5 @@
-IBMiToolkit
-==========
+PHP Toolkit for IBM i 
+=====================
 
 [![Build Status](https://travis-ci.org/zendtech/IbmiToolkit.svg?branch=master)](https://travis-ci.org/zendtech/IbmiToolkit)
 
