@@ -6,9 +6,6 @@ IBMiToolkit
 For production systems please do not use the master branch.  Instead use the latest 
 [stable release](https://github.com/zendtech/IbmiToolkit/releases/latest).
 
-This project was originally hosted at https://code.google.com/p/zend-ibmi-tk-cw/ 
-where older versions still reside. As of Mar. 3, 2014 it is now maintained here.
-
 Introduction
 ------------
 
@@ -37,7 +34,7 @@ Planned Features:
 - Optimizations for larger data sets
 - More (to be added to GitHub issues)
 
-XMLSERVICE and the IBMiToolkit are already shipped with Zend Server. But being 
+XMLSERVICE and the IBMi Toolkit are already shipped with Zend Server. But being 
 open source they can also be downloaded, installed, and upgraded separately.
 
 Autoloading
