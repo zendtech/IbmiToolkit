@@ -36,3 +36,5 @@ Planned Features:
 XMLSERVICE and the IBMi Toolkit are already shipped with Zend Server. But being 
 open source they can also be downloaded, installed, and upgraded separately.
 
+For more information and examples, please visit the wiki:
+https://github.com/zendtech/IbmiToolkit/wiki
