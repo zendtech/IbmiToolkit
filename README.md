@@ -13,7 +13,7 @@ The PHP Toolkit for IBM i (Toolkit) is a PHP-based front end to [XMLSERVICE](htt
 
 The Toolkit is open source and has been developed with help from Alan Seiden and the community. 
 
-Community discussion of the Toolkit happens at the ‘Club Seiden’ forum:
+Discussion of the Toolkit (usage and how to contribute) happens at the ‘Club Seiden’ forum:
 http://club.alanseiden.com/community/
 
 Current Main Features:
