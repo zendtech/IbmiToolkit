@@ -41,11 +41,6 @@ spl_autoload_register(function($class){
         'ToolkitApi\CW\DataDescriptionPcml' => __DIR__ . DIRECTORY_SEPARATOR . 'CW' . DIRECTORY_SEPARATOR . 'DataDescriptionPcml.php',
     );
 
-    if (!array_key_exists($class,$classmap))
-    {
-        throw new Exception("Class $class isn't defined in classmap");
-    }
-
     $file = $classmap[$class];
     if (!is_readable($file)) {
         throw new Exception("File $file Not Found");
