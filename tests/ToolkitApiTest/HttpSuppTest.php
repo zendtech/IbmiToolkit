@@ -1,8 +1,9 @@
 <?php
+namespace ToolkitApiTest;
 
 use ToolkitApi\httpsupp;
 
-class HttpSuppTest extends PHPUnit_Framework_TestCase
+class HttpSuppTest extends \PHPUnit_Framework_TestCase
 {
     public function testCanSetIpc()
     {

@@ -1,8 +1,9 @@
 <?php
+namespace ToolkitApiTest\CW;
 
 use ToolkitApi\CW;
 
-class ToolkitServiceCwTest extends PHPUnit_Framework_TestCase
+class ToolkitServiceCwTest extends \PHPUnit_Framework_TestCase
 {
     public function testCanSetIpc()
     {
