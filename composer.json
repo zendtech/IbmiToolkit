@@ -19,7 +19,15 @@
         "php": ">=5.3.3"
     },
     "autoload": {
-        "classmap": ["ToolkitApi/"]
+        "classmap": ["ToolkitApi/"],
+        "psr-4": {
+            "ToolkitApi\\":"ToolkitApi"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "ToolkitApiTest\\":"tests/ToolkitApiTest"
+        }
     },
     "require-dev": {
         "phpunit/phpunit": "4.2.*"
