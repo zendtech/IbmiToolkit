@@ -617,7 +617,7 @@ function i5_adopt_authority($user, $password, ToolkitServiceCw $connection=null)
 
     // user/pw must be uppercase.
     $user = strtoupper($user);
-    $password = strtoupper($password);
+    $password = $password;
     
     // check that username and password vars are OK.
     // forbid QSECOFR and empty password (though special values such as *NOPWDCHK are OK) 
