@@ -1,20 +1,20 @@
 <?php
 namespace ToolkitApiTest;
 
-use ToolkitApi\Int8Param;
 use ToolkitApi\ProgramParameter;
+use ToolkitApi\UInt8Param;
 
-class Int8ParamTest extends \PHPUnit_Framework_TestCase
+class UInt8ParamTest extends \PHPUnit_Framework_TestCase
 {
     public function testCanCreateInstance()
     {
-        $parameter = new Int8Param('both', 'test comment', 'testVar', 8);
+        $parameter = new UInt8Param('both', 'test comment', 'testVar', 8);
         $this->assertTrue($parameter instanceof ProgramParameter);
 
-        $parameter = new Int8Param('in', 'comment 2', 'var2', 10);
+        $parameter = new UInt8Param('in', 'comment 2', 'var2', 10);
         $this->assertTrue($parameter instanceof ProgramParameter);
 
-        $parameter = new Int8Param('out', 'comment3', 'var3', 3);
+        $parameter = new UInt8Param('out', 'comment3', 'var3', 3);
         $this->assertTrue($parameter instanceof ProgramParameter);
     }
 }
