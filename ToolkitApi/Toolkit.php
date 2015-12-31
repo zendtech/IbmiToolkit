@@ -1339,11 +1339,63 @@ class Toolkit
      * @param string $varName
      * @param string $value
      * @param int $dimension
+     * @return Int8Param
+     */
+    public static function AddParameterInt8($io, $comment, $varName='', $value='', $dimension=0)
+    {
+        return new Int8Param($io, $comment, $varName, $value, $dimension);
+    }
+
+    /**
+     * @param $io
+     * @param $comment
+     * @param string $varName
+     * @param string $value
+     * @param int $dimension
+     * @return Int16Param
+     */
+    public static function AddParameterInt16($io, $comment, $varName='', $value='', $dimension=0)
+    {
+        return new Int16Param($io, $comment, $varName, $value, $dimension);
+    }
+
+    /**
+     * @param $io
+     * @param $comment
+     * @param string $varName
+     * @param string $value
+     * @param int $dimension
      * @return Int64Param
      */
     static function AddParameterInt64($io, $comment, $varName = '', $value = '', $dimension = 0)
     {
         return new Int64Param($io, $comment, $varName, $value, $dimension);
+    }
+
+    /**
+     * @param $io
+     * @param $comment
+     * @param string $varName
+     * @param string $value
+     * @param int $dimension
+     * @return UInt8Param
+     */
+    public static function AddParameterUInt8($io, $comment, $varName='', $value='', $dimension=0)
+    {
+        return new UInt8Param($io, $comment, $varName, $value, $dimension);
+    }
+
+    /**
+     * @param $io
+     * @param $comment
+     * @param string $varName
+     * @param string $value
+     * @param int $dimension
+     * @return UInt16Param
+     */
+    public static function AddParameterUInt16($io, $comment, $varName='', $value='', $dimension=0)
+    {
+        return new UInt16Param($io, $comment, $varName, $value, $dimension);
     }
 
     /**
