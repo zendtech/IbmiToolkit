@@ -39,6 +39,7 @@ spl_autoload_register(function($class){
         'ToolkitApi\CW\I5Error'         => __DIR__ . DIRECTORY_SEPARATOR . 'CW' . DIRECTORY_SEPARATOR . 'I5Error.php',
         'ToolkitApi\CW\DataDescription' => __DIR__ . DIRECTORY_SEPARATOR . 'CW' . DIRECTORY_SEPARATOR . 'DataDescription.php',
         'ToolkitApi\CW\DataDescriptionPcml' => __DIR__ . DIRECTORY_SEPARATOR . 'CW' . DIRECTORY_SEPARATOR . 'DataDescriptionPcml.php',
+        'ToolkitApi\Int8Param'          => __DIR__ . DIRECTORY_SEPARATOR . 'Int8Param.php',
     );
 
     if (!array_key_exists($class,$classmap))
