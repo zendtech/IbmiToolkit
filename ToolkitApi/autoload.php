@@ -42,11 +42,6 @@ spl_autoload_register(function($class){
         'ToolkitApi\Int8Param'          => __DIR__ . DIRECTORY_SEPARATOR . 'Int8Param.php',
     );
 
-    if (!array_key_exists($class,$classmap))
-    {
-        throw new Exception("Class $class isn't defined in classmap");
-    }
-
     $file = $classmap[$class];
     if (!is_readable($file)) {
         throw new Exception("File $file Not Found");
