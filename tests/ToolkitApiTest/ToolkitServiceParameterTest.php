@@ -22,6 +22,7 @@ class ProgramParameterTest extends \PHPUnit_Framework_TestCase
     protected $data;
     protected $varying;
     protected $dim;
+    protected $by;
 
     public function setUp()
     {
