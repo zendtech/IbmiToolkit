@@ -1481,7 +1481,7 @@ class Toolkit
     }
 
     /**
-     * "hole" paramter is for data to ignore
+     * "hole" parameter is for data to ignore
      *
      * @param $size
      * @param string $comment
@@ -1918,7 +1918,7 @@ class Toolkit
         $rndName = sprintf("ZS%d%d%d%d",
                      $localtime[0],/*s*/
                      $localtime[1],/*min*/
-                     $localtime[2],/*our*/
+                     $localtime[2],/*hour*/
                      $localtime[3] /*day*/
                       );
         return $rndName;
