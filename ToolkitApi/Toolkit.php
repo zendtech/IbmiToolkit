@@ -794,7 +794,7 @@ class Toolkit
 
             // if debug mode, log control key, and input XML.
             if ($this->isDebug()) {
-                $this->debugLog("\nExec start: " . date("Y-m-d H:i:s") . "\nVersion of toolkit front end: " . self::getFrontEndVersion() ."\nIPC: '" . $this->getInternalKey() . "'. Control key: $controlKeyString\nHost URL: $url\nExpected output size (plugSize): $plugSize or $outByteSize bytes\nInput XML: $inputXml\n");
+                $this->debugLog("\nExec start: " . date("Y-m-d H:i:s") . "\nVersion of toolkit front end: " . self::getFrontEndVersion() ."\nToolkit class: '" . FILE . "'\nIPC: '" . $this->getInternalKey() . "'. Control key: $controlKeyString\nHost URL: $url\nExpected output size (plugSize): $plugSize or $outByteSize bytes\nInput XML: $inputXml\n");
                 $this->execStartTime = microtime(true);
             }
 
@@ -1339,11 +1339,63 @@ class Toolkit
      * @param string $varName
      * @param string $value
      * @param int $dimension
+     * @return Int8Param
+     */
+    public static function AddParameterInt8($io, $comment, $varName='', $value='', $dimension=0)
+    {
+        return new Int8Param($io, $comment, $varName, $value, $dimension);
+    }
+
+    /**
+     * @param $io
+     * @param $comment
+     * @param string $varName
+     * @param string $value
+     * @param int $dimension
+     * @return Int16Param
+     */
+    public static function AddParameterInt16($io, $comment, $varName='', $value='', $dimension=0)
+    {
+        return new Int16Param($io, $comment, $varName, $value, $dimension);
+    }
+
+    /**
+     * @param $io
+     * @param $comment
+     * @param string $varName
+     * @param string $value
+     * @param int $dimension
      * @return Int64Param
      */
     static function AddParameterInt64($io, $comment, $varName = '', $value = '', $dimension = 0)
     {
         return new Int64Param($io, $comment, $varName, $value, $dimension);
+    }
+
+    /**
+     * @param $io
+     * @param $comment
+     * @param string $varName
+     * @param string $value
+     * @param int $dimension
+     * @return UInt8Param
+     */
+    public static function AddParameterUInt8($io, $comment, $varName='', $value='', $dimension=0)
+    {
+        return new UInt8Param($io, $comment, $varName, $value, $dimension);
+    }
+
+    /**
+     * @param $io
+     * @param $comment
+     * @param string $varName
+     * @param string $value
+     * @param int $dimension
+     * @return UInt16Param
+     */
+    public static function AddParameterUInt16($io, $comment, $varName='', $value='', $dimension=0)
+    {
+        return new UInt16Param($io, $comment, $varName, $value, $dimension);
     }
 
     /**
@@ -1429,7 +1481,7 @@ class Toolkit
     }
 
     /**
-     * "hole" paramter is for data to ignore
+     * "hole" parameter is for data to ignore
      *
      * @param $size
      * @param string $comment
@@ -1866,7 +1918,7 @@ class Toolkit
         $rndName = sprintf("ZS%d%d%d%d",
                      $localtime[0],/*s*/
                      $localtime[1],/*min*/
-                     $localtime[2],/*our*/
+                     $localtime[2],/*hour*/
                      $localtime[3] /*day*/
                       );
         return $rndName;
