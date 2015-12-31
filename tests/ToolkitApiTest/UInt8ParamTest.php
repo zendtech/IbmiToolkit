@@ -4,6 +4,10 @@ namespace ToolkitApiTest;
 use ToolkitApi\ProgramParameter;
 use ToolkitApi\UInt8Param;
 
+/**
+ * Class UInt8ParamTest
+ * @package ToolkitApiTest
+ */
 class UInt8ParamTest extends \PHPUnit_Framework_TestCase
 {
     public function testCanCreateInstance()
