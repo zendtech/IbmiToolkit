@@ -49,7 +49,7 @@ class ProgramParameterTest extends \PHPUnit_Framework_TestCase
     public function testCanGetParameterProperties()
     {
         $data1 = $this->programParameter->getParamProperities();
-        $data2 = [
+        $data2 = array(
             'type' => $this->type,
             'io' => $this->io,
             'comment' => $this->comment,
@@ -66,7 +66,7 @@ class ProgramParameterTest extends \PHPUnit_Framework_TestCase
             'ccsidBefore' => '',
             'ccsidAfter' => '',
             'useHex' => false,
-        ];
+        );
 
         $this->assertEquals($data1, $data2);
     }
