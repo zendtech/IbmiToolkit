@@ -42,6 +42,7 @@ spl_autoload_register(function($class){
         'ToolkitApi\Int8Param'          => __DIR__ . DIRECTORY_SEPARATOR . 'Int8Param.php',
         'ToolkitApi\UInt8Param'         => __DIR__ . DIRECTORY_SEPARATOR . 'UInt8Param.php',
         'ToolkitApi\Int16Param'         => __DIR__ . DIRECTORY_SEPARATOR . 'Int16Param.php',
+        'ToolkitApi\UInt16Param'         => __DIR__ . DIRECTORY_SEPARATOR . 'UInt16Param.php',
     );
 
     $file = $classmap[$class];
