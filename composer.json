@@ -1,7 +1,7 @@
 {
     "name": "zendtech/ibmitoolkit",
     "description": "PHP frontend to XMLSERVICE for IBM i development.",
-    "keywords": ["ibmitoolkit","ibmxmltoolkit","XMLSERVICE","IBMi","zend","as400"],
+    "keywords": ["ibmitoolkit","ibmxmltoolkit","XMLSERVICE","IBM i","zend","as400"],
     "license": "BSD-3-Clause",
     "authors": [
         {

@@ -33,7 +33,7 @@ Planned Features:
 - Optimizations for larger data sets
 - More (to be added to GitHub issues)
 
-XMLSERVICE and the IBMi Toolkit are already shipped with Zend Server. But being 
+XMLSERVICE and the IBM i Toolkit are already shipped with Zend Server. But being 
 open source they can also be downloaded, installed, and upgraded separately.
 
 For more information and examples, please visit the wiki:
