@@ -1786,12 +1786,19 @@ class Toolkit
          */
         if ($this->isStateless()) {
             $key .= " *here";
-        } else {
+        } else 
+			
             // not stateless, so could make sense to supply *sbmjob parameters for spawning a separate job.
             if (trim($this->getOption('sbmjobParams')) != '') {
                $sbmjobParams = $this->getOption('sbmjobParams');
                $key .= " *sbmjob($sbmjobParams)";
             }
+			else
+			{
+				//SSR 2016-05-10 - default stateful call to submit seperate XTOOLKIT job, if no custom submit job parameters specified
+				$key .= " *sbmjob";
+				
+			}
         }
 
         // if internal XMLSERVICE tracing, into database table XMLSERVLOG/LOG, is desired
