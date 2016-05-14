@@ -46,10 +46,9 @@ spl_autoload_register(function($class){
     );
 
     $file = $classmap[$class];
-    if (!is_readable($file)) {
-        throw new Exception("File $file Not Found");
+    if (file_exists($file)) {
+        require_once $file;
     }
 
-    require_once $file;
     return;
 });
