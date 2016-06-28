@@ -1787,7 +1787,7 @@ class Toolkit
         if ($this->isStateless()) {
             $key .= " *here";
         } else 
-			
+        {
             // not stateless, so could make sense to supply *sbmjob parameters for spawning a separate job.
             if (trim($this->getOption('sbmjobParams')) != '') {
                $sbmjobParams = $this->getOption('sbmjobParams');
