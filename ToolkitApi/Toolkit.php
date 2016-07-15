@@ -9,7 +9,7 @@ define('CONFIG_FILE', 'toolkit.ini');
  *
  * @package ToolkitApi
  */
-class Toolkit
+class Toolkit implements ToolkitInterface
 {
     const VERSION =  "1.7.0"; // version number for front-end PHP toolkit
 

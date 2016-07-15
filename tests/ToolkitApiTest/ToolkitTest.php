@@ -14,6 +14,7 @@ use ToolkitApi\RealParam;
 use ToolkitApi\SizePackParam;
 use ToolkitApi\SizeParam;
 use ToolkitApi\Toolkit;
+use ToolkitApi\ToolkitInterface;
 use ToolkitApi\UInt16Param;
 use ToolkitApi\UInt32Param;
 use ToolkitApi\UInt64Param;
@@ -27,7 +28,7 @@ use ToolkitApi\ZonedParam;
 class ToolkitTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     * @var Toolkit $toolkit
+     * @var ToolkitInterface $toolkit
      */
     protected $toolkit;
 
