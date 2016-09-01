@@ -45,9 +45,11 @@ spl_autoload_register(function($class){
         'ToolkitApi\UInt16Param'         => __DIR__ . DIRECTORY_SEPARATOR . 'UInt16Param.php',
     );
 
-    $file = $classmap[$class];
-    if (file_exists($file)) {
-        require_once $file;
+    if (array_key_exists($class, $classmap)) {
+        $file = $classmap[$class];
+        if (file_exists($file)) {
+            require_once $file;
+        }
     }
 
     return;
