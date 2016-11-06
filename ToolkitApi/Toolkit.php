@@ -75,6 +75,7 @@ class Toolkit
                                 'sbmjobCommand'  => '', // optional complete override of SBMJOB command when new toolkit job is submitted
                                 'prestart'       => false,
                                 'stateless'      => false,
+                                'stateless_mode_default' => true, // add new stateless flag for toolkit (non CW)
                                 'performance'    => false, // whether to enable performance collection (not fully implemented)
                                 'idleTimeout'    => '', // created for Compat. Wrapper (CW)
                                 'cdata'          => true, // whether to ask XMLSERVICE to wrap its output in CDATA to protect reserved XML characters
@@ -144,7 +145,7 @@ class Toolkit
         }
 
         // Optional params. Don't specify if not given in INI.
-        $this->getOptionalParams('system', array('v5r4', 'ccsidBefore', 'ccsidAfter', 'useHex', 'paseCcsid', 'trace', 'dataStructureIntegrity',  'arrayIntegrity'));
+        $this->getOptionalParams('system', array('stateless_mode_default','stateless','v5r4', 'ccsidBefore', 'ccsidAfter', 'useHex', 'paseCcsid', 'trace', 'dataStructureIntegrity',  'arrayIntegrity'));
         $this->getOptionalParams('transport', array('httpTransportUrl', 'plugSize'));
 
         // populate serviceParams with $transport, or get it from INI
@@ -1734,7 +1735,12 @@ class Toolkit
      */
     public function isStateless()
     {
-        return $this->getOption('stateless');
+        if ($this->getIsCw()){
+            return $this->getOption('stateless');
+        }
+        else{
+            return $this->getOption('stateless_mode_default');
+        }
     }
 
     /**
