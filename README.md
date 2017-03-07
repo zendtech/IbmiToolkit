@@ -1,10 +1,12 @@
 PHP Toolkit for IBM i 
 =====================
 
-[![Build Status](https://travis-ci.org/zendtech/IbmiToolkit.svg?branch=master)](https://travis-ci.org/zendtech/IbmiToolkit)
+This is a fork of the IBM i Toolkit.  For offical repository, visit [zendtech/IbmiToolkit](https://github.com/zendtech/IbmiToolkit) on GitHub.
 
-For production systems please do not use the master branch.  Instead use the latest 
-[stable release](https://github.com/zendtech/IbmiToolkit/releases/latest).
+This fork is designed to provide access to patches that are not tagged in official repository.  Eventually, it may include custom features or enhancements.
+
+**The introduction below is from the official release and does not reflect the plans of this fork.**
+
 
 Introduction
 ------------
