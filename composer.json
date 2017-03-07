@@ -1,5 +1,5 @@
 {
-    "name": "zendtech/ibmitoolkit",
+    "name": "dmimatt/IbmiToolkit",
     "description": "PHP frontend to XMLSERVICE for IBM i development.",
     "keywords": ["ibmitoolkit","ibmxmltoolkit","XMLSERVICE","IBM i","zend","as400"],
     "license": "BSD-3-Clause",
@@ -13,6 +13,10 @@
             "name": "Adam Culp",
             "email": "adamculp@uws.net",
             "homepage": "http://geekyboy.com"
+        },
+        {
+            "name": "Matt Lavinder",
+            "email": "mlavinder@data-management.com"
         }
     ],
     "require": {
