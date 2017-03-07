@@ -1,5 +1,8 @@
 # CHANGELOG
 
-## 1.6.0 (2014-08-07)
+## 1.7.1-p1 (2017-03-07)
 
-- This is a placeholder change log. Don't get too excited yet! Will update soon with actual changed items (many).
+- Fork created of master branch of zendtech/IbmiToolkit.
+- Fix for autoloader.php (#96 - autoloader check class exists in array)
+- Updated composer.json to reflect information of fork 
+ 
