@@ -1,5 +1,5 @@
 {
-    "name": "dmimatt/IbmiToolkit",
+    "name": "datamanagementinc/IbmiToolkit",
     "description": "PHP frontend to XMLSERVICE for IBM i development.",
     "keywords": ["ibmitoolkit","ibmxmltoolkit","XMLSERVICE","IBM i","zend","as400"],
     "license": "BSD-3-Clause",
