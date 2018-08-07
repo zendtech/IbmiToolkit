@@ -1,36 +1,47 @@
 {
-    "name": "zendtech/ibmitoolkit",
-    "description": "PHP frontend to XMLSERVICE for IBM i development.",
-    "keywords": ["ibmitoolkit","ibmxmltoolkit","XMLSERVICE","IBM i","zend","as400"],
-    "license": "BSD-3-Clause",
-    "authors": [
-        {
-            "name": "Alan Seiden",
-            "email": "alan@alanseiden.com",
-            "homepage": "http://alanseiden.com"
-        },
-        {
-            "name": "Adam Culp",
-            "email": "adamculp@uws.net",
-            "homepage": "http://geekyboy.com"
+    "name" : "guidofaecke/ibmitoolkit",
+    "description" : "PHP frontend to XMLSERVICE for IBM i development.",
+    "keywords" : [
+        "ibmitoolkit",
+        "ibmxmltoolkit",
+        "XMLSERVICE",
+        "IBM i",
+        "zend",
+        "as400"
+    ],
+    "license" : "BSD-3-Clause",
+    "authors" : [{
+            "name" : "Alan Seiden",
+            "email" : "alan@alanseiden.com",
+            "homepage" : "http://alanseiden.com"
+        }, {
+            "name" : "Adam Culp",
+            "email" : "adamculp@uws.net",
+            "homepage" : "http://geekyboy.com"
+        }, {
+            "name" : "Guido Faecke",
+            "email" : "guido@faecke.us",
+            "homepage" : "http://faecke.us"
         }
     ],
-    "require": {
-        "php": ">=5.3.3"
+    "require" : {
+        "php" : ">=5.6"
     },
-    "autoload": {
-        "classmap": ["ToolkitApi/"],
-        "psr-4": {
-            "ToolkitApi\\":"ToolkitApi"
+    "autoload" : {
+        "classmap" : [
+            "ToolkitApi/"
+        ],
+        "psr-4" : {
+            "ToolkitApi\\" : "ToolkitApi"
         }
     },
-    "autoload-dev": {
-        "psr-4": {
-            "ToolkitApi\\":"ToolkitApi",
-            "ToolkitApiTest\\":"tests/ToolkitApiTest"
+    "autoload-dev" : {
+        "psr-4" : {
+            "ToolkitApi\\" : "ToolkitApi",
+            "ToolkitApiTest\\" : "tests/ToolkitApiTest"
         }
     },
-    "require-dev": {
-        "phpunit/phpunit": "4.2.*"
+    "require-dev" : {
+        "phpunit/phpunit" : "4.8.*"
     }
 }
