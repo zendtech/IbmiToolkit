@@ -1456,7 +1456,7 @@ class Toolkit
      * @param $scale
      * @param $comment
      * @param string $varName
-     * @param string $value
+     * @param mixed $value
      * @param int $dimension
      * @return PackedDecParam
      */
@@ -1471,7 +1471,7 @@ class Toolkit
      * @param $scale
      * @param $comment
      * @param string $varName
-     * @param string $value
+     * @param mixed $value
      * @param int $dimension
      * @return ZonedParam
      */

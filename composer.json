@@ -37,5 +37,8 @@
             "ToolkitApi\\" : "ToolkitApi",
             "ToolkitApiTest\\" : "tests/ToolkitApiTest"
         }
+    },
+    "require" : {
+        "php" : "^5.6 || ^7.0"
     }
 }
