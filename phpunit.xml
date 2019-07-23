@@ -8,9 +8,8 @@
         stopOnFailure="false"
         processIsolation="false"
         backupGlobals="false"
-        syntaxCheck="true"
 >
-    <testsuite>
+    <testsuite name="ToolkitTests">
         <directory>./tests/ToolkitApiTest</directory>
     </testsuite>
 </phpunit>

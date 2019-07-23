@@ -10,9 +10,9 @@
             "homepage": "http://alanseiden.com"
         },
         {
-            "name": "Adam Culp",
-            "email": "adamculp@uws.net",
-            "homepage": "http://geekyboy.com"
+            "name": "Chuk Shirley",
+            "email": "chukShirley@gmail.com",
+            "homepage": "http://github.com/chukShirley"
         }
     ],
     "require": {
@@ -31,6 +31,6 @@
         }
     },
     "require-dev": {
-        "phpunit/phpunit": "4.2.*"
+        "phpunit/phpunit": "^8.2"
     }
 }

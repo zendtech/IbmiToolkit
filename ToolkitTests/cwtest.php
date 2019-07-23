@@ -1,10 +1,10 @@
 <?php
-
-// @todo need to somehow get ToolkitService so we can use getConfigValue()
+require __DIR__ .'/../vendor/autoload.php';
 
 use ToolkitApi\CW;
 use ToolkitApi\UserSpace;
 use ToolkitApi\DataQueue;
+use ToolkitApi\Toolkit;
 
 // some items to turn on and off in the test
 $doPcml = true;
@@ -23,33 +23,33 @@ set_time_limit(480);
 //require_once('CW/cw.php'); // don't need if added auto_append in PHP.INI
 
 // Use configurable demo lib/name from toolkit ini
-$demoLib = trim(getConfigValue('demo', 'demo_library'));
+$demoLib = trim(Toolkit::getConfigValue('demo', 'demo_library'));
 if (!$demoLib) {
    die('Demo library not set in toolkit.ini.');
 }
 
 // Use configurable encoding from toolkit ini
 // We use encoding in meta tag so characters appear correctly in browser
-$encoding = trim(getConfigValue('system', 'encoding'));
+$encoding = trim(Toolkit::getConfigValue('system', 'encoding'));
 if (!$encoding) {
    die('Encoding not set in toolkit.ini. Example: ISO-8859-1');
 }
 
 // optional demo values
-$setLibList = trim(getConfigValue('demo', 'initlibl', ''));
-$setCcsid = trim(getConfigValue('demo', 'ccsid', ''));
-$setJobName = trim(getConfigValue('demo', 'jobname', ''));
-$setIdleTimeout = trim(getConfigValue('demo', 'idle_timeout', ''));
-$transportType = trim(getConfigValue ( 'demo', 'transport_type', ''));
+$setLibList = trim(Toolkit::getConfigValue('demo', 'initlibl', ''));
+$setCcsid = trim(Toolkit::getConfigValue('demo', 'ccsid', ''));
+$setJobName = trim(Toolkit::getConfigValue('demo', 'jobname', ''));
+$setIdleTimeout = trim(Toolkit::getConfigValue('demo', 'idle_timeout', ''));
+$transportType = trim(Toolkit::getConfigValue ( 'demo', 'transport_type', ''));
 
 // optional demo connection values
 $private = false; // default
 $privateNum = false; // default
-$persistent = trim(getConfigValue('demo', 'persistent', false));
+$persistent = trim(Toolkit::getConfigValue('demo', 'persistent', false));
 if ($persistent) {
 	// private can only happen with persistence
-    $private = trim(getConfigValue('demo', 'private', false));
-    $privateNum = trim(getConfigValue('demo', 'private_num', '0'));
+    $private = trim(Toolkit::getConfigValue('demo', 'private', false));
+    $privateNum = trim(Toolkit::getConfigValue('demo', 'private_num', '0'));
 } //(persistent)
 
 $scriptTitle = 'Test script for IBM i Compatibility Wrapper (CW)';

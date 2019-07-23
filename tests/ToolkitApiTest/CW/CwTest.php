@@ -1,12 +1,12 @@
 <?php
 namespace ToolkitApiTest\CW;
 
-use ToolkitApi\CW;
+use PHPUnit\Framework\TestCase;
 
-class ToolkitServiceCwTest extends \PHPUnit_Framework_TestCase
+final class ToolkitServiceCwTest extends TestCase
 {
     public function testCanSetIpc()
     {
-        return true;
+        $this->markTestIncomplete();
     }
 }
