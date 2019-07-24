@@ -1,5 +1,6 @@
 <?php
 namespace ToolkitApi;
+
 include_once 'ToolkitServiceSet.php';
 
 define('CONFIG_FILE', 'toolkit.ini');
@@ -173,6 +174,15 @@ class Toolkit
             if ($this->isDebug()) {
                 $this->debugLog("Re-using existing db connection with schema separator: $schemaSep");
             }
+        } elseif ($transportType === 'odbc' && is_resource($databaseNameOrResource)) {
+            $conn = $databaseNameOrResource;
+            $this->_i5NamingFlag = $userOrI5NamingFlag;
+            $schemaSep = ($this->_i5NamingFlag) ? '/' : '.';
+            $this->setOptions(array('schemaSep' => $schemaSep));
+            $this->chooseTransport('odbc');
+            if ($this->isDebug()) {
+                $this->debugLog("Re-using existing db connection with schema separator: $schemaSep");
+            }
         } elseif ($transportType === 'http' || $transportType === 'https') {
             $databaseName = $databaseNameOrResource;
             $user = $userOrI5NamingFlag;
@@ -209,8 +219,6 @@ class Toolkit
         }
 
         $this->conn = $conn;
-
-        return $this;
     }
 
     /**
@@ -816,10 +824,10 @@ class Toolkit
     }
 
     /**
-     * @param $internalKey
-     * @param $plugSize
-     * @param $controlKeyString
-     * @param $inputXml
+     * @param string $internalKey
+     * @param string $plugSize
+     * @param string $controlKeyString
+     * @param string $inputXml
      * @param bool $disconnect
      * @return array
      */
@@ -956,7 +964,6 @@ class Toolkit
     public function sendXml($inputXml, $disconnect=false)
     {
         return $this->ExecuteProgram($inputXml, $disconnect);
-
     }
 
     /**

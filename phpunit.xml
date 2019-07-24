@@ -1,5 +1,5 @@
 <phpunit
-        bootstrap="./vendor/autoload.php"
+        bootstrap="./tests/bootstrap.php"
         colors="true"
         convertErrorsToExceptions="true"
         convertNoticesToExceptions="true"
@@ -9,7 +9,12 @@
         processIsolation="false"
         backupGlobals="false"
 >
-    <testsuite name="ToolkitTests">
-        <directory>./tests/ToolkitApiTest</directory>
-    </testsuite>
+    <testsuites>
+        <testsuite name="ToolkitTests">
+            <directory>./tests/ToolkitApiTest</directory>
+        </testsuite>
+        <testsuite name="Functional">
+            <directory>./tests/functional</directory>
+        </testsuite>
+    </testsuites>
 </phpunit>
