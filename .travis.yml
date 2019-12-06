@@ -2,4 +2,4 @@ language: php
 
 before_script: composer install
 
-script: phpunit --configuration phpunit.xml
+script: phpunit --configuration phpunit.xml --testsuite ToolkitTests
