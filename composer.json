@@ -16,7 +16,7 @@
         }
     ],
     "require": {
-        "php": ">=5.3.3"
+      "php": ">=5.3.3"
     },
     "autoload": {
         "classmap": ["ToolkitApi/"],
@@ -32,6 +32,7 @@
         }
     },
     "require-dev": {
+        "ext-pdo": "*",
         "phpunit/phpunit": "^8.2",
         "symfony/process": "^4.3"
     }
