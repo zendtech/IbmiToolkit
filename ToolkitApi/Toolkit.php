@@ -1,7 +1,10 @@
 <?php
 namespace ToolkitApi;
 
+use PDO;
+
 include_once 'ToolkitServiceSet.php';
+include_once 'ToolkitService.php';
 
 define('CONFIG_FILE', 'toolkit.ini');
 
@@ -30,6 +33,10 @@ class Toolkit
 
     // $db2 variable may not be needed. Consider deprecating in future.
     protected $db2 = false;
+
+    /**
+     * @var null|resource|PDO
+     */
     protected $db = null; // contains class for db connections
 
     protected $_i5NamingFlag = 0; // same as DB2_I5_NAMING_OFF; // Other value could be 1 (DB2_I5_NAMING_ON).
@@ -180,6 +187,16 @@ class Toolkit
             $schemaSep = ($this->_i5NamingFlag) ? '/' : '.';
             $this->setOptions(array('schemaSep' => $schemaSep));
             $this->chooseTransport('odbc');
+            if ($this->isDebug()) {
+                $this->debugLog("Re-using existing db connection with schema separator: $schemaSep");
+            }
+        } elseif ($databaseNameOrResource instanceof PDO && $transportType === 'pdo') {
+            $conn = $databaseNameOrResource;
+            $this->db = $conn;
+            $this->_i5NamingFlag = $userOrI5NamingFlag;
+            $schemaSep = ($this->_i5NamingFlag) ? '/' : '.';
+            $this->setOptions(array('schemaSep' => $schemaSep));
+            $this->chooseTransport('pdo');
             if ($this->isDebug()) {
                 $this->debugLog("Re-using existing db connection with schema separator: $schemaSep");
             }
@@ -399,6 +416,9 @@ class Toolkit
                 //for odbc will be different default stored procedure call
                 $this->setOptions(array('plugPrefix' => 'iPLUGR')); // "R" = "result set" which is how ODBC driver returns param results
                 $this->db = new odbcsupp();
+        } elseif ($extensionName === 'pdo') {
+            $this->setOptions(array('plugPrefix' => 'iPLUGR'));
+            $this->db = new PdoSupp($this->db);
         }
 
         // transport, too, to be generic
