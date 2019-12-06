@@ -1,6 +1,7 @@
 <?php
 namespace ToolkitApiTest;
 
+use PHPUnit\Framework\TestCase;
 use ToolkitApi\BinParam;
 use ToolkitApi\CharParam;
 use ToolkitApi\FloatParam;
@@ -24,14 +25,14 @@ use ToolkitApi\ZonedParam;
  * Class ToolkitTest
  * @package ToolkitApiTest
  */
-class ToolkitTest extends \PHPUnit_Framework_TestCase
+final class ToolkitTest extends TestCase
 {
     /**
      * @var Toolkit $toolkit
      */
     protected $toolkit;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->toolkit = new Toolkit('*LOCAL', '0', 'testPwd', 'http', false);
     }
@@ -143,6 +144,7 @@ class ToolkitTest extends \PHPUnit_Framework_TestCase
 
     public function testCanAddArrayParameter()
     {
+        $this->markTestIncomplete();
 /*        $array = array(
             array(
                 'type' => ''

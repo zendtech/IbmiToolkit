@@ -1,0 +1,24 @@
+<?php
+return [
+    'db' => [
+        'odbc' => [
+            'dsn' => 'DSN=*LOCAL;',
+            'username' => 'MYUSER',
+            'password' => 'MYPASS',
+            'platform' => 'IbmDb2',
+            'platform_options' => [
+                'quote_identifiers' => true,
+            ],
+        ],
+    ],
+    'toolkit' => [
+        'system' => [
+            'XMLServiceLib' => 'QXMLSERV',
+            'HelperLib' => 'QXMLSERV',
+            'debug' => false,
+            'trace' => false,
+            'sbmjob_params' => 'QSYS/QSRVJOB/XTOOLKIT',
+            'stateless' => true,
+        ],
+    ],
+];
