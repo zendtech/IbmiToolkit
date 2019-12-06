@@ -1,19 +1,20 @@
 ; toolkit.ini for Zend/PHP Toolkit and Compatibility Wrapper (CW)
-; with default values appropriate for Zend Server 9
+; with default values appropriate for Zend Server 6/7
 ;comment
 [system]
-; set library where XTOOLKIT lives, most likely XMLSERVICE (testing) or ZENDPHP7 (production)
-XMLServiceLib = "ZENDPHP7" ; production Zend Server 9.x
+; set library where XTOOLKIT lives, most likely XMLSERVICE (testing) or ZENDSVR (production)
+;XMLServiceLib = "ZENDSVR" ; production Zend Server 5.x
+XMLServiceLib = "ZENDSVR6" ; production Zend Server 6.x/7.x
 ;XMLServiceLib = "XMLSERVICE" ; for testing new XMLSERVICE packages
 
 ; Location of ZSXMLSRV "helper" service program. Overrides ToolkitServiceSet's ZSTOOLKITLIB constant 
-HelperLib = "ZENDPHP7" ; library of ZS "helper" service program. ZENDSVR, ZENDSVR6, or ZENDPHP7
+HelperLib = "ZENDSVR6" ; library of ZS "helper" service program. ZENDSVR or ZENDSVR6
 
 ; debug sets PHP toolkit's debug mode on or off (true/false).
-; Default log file: /usr/local/zendphp7/var/log/tkit_debug.log
+; Default log file: /usr/local/zendsvr(6/7)/var/log/tkit_debug.log
 ; This log will grow large, so leave this false when you do not need to log everything.
 debug = false
-debugLogFile = "/usr/local/zendphp7/var/log/tkit_debug.log"
+debugLogFile = "/usr/local/zendsvr6/var/log/tkit_debug.log"
 
 ; Enable internal, low-level XMLSERVICE trace into table XMLSERVLOG/LOG
 ; (New in PHP tkit 1.3.1, requiring XMLSERVICE 1.7.1)
@@ -76,7 +77,7 @@ stateless = true
 
 [log]
 ; Both CW and regular toolkit: warnings and errors will be written to the logfile (CW and regular toolkit).
-logfile = "/usr/local/zendphp7/var/log/toolkit.log"
+logfile = "/usr/local/zendsvr6/var/log/toolkit.log"
 
 ; CW only: If logCwConnect = true then CW connection events will be written to the logfile.
 ; This log will grow large, so set logCwConnects=false in production. 
