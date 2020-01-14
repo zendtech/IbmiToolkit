@@ -6,7 +6,10 @@ use PDO;
 include_once 'ToolkitServiceSet.php';
 include_once 'ToolkitService.php';
 
-define('CONFIG_FILE', 'toolkit.ini');
+if (!defined('CONFIG_FILE')) {
+    define('CONFIG_FILE', 'toolkit.ini');
+}
+
 
 /**
  * Class Toolkit
