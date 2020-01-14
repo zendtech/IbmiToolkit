@@ -2,7 +2,10 @@
 namespace ToolkitApi;
 include_once 'ToolkitServiceSet.php';
 
-define('CONFIG_FILE', 'toolkit.ini');
+if (!defined('CONFIG_FILE')) {
+    define('CONFIG_FILE', 'toolkit.ini');
+}
+
 
 /**
  * Class Toolkit
