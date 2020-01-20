@@ -37,12 +37,14 @@ class db2supp
         }
         
         if ($options) {
+            $driver_options = $options['driver_options'] ?: array();
+
             if ((isset($options['persistent'])) && $options['persistent']) {
-                $conn = db2_pconnect($database, $user, $password);
+                $conn = db2_pconnect($database, $user, $password, $driver_options);
             } else {
-                $conn = db2_connect($database, $user, $password);
+                $conn = db2_connect($database, $user, $password, $driver_options);
             }
-            
+
             if (is_resource($conn)) {
                 return $conn;
             }
