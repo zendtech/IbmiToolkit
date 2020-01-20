@@ -3,8 +3,8 @@ namespace ToolkitApi;
 
 use PDO;
 
-include_once 'ToolkitServiceSet.php';
-include_once 'ToolkitService.php';
+include_once __DIR__ . DIRECTORY_SEPARATOR . 'ToolkitServiceSet.php';
+include_once __DIR__ . DIRECTORY_SEPARATOR . 'ToolkitService.php';
 
 if (!defined('CONFIG_FILE')) {
     define('CONFIG_FILE', 'toolkit.ini');
