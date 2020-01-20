@@ -3,7 +3,7 @@ namespace ToolkitApi;
 
 /**
  * Class db2supp
- * 
+ *
  * @todo define common transport class/interface extended/implemented by all transports
  *
  * @package ToolkitApi
@@ -14,8 +14,8 @@ class db2supp
     private $last_errormsg;
 
     /**
-     * 
-     * 
+     *
+     *
      * @todo Throw in your "transport/adapter" framework for a real OO look and feel ....
      * Throw new Exception("Fail execute ($sql) ".db2_stmt_errormsg(),db2_stmt_error());
      * ... and retrieve via try/catch + Exception methods.
@@ -32,25 +32,25 @@ class db2supp
         if ($user && empty($password)) {
             $this->setErrorCode('08001');
             $this->setErrorMsg('Authorization failure on distributed database connection attempt. SQLCODE=-30082');
-            
+
             return false;
         }
-        
+
         if ($options) {
             if ((isset($options['persistent'])) && $options['persistent']) {
-                $conn = db2_pconnect($database, $user, $password);
+                $conn = db2_pconnect($database, $user, $password, $options);
             } else {
-                $conn = db2_connect($database, $user, $password);
+                $conn = db2_connect($database, $user, $password, $options);
             }
-            
+
             if (is_resource($conn)) {
                 return $conn;
             }
         }
-        
+
         $this->setErrorCode(db2_conn_error());
         $this->setErrorMsg(db2_conn_errormsg());
-          
+
         return false;
     }
 
@@ -63,12 +63,12 @@ class db2supp
             db2_close($conn);
         }
     }
-    
+
     /**
      * disconnect, truly close, a persistent connection.
-     * 
+     *
      * NOTE: Only available on i5/OS
-     * 
+     *
      * @param $conn
      */
     public function disconnectPersistent($conn)
@@ -96,10 +96,10 @@ class db2supp
 
     /**
      * set error code and message based on last db2 prepare or execute error.
-     * 
+     *
      * @todo: consider using GET DIAGNOSTICS for even more message text:
      * http://publib.boulder.ibm.com/infocenter/iseries/v5r4/index.jsp?topic=%2Frzala%2Frzalafinder.htm
-     * 
+     *
      * @param null $stmt
      */
     protected function setStmtError($stmt = null)
@@ -110,7 +110,7 @@ class db2supp
         } else {
             $this->setErrorCode(db2_stmt_error());
             $this->setErrorMsg(db2_stmt_errormsg());
-        }        
+        }
     }
 
     /**
@@ -128,10 +128,10 @@ class db2supp
     {
         $this->last_errormsg = $errorMsg;
     }
-    
+
     /**
      * this function used for special stored procedure call only
-     * 
+     *
      * @param $conn
      * @param $sql
      * @return bool
@@ -158,7 +158,7 @@ class db2supp
             array('position' => 3, 'name' => "inputXml",    'inout' => DB2_PARAM_IN),
             array('position' => 4, 'name' => "outputXml",   'inout' => DB2_PARAM_OUT),
         );
-        
+
         // bind the four parameters
         foreach ($params as $param) {
             $ret = db2_bind_param ($crsr, $param['position'], $param['name'], $param['inout']);
@@ -202,9 +202,9 @@ class db2supp
             }
         } else {
             $this->setStmtError();
-            Throw new \Exception("Failure executing SQL: ($sql) " . db2_stmt_errormsg(), db2_stmt_error()); 
+            Throw new \Exception("Failure executing SQL: ($sql) " . db2_stmt_errormsg(), db2_stmt_error());
         }
-         
+
         return $txt;
     }
 }
