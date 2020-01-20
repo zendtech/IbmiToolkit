@@ -142,19 +142,6 @@ final class ToolkitTest extends TestCase
         $this->assertTrue($parameter instanceof BinParam);
     }
 
-    public function testCanAddArrayParameter()
-    {
-        $this->markTestIncomplete();
-/*        $array = array(
-            array(
-                'type' => ''
-            ),
-            array(
-
-            )
-        );*/
-    }
-
     public function testCanAddParameterSize()
     {
         $size = $this->toolkit->AddParameterSize('test comment', 'varName', 3);
