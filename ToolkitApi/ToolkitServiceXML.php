@@ -426,9 +426,9 @@ class XMLWrapper
         }
         
         $pgmtag = $this->getPgmTag($pgm, $lib, $function);
-        
+
         $xmlIn = "{$pgmtag}\n{$parametersXml}{$returnParametersXml}</pgm>";
-        
+
         return $this->addOuterTags($xmlIn);
     }
     
