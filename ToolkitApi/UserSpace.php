@@ -11,9 +11,9 @@ class UserSpace
     protected $ErrMessage;
 
     /**
-     * @param Toolkit $ToolkitSrvObj
+     * @param ToolkitInterface $ToolkitSrvObj
      */
-    public function __construct(Toolkit $ToolkitSrvObj = null)
+    public function __construct(ToolkitInterface $ToolkitSrvObj = null)
     {
         if ($ToolkitSrvObj instanceof Toolkit) {
             $this->ToolkitSrvObj = $ToolkitSrvObj ;

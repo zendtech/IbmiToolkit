@@ -16,10 +16,10 @@ class JobLogs
     private $TmpLib = DFTLIB;
 
     /**
-     * @param Toolkit $ToolkitSrvObj
+     * @param ToolkitInterface $ToolkitSrvObj
      * @param string $tmpUSLib
      */
-    public function __construct(Toolkit $ToolkitSrvObj = null, $tmpUSLib = DFTLIB)
+    public function __construct(ToolkitInterface $ToolkitSrvObj = null, $tmpUSLib = DFTLIB)
     {
         if ($ToolkitSrvObj instanceof Toolkit ) {
             $this->ToolkitSrvObj = $ToolkitSrvObj;

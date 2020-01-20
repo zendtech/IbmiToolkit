@@ -16,7 +16,7 @@ if (!defined('CONFIG_FILE')) {
  *
  * @package ToolkitApi
  */
-class Toolkit
+class Toolkit implements ToolkitInterface
 {
     const VERSION =  "1.8.2"; // version number for front-end PHP toolkit
 

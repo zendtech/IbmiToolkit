@@ -2,6 +2,7 @@
 namespace ToolkitApi\CW;
 
 use ToolkitApi\Toolkit;
+use ToolkitApi\ToolkitInterface;
 
 /**
  * Additional functionality for parsing PCML
@@ -37,10 +38,10 @@ class DataDescriptionPcml extends DataDescription
      * Constructor takes a PCML string and converts to an array-based old toolkit data description string.
      *
      * @param string $pcml The string of PCML
-     * @param Toolkit $connection connection object for toolkit
+     * @param ToolkitInterface $connection connection object for toolkit
      * @throws \Exception
      */
-    public function __construct($pcml, Toolkit $connection)
+    public function __construct($pcml, ToolkitInterface $connection)
     {
         $this->setConnection($connection);
 

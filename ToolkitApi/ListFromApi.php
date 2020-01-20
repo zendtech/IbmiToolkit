@@ -18,9 +18,9 @@ class ListFromApi
      * @param $totalRecords
      * @param $receiverDs
      * @param $lengthOfReceiverVariable
-     * @param Toolkit $ToolkitSrvObj
+     * @param ToolkitInterface $ToolkitSrvObj
      */
-    public function __construct($requestHandle, $totalRecords, $receiverDs, $lengthOfReceiverVariable, Toolkit $ToolkitSrvObj = null)
+    public function __construct($requestHandle, $totalRecords, $receiverDs, $lengthOfReceiverVariable, ToolkitInterface $ToolkitSrvObj = null)
     {
         if ($ToolkitSrvObj instanceof Toolkit) {
             $this->ToolkitSrvObj = $ToolkitSrvObj;
@@ -34,7 +34,7 @@ class ListFromApi
     }
 
     /**
-     * @return Toolkit
+     * @return ToolkitInterface
      */
     public function getConn()
     {
