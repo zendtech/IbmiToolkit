@@ -1,5 +1,5 @@
 {
-    "name": "zendtech/ibmitoolkit",
+    "name": "guidofaecke/ibmitoolkit",
     "description": "PHP frontend to XMLSERVICE for IBM i development.",
     "keywords": ["ibmitoolkit","ibmxmltoolkit","XMLSERVICE","IBM i","zend","as400"],
     "license": "BSD-3-Clause",
@@ -13,6 +13,11 @@
             "name": "Chuk Shirley",
             "email": "chukShirley@gmail.com",
             "homepage": "http://github.com/chukShirley"
+        },
+        {
+            "name" : "Guido Faecke",
+            "email" : "guido@faecke.us",
+            "homepage" : "http://faecke.us"
         }
     ],
     "require": {

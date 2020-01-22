@@ -21,15 +21,15 @@ class ProgramParameter
     protected  $labelLen;  /* use this on a data structure to get the size/length */
     protected  $labelDoUntil = '';   /* use on a data structure array along with 'dim' to to set # of records to return based on labelEndDo (see below) */
     protected  $labelEndDo = '';  /* use this on an integer "count" field to control the number of records to return in n array data structure (see labelDoUntil above) */
-    
+
     // CCSID/hex support
     protected $_ccsidBefore;
     protected $_ccsidAfter;
     protected $_useHex;
-    
+
     // if data field is not named, the toolkit creates a name of the pattern var0, var1, var2...
     static protected $_fallbackNameSequence = 0; // start with zero to give unnamed elements a unique name
-    
+
     // @todo do setlen for other program param types, too
 
     /**
@@ -42,8 +42,8 @@ class ProgramParameter
      * @param int $dimension
      * @param string $by
      * @param bool $isArray
-     * @param null $labelSetLen
-     * @param null $labelLen
+     * @param int|null $labelSetLen
+     * @param int|null $labelLen
      * @param string $ccsidBefore
      * @param string $ccsidAfter
      * @param bool $useHex
@@ -69,8 +69,8 @@ class ProgramParameter
         $this->labelLen        = $labelLen;
         $this->_ccsidBefore    = $ccsidBefore;
         $this->_ccsidAfter     = $ccsidAfter;
-        $this->_useHex         = $useHex;    
-        
+        $this->_useHex         = $useHex;
+
     }
 
     /**
@@ -80,9 +80,9 @@ class ProgramParameter
     {
         // if varName is empty then set a fallback unique varName.
         if (!$this->varName) {
-            $this->varName = $this->getFallbackVarName(); 
+            $this->varName = $this->getFallbackVarName();
         }
-        
+
         return array('type' => $this->type,
                   'io' => $this->io,
                   'comment' => $this->comment,
@@ -104,7 +104,7 @@ class ProgramParameter
 
     /**
      * spell it right
-     * 
+     *
      * @return array
      */
     public function getParamProperties()
@@ -115,7 +115,7 @@ class ProgramParameter
     /**
      * set a parameter's properties via an key=>value array structure. Choose any properties to set.
      * map the XML keywords (usually shorter than true class property names) to the class property names.
-     * 
+     *
      * @param array $properties
      */
     public function setParamProperties($properties = array())
@@ -142,7 +142,7 @@ class ProgramParameter
         // using the mapping above to find the true property name.
         foreach ($properties as $key=>$value) {
             $propName = isset($map[$key]) ? $map[$key] : '';
-            
+
             if ($propName) {
                 // a valid property name was found so set it
                 $this->$propName = $value;
@@ -160,19 +160,19 @@ class ProgramParameter
 
     /**
      * for unnamed data elements, provide a unique name: var0, var1, var2...
-     * 
+     *
      * @return string
      */
     protected function getFallbackVarName()
     {
         $varName =  'var' . self::$_fallbackNameSequence++;
-        
+
         return $varName;
     }
 
     /**
      * if $value is an array, but not yet a data structure, make a data structure of the array elements.
-     * 
+     *
      * @param $type
      * @param $io
      * @param $comment
@@ -226,7 +226,7 @@ class ProgramParameter
 
     /**
      * set "len label"
-     * 
+     *
      * @param $labelLen
      */
     public function setParamLabelLen($labelLen)
@@ -278,7 +278,7 @@ class ProgramParameter
 
     /**
      * for a data structure or other item in an array, set the label for "do until"
-     * 
+     *
      * @param string $label
      * @return $this
      */
@@ -289,10 +289,10 @@ class ProgramParameter
     }
 
     /**
-     * for a numeric counter field that will determine how many array elements return 
-     * from a program call, set the label for "enddo". Links up with the Dou label 
+     * for a numeric counter field that will determine how many array elements return
+     * from a program call, set the label for "enddo". Links up with the Dou label
      * given to the dim'med array element itself.
-     * 
+     *
      * @param string $label
      * @return $this
      */
@@ -304,11 +304,11 @@ class ProgramParameter
 
     /**
      * "CCSID before" means how to convert to CCSID on the way in to XMLSERVICE, when needed
-     * 
+     *
      * @param string $ccsidBefore
      * @return $this
-     */ 
-    public function setParamCcsidBefore($ccsidBefore = '') 
+     */
+    public function setParamCcsidBefore($ccsidBefore = '')
     {
         $this->_ccsidBefore = $ccsidBefore;
         return $this; // fluent interface
@@ -316,7 +316,7 @@ class ProgramParameter
 
     /**
      * "CCSID after" means how to convert to CCSID on the way out from XMLSERVICE, when needed
-     * 
+     *
      * @param string $ccsidAfter
      * @return $this
      */
@@ -328,7 +328,7 @@ class ProgramParameter
 
     /**
      * "useHex" controls whether the data will be converted to/from hex
-     * 
+     *
      * @param bool $useHex
      * @return $this
      */
@@ -390,7 +390,7 @@ class ProgramParameter
      * bin2str is used by the 5250 Bridge. It converts a hex string to character string
      * while cleaning up unexpected characters.
      * Original comment: "can not be public. Return XML does not return a type of values."
-     * 
+     *
      * @param $hex_data
      * @return string
      */
@@ -406,12 +406,12 @@ class ProgramParameter
              */
              if ($hex_data[$i] == '0') {
                  $hexPair = '20'; // space
-             } //(if($hex_data[$i] == '0') ) 
+             } //(if($hex_data[$i] == '0') )
              // break;
              $str.= chr(hexdec($hexPair));
              //$str.= chr(hexdec($hex_data[$i].$hex_data [$i+1]));
         }
-        
+
         return $str;
      }
 }
@@ -425,16 +425,16 @@ class DataStructure extends ProgramParameter
 {
 
     /**
-     * v1.4.0 added $comment as arg 5, in place of the obsolete $isReturnParam argument. 
+     * v1.4.0 added $comment as arg 5, in place of the obsolete $isReturnParam argument.
      * Data structure return values didn't work properly before 1.4.0 anyway.
-     * 
+     *
      * @param $paramsArray
      * @param string $struct_name
      * @param int $dim
      * @param string $comment
      * @param string $by
      * @param bool $isArray
-     * @param null $labelLen
+     * @param int|null $labelLen
      * @param string $io
      */
     function __construct($paramsArray, $struct_name ="DataStruct", $dim=0, $comment = '', $by='', $isArray=false, $labelLen = null, $io = 'both')
@@ -445,7 +445,7 @@ class DataStructure extends ProgramParameter
 
 /**
  * Class CharParam
- * 
+ *
  * CharParam can require hex/ccsid conversions, which other types don't.
  *
  * @package ToolkitApi
@@ -454,7 +454,7 @@ class CharParam extends ProgramParameter
 {
     /**
      * @todo if array. call charparm 5 times with fake field name and coming out, too. (?)
-     * 
+     *
      * @param $io
      * @param $size
      * @param string $comment
@@ -519,11 +519,11 @@ class PackedDecParam extends ProgramParameter
      * @param string $scale
      * @param string $comment
      * @param string $varName
-     * @param string $value
+     * @param mixed $value
      * @param int $dimension
      * @param string $by
      * @param bool $isArray
-     * @param null $labelSetLen
+     * @param int|null $labelSetLen
      */
     function __construct($io, $length, $scale, $comment,  $varName = '', $value, $dimension=0, $by='', $isArray = false,  $labelSetLen = null)
     {
@@ -548,7 +548,7 @@ class Int32Param extends ProgramParameter
      * @param int $dimension
      * @param string $by
      * @param bool $isArray
-     * @param null $labelSetLen
+     * @param int|null $labelSetLen
      */
      function __construct($io, $comment, $varName = '', $value, $dimension=0, $by='', $isArray = false, $labelSetLen = null)
      {

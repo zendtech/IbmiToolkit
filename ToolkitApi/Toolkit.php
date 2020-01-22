@@ -653,9 +653,9 @@ class Toolkit
      *
      * @param string $pgmName Name of program to call, without library
      * @param string $lib Library of program. Leave blank to use library list or current library
-     * @param null $inputParam An array of ProgramParameter objects OR XML representing params, to be sent as-is.
-     * @param null $returnParam ReturnValue Array of one parameter that's the return value parameter
-     * @param null $options Array of other options. The most popular is 'func' indicating the name of a subprocedure or function.
+     * @param mixed[]|null $inputParam An array of ProgramParameter objects OR XML representing params, to be sent as-is.
+     * @param mixed[]|null $returnParam ReturnValue Array of one parameter that's the return value parameter
+     * @param mixed[]|null $options Array of other options. The most popular is 'func' indicating the name of a subprocedure or function.
      * @return array|bool
      */
     public function pgmCall($pgmName, $lib, $inputParam = NULL, $returnParam = NULL, $options = NULL)
@@ -1486,7 +1486,7 @@ class Toolkit
      * @param $scale
      * @param $comment
      * @param string $varName
-     * @param string $value
+     * @param mixed $value
      * @param int $dimension
      * @return PackedDecParam
      */
@@ -1501,7 +1501,7 @@ class Toolkit
      * @param $scale
      * @param $comment
      * @param string $varName
-     * @param string $value
+     * @param mixed $value
      * @param int $dimension
      * @return ZonedParam
      */
@@ -1563,7 +1563,7 @@ class Toolkit
      * @param int $dim
      * @param string $by
      * @param bool $isArray
-     * @param null $labelLen
+     * @param int|null $labelLen
      * @param string $comment
      * @param string $io
      * @return DataStructure
@@ -2384,7 +2384,7 @@ class Toolkit
      *
      * @param $heading
      * @param $key
-     * @param null $default
+     * @param mixed|null $default
      * @return bool|null
      */
     static function getConfigValue($heading, $key, $default = null)
