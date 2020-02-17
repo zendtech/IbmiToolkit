@@ -830,11 +830,6 @@ class Toolkit implements ToolkitInterface
             }
 
             $result = $transport->send($inputXml, $outByteSize);
-
-            // workaround: XMLSERVICE as of 1.7.4 returns a single space instead of empty string when no content was requested.
-            if ($result == ' ') {
-                $result = '';
-            }
         }
 
         if ($this->isDebug() && $result) {
@@ -843,7 +838,7 @@ class Toolkit implements ToolkitInterface
             $this->debugLog("Output XML: $result\nExec end: " . date("Y-m-d H:i:s") . ". Seconds to execute: $elapsed.\n\n");
         }
 
-        return $result;
+        return trim($result);
     }
 
     /**
@@ -852,7 +847,8 @@ class Toolkit implements ToolkitInterface
      * @param string $controlKeyString
      * @param string $inputXml
      * @param bool $disconnect
-     * @return array
+     * @return string
+     * @throws \Exception
      */
     protected function makeDbCall($internalKey, $plugSize, $controlKeyString, $inputXml, $disconnect = false)
     {
