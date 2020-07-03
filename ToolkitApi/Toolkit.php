@@ -148,7 +148,7 @@ class Toolkit implements ToolkitInterface
         $this->execStartTime = '';
 
         // stop any types that are not valid for first parameter. Invalid values may cause toolkit to try to create another database connection.
-        if (!is_string($databaseNameOrResource) && !is_resource($databaseNameOrResource) {
+        if (!is_string($databaseNameOrResource) && !is_resource($databaseNameOrResource)) {
 
             // initialize generic message
             $this->error = "\nFailed to connect. databaseNameOrResource " . var_export($databaseNameOrResource, true) . " not valid.";
