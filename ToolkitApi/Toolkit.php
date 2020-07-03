@@ -136,7 +136,7 @@ class Toolkit implements ToolkitInterface
     /**
      * if passing an existing resource and naming, don't need the other params.
      *
-     * @param $databaseNameOrResource
+     * @param string|resource $databaseNameOrResource
      * @param string $userOrI5NamingFlag 0 = DB2_I5_NAMING_OFF or 1 = DB2_I5_NAMING_ON
      * @param string $password
      * @param string $transportType (http, ibm_db2, odbc)
@@ -147,6 +147,22 @@ class Toolkit implements ToolkitInterface
     {
         $this->execStartTime = '';
 
+        // stop any types that are not valid for first parameter. Invalid values may cause toolkit to try to create another database connection.
+        if (!is_string($databaseNameOrResource) && !is_resource($databaseNameOrResource) {
+
+            // initialize generic message
+            $this->error = "\nFailed to connect. databaseNameOrResource " . var_export($databaseNameOrResource, true) . " not valid.";
+
+            // change to a more specific helpful message if a boolean false arising from a failed database connection passed in
+            if (false === $databaseNameOrResource) {
+                $this->error = "\nFailed to connect. If you passed in a database connection, it was a failed one with a value of false.";
+            }
+            
+            $this->debugLog($this->error);
+            throw new \Exception($this->error);
+            
+        } // (if (!is_string....)               
+     
         // set service parameters to use in object.
         $this->serviceParams = $this->getDefaultServiceParams();
 
