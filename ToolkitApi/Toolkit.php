@@ -38,7 +38,7 @@ class Toolkit implements ToolkitInterface
     protected $db2 = false;
 
     /**
-     * @var null|resource|PDO
+     * @var null|resource|PDO|PdoSupp|odbcsupp|db2supp
      */
     protected $db = null; // contains class for db connections
 
@@ -157,12 +157,12 @@ class Toolkit implements ToolkitInterface
             if (false === $databaseNameOrResource) {
                 $this->error = "\nFailed to connect. If you passed in a database connection, it was a failed one with a value of false.";
             }
-            
+
             $this->debugLog($this->error);
             throw new \Exception($this->error);
-            
-        } // (if (!is_string....)               
-     
+
+        } // (if (!is_string....)
+
         // set service parameters to use in object.
         $this->serviceParams = $this->getDefaultServiceParams();
 
@@ -868,7 +868,7 @@ class Toolkit implements ToolkitInterface
      * @param string $controlKeyString
      * @param string $inputXml
      * @param bool $disconnect
-     * @return array
+     * @return string
      */
     protected function makeDbCall($internalKey, $plugSize, $controlKeyString, $inputXml, $disconnect = false)
     {
