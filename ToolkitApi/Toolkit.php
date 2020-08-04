@@ -157,12 +157,12 @@ class Toolkit implements ToolkitInterface
             if (false === $databaseNameOrResource) {
                 $this->error = "\nFailed to connect. If you passed in a database connection, it was a failed one with a value of false.";
             }
-            
+
             $this->debugLog($this->error);
             throw new \Exception($this->error);
-            
-        } // (if (!is_string....)               
-     
+
+        } // (if (!is_string....)
+
         // set service parameters to use in object.
         $this->serviceParams = $this->getDefaultServiceParams();
 
@@ -846,12 +846,10 @@ class Toolkit implements ToolkitInterface
             }
 
             $result = $transport->send($inputXml, $outByteSize);
-
-            // workaround: XMLSERVICE as of 1.7.4 returns a single space instead of empty string when no content was requested.
-            if ($result == ' ') {
-                $result = '';
-            }
         }
+
+        // workaround: XMLSERVICE as of 1.7.4 returns a single space instead of empty string when no content was requested.
+        $result = trim($result);
 
         if ($this->isDebug() && $result) {
             $end = microtime(true);
