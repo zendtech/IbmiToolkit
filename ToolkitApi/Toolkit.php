@@ -38,7 +38,7 @@ class Toolkit implements ToolkitInterface
     protected $db2 = false;
 
     /**
-     * @var null|resource|PDO
+     * @var null|resource|PDO|PdoSupp|odbcsupp|db2supp
      */
     protected $db = null; // contains class for db connections
 
@@ -866,7 +866,7 @@ class Toolkit implements ToolkitInterface
      * @param string $controlKeyString
      * @param string $inputXml
      * @param bool $disconnect
-     * @return array
+     * @return string
      */
     protected function makeDbCall($internalKey, $plugSize, $controlKeyString, $inputXml, $disconnect = false)
     {
