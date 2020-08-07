@@ -7,6 +7,8 @@ use ToolkitApi\ListFromApi;
 use ToolkitApi\DataArea;
 use ToolkitApi\UserSpace;
 
+require_once 'cwclasses.php';
+
 /**
  * Procedural Compatibility Wrapper for IBM i Toolkit for PHP
  */
