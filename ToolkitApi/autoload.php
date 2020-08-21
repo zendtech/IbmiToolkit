@@ -19,6 +19,7 @@ spl_autoload_register(function($class){
         'ToolkitApi\SystemValues'       => __DIR__ . DIRECTORY_SEPARATOR . 'SystemValues.php',
         'ToolkitApi\DataArea'           => __DIR__ . DIRECTORY_SEPARATOR . 'DataArea.php',
         'ToolkitApi\odbcsupp'           => __DIR__ . DIRECTORY_SEPARATOR . 'Odbcsupp.php',
+        'ToolkitApi\PdoSupp'            => __DIR__ . DIRECTORY_SEPARATOR . 'PdoSupp.php',
         'ToolkitApi\ToolkitPcml'        => __DIR__ . DIRECTORY_SEPARATOR . 'ToolkitPCML.php',
         'ToolkitApi\ProgramParameter'   => __DIR__ . DIRECTORY_SEPARATOR . 'ToolkitServiceParameter.php',
         'ToolkitApi\DataStructure'      => __DIR__ . DIRECTORY_SEPARATOR . 'ToolkitServiceParameter.php',
