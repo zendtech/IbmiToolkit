@@ -184,8 +184,12 @@ class Toolkit implements ToolkitInterface
         // set up options in this object. Includes debugging, logging, transport.
         $this->setOptions($this->serviceParams);
 
-        // get transport type from options, wherever it came from.
+        // get transport type from options, wherever it came from, and lowercase it.
         $transportType = $this->getOption('transportType');
+        if (is_string($transportType)) {
+            $transportType = strtolower($transportType);
+        }
+        
         if ($this->isDebug()) {
             $this->debugLog("Creating new conn with database: '$databaseNameOrResource', user or i5 naming flag: '$userOrI5NamingFlag', transport: '$transportType', persistence: '$isPersistent'\n");
         }
