@@ -15,7 +15,7 @@ require_once('ToolkitApi/ToolkitService.php');
 // (adjust parameters as required)
 $user = 'myuser'; 
 $pw = 'mypass';
-$namingMode = 1; // 0 = SQL naming (library lists). 1 = System naming (library lists)
+$namingMode = 1; // 0 = SQL naming. 1 = System naming (enable library lists)
 // Default *LOCAL DSN example. 
 // If you wish to use a different host not specified by a DSN in your ODBC config, either create the DSN or specify the driver and host in your connection string.
 $dsn = '*LOCAL';
