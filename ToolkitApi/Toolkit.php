@@ -906,7 +906,7 @@ class Toolkit implements ToolkitInterface
 
         // can return false if prepare or exec failed.
         $outputXml = $this->db->execXMLStoredProcedure($this->conn, $sql, $bindArray);
-        if (!$outputXml) {
+        if (false === $outputXml) {
             // if false returned, was a database error (stored proc prepare or execute error)
             // @todo add ODBC SQL State codes
 
