@@ -2706,7 +2706,7 @@ function i5_objects_list($library, $name = '*ALL', $type = '*ALL', $connection =
         <data var='USE_TIME' dtsdate='on' comment='Last-used date and time' type='8b' />
         <data var='RESET_TIME' dtsdate='on' comment='Reset date and time' type='8b' />
         <data var='USE_DAYS' comment='Days-used count' type='10i0' />
-        <data var='USE_TIME' comment='Usage information updated' type='1a' />
+        <data var='USE_INFUPD' comment='Usage information updated' type='1a' />
         <data var='FILER5' comment='Filler to end of format (object and lib ASP, reserved)' type='23h' />
         <data var='OBJ_SIZE' comment='Object size' type='10i0' />
         <data var='SIZE_MLTP' comment='Object size multiplier' type='10i0' />
