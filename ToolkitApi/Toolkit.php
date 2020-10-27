@@ -139,7 +139,7 @@ class Toolkit implements ToolkitInterface
      * @param string|resource $databaseNameOrResource
      * @param string $userOrI5NamingFlag 0 = DB2_I5_NAMING_OFF or 1 = DB2_I5_NAMING_ON
      * @param string $password
-     * @param string $transportType (http, ibm_db2, odbc)
+     * @param string $transportType (http, ibm_db2, odbc, ssh)
      * @param bool $isPersistent
      * @throws \Exception
      */
@@ -375,15 +375,19 @@ class Toolkit implements ToolkitInterface
     }
 
     /**
-     * Choose data transport type: ibm_db2, odbc, http
+     * Choose data transport type: ibm_db2, odbc, http, ssh
      *
-     * @param string $transportName 'ibm_db2' or 'odbc' or 'http'
+     * @param string $transportName 'ibm_db2' or 'odbc' or 'http' or 'ssh'
      * @throws \Exception
      */
     protected function chooseTransport($transportName = '')
     {
         switch($transportName)
         {
+            case 'ssh':
+                $transport = new SshSupp();
+                $this->setTransport($transport);
+                break;
             case 'http':
                 $transport = new httpsupp();
                 $transport->setUrl(
