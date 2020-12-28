@@ -124,7 +124,6 @@ final class PdoSupp
      */
     public function execXMLStoredProcedure($conn, $stmt, $bindArray)
     {
-        $conn->beginTransaction();
         $statement = $conn->prepare($stmt);
 
         if (!$statement) {
@@ -137,8 +136,6 @@ final class PdoSupp
             $bindArray['controlKey'],
             $bindArray['inputXml']
         ));
-
-        $conn->commit();
 
         if (!$result) {
             $this->setError($conn);
