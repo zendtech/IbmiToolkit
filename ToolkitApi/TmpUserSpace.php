@@ -1,7 +1,7 @@
 <?php
 namespace ToolkitApi;
 
-class TmpUserSpace
+class TmpUserSpace extends UserSpace
 {
     private $TMPUSName;
 
