@@ -43,7 +43,7 @@ class SpooledFiles
     /**
      *
      */
-    public function __destructor()
+    public function __destruct()
     {
         // empty
     }
