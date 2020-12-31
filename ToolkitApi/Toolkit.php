@@ -339,7 +339,7 @@ class Toolkit implements ToolkitInterface
      */
     protected function validPlugSizeList()
     {
-        return implode($this->validPlugSizes(), ', ');
+        return implode(', ', $this->validPlugSizes());
     }
 
     /**
