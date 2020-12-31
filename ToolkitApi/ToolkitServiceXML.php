@@ -366,7 +366,7 @@ class XMLWrapper
      * @param null $function
      * @return string
      */
-    public function buildXmlIn($inputOutputParams = NULL, array $returnParams = NULL,
+    public function buildXmlIn($inputOutputParams, array $returnParams,
                     $pgm,
                     $lib = "",
                     $function = NULL)

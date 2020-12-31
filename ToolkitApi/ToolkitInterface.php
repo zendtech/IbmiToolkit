@@ -250,7 +250,7 @@ interface ToolkitInterface
      * @param $labelFindLen
      * @return SizeParam
      */
-    static function AddParameterSize($comment, $varName = '', $labelFindLen);
+    static function AddParameterSize($comment, $varName, $labelFindLen);
 
     /**
      * @param $comment
@@ -258,7 +258,7 @@ interface ToolkitInterface
      * @param $labelFindLen
      * @return SizePackParam
      */
-    static function AddParameterSizePack($comment, $varName = '', $labelFindLen);
+    static function AddParameterSizePack($comment, $varName, $labelFindLen);
 
     /**
      * @param $io
