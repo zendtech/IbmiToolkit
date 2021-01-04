@@ -223,6 +223,12 @@ class Toolkit implements ToolkitInterface
             if ($this->isDebug()) {
                 $this->debugLog("Re-using existing db connection with schema separator: $schemaSep");
             }
+        } elseif ($transportType === 'ssh') {
+            $databaseName = $databaseNameOrResource;
+            $user = $userOrI5NamingFlag;
+            $this->chooseTransport($transportType);
+            $transport = $this->getTransport();
+            $conn = $transport->connect($databaseName, $user, $password, array('persistent'=>$this->getIsPersistent()));
         } elseif ($transportType === 'http' || $transportType === 'https') {
             $databaseName = $databaseNameOrResource;
             $user = $userOrI5NamingFlag;
@@ -375,9 +381,9 @@ class Toolkit implements ToolkitInterface
     }
 
     /**
-     * Choose data transport type: ibm_db2, odbc, http, ssh
+     * Choose data transport type: ibm_db2, odbc, pdo, http, https, ssh
      *
-     * @param string $transportName 'ibm_db2' or 'odbc' or 'http' or 'ssh'
+     * @param string $transportName 'ibm_db2' or 'odbc' or 'pdo' or 'http' or 'https' or 'ssh'
      * @throws \Exception
      */
     protected function chooseTransport($transportName = '')
@@ -836,8 +842,19 @@ class Toolkit implements ToolkitInterface
         // If a database transport
         if (isset($this->db) && $this->db) {
             $result = $this->makeDbCall($internalKey, $plugSize, $controlKeyString, $inputXml, $disconnect);
-        } else {
-            // Not a DB transport. At this time, assume HTTP transport (which doesn't use a plug, by the way. uses outbytesize)
+        } else if ($this->getTransport() instanceof SshSupp) {
+            $transport = $this->getTransport();
+            // This is where we reset options like is done in the switch
+            // block that makes the transport for us
+
+            // if debug mode, log control key, and input XML.
+            if ($this->isDebug()) {
+                $this->debugLog("\nExec start: " . date("Y-m-d H:i:s") . "\nVersion of toolkit front end: " . self::getFrontEndVersion() ."\nToolkit class: '" . __FILE__ . "'\nIPC: '" . $this->getInternalKey() . "'. Control key: $controlKeyString\nHost URL: $url\nExpected output size (plugSize): $plugSize or $outByteSize bytes\nInput XML: $inputXml\n");
+                $this->execStartTime = microtime(true);
+            }
+
+            $result = $transport->send($inputXml);
+        } else if ($this->getTransport() instanceof httpsupp) {
             $transport = $this->getTransport();
             $transport->setIpc($internalKey);
             $transport->setCtl($controlKeyString);
