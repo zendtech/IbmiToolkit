@@ -109,11 +109,35 @@ class SshSupp
             ssh2_disconnect($conn);
             return false;
         }
-        // XXX: Public key auth
-        if (!ssh2_auth_password($conn, $user, $password)) {
-            $this->setErrorCode("SSH2_AUTH_PASSWORD");
-            $this->setErrorMsg("error performing password auth over SSH");
-            return false;        
+        $authMethod = array_key_exists("sshMethod", $options) ? $options["sshMethod"] : "password";
+        switch ($authMethod) {
+        case "keyfile":
+            $pub = $options["sshPublicKeyFile"];
+            $priv = $options["sshPrivateKeyFile"];
+            $passphrase = $options["sshPrivateKeyPassphrase"];
+            if (!ssh2_auth_pubkey_file($conn, $user, $pub, $priv, $passphrase)) {
+                $this->setErrorCode("SSH2_AUTH_KEYFILE");
+                $this->setErrorMsg("error performing keyfile auth over SSH");
+                ssh2_disconnect($conn);
+                return false;
+            }
+            break;
+        case "agent":
+            if (!ssh2_auth_agent($conn, $user)) {
+                $this->setErrorCode("SSH2_AUTH_AGENT");
+                $this->setErrorMsg("error performing agent auth over SSH");
+                ssh2_disconnect($conn);
+                return false;
+            }
+            break;
+        case "password":
+            if (!ssh2_auth_password($conn, $user, $password)) {
+                $this->setErrorCode("SSH2_AUTH_PASSWORD");
+                $this->setErrorMsg("error performing password auth over SSH");
+                ssh2_disconnect($conn);
+                return false;
+            }
+            break;
         }
         
         $this->conn = $conn;
