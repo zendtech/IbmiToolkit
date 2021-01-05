@@ -140,12 +140,21 @@ class Toolkit implements ToolkitInterface
      * @param string $userOrI5NamingFlag 0 = DB2_I5_NAMING_OFF or 1 = DB2_I5_NAMING_ON
      * @param string $password
      * @param string $transportType (http, ibm_db2, odbc, ssh)
-     * @param bool $isPersistent
+     * @param array|bool $options Connection options. bool is for just isPersistent (compatibility)
      * @throws \Exception
      */
-    public function __construct($databaseNameOrResource, $userOrI5NamingFlag = '0', $password = '', $transportType = '', $isPersistent = false)
+    public function __construct($databaseNameOrResource, $userOrI5NamingFlag = '0', $password = '', $transportType = '', $options = array("isPersistent" => false))
     {
         $this->execStartTime = '';
+        // to avoid having to rewrite the other code paths
+        $isPersistent = false;
+        if (is_bool($options)) {
+            // compatibility with legacy isPersistent
+            $isPersistent = $options;
+            $options = array("isPersistent" => $options);
+        } else if (is_array($options)) {
+            $isPersistent = array_key_exists("isPersistent", $options) ? $options["isPersistent"] : false;
+        }
 
         // stop any types that are not valid for first parameter. Invalid values may cause toolkit to try to create another database connection.
         if (!is_string($databaseNameOrResource) && !is_resource($databaseNameOrResource) && ((!is_object($databaseNameOrResource) || (is_object($databaseNameOrResource) && get_class($databaseNameOrResource) !== PDO::class)))) {
@@ -228,7 +237,7 @@ class Toolkit implements ToolkitInterface
             $user = $userOrI5NamingFlag;
             $this->chooseTransport($transportType);
             $transport = $this->getTransport();
-            $conn = $transport->connect($databaseName, $user, $password, array('persistent'=>$this->getIsPersistent()));
+            $conn = $transport->connect($databaseName, $user, $password, $options);
         } elseif ($transportType === 'http' || $transportType === 'https') {
             $databaseName = $databaseNameOrResource;
             $user = $userOrI5NamingFlag;
