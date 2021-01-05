@@ -100,8 +100,15 @@ class SshSupp
             $this->setErrorMsg("error connecting to SSH");
             return false;        
         }
-        // XXX: Check fingerprint here
-        $fingerprint = ssh2_fingerprint($conn, SSH2_FINGERPRINT_MD5 | SSH2_FINGERPRINT_HEX);
+        // XXX: should probably be doing better than SHA1 here, but ssh2
+        $remoteFP = ssh2_fingerprint($conn, SSH2_FINGERPRINT_SHA1 | SSH2_FINGERPRINT_HEX);
+        $trustedFP = array_key_exists("sshFingerprint", $options) ? $options["sshFingerprint"] : false;
+        if ($trustedFP !== false && $trustedFP !== $remoteFP) {
+            $this->setErrorCode("SSH2_FINGERPRINT");
+            $this->setErrorMsg("the fingerprint ($remoteFP) differs from the set fingerprint");
+            ssh2_disconnect($conn);
+            return false;
+        }
         // XXX: Public key auth
         if (!ssh2_auth_password($conn, $user, $password)) {
             $this->setErrorCode("SSH2_AUTH_PASSWORD");
