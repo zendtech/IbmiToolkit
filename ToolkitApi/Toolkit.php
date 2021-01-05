@@ -858,7 +858,8 @@ class Toolkit implements ToolkitInterface
 
             // if debug mode, log control key, and input XML.
             if ($this->isDebug()) {
-                $this->debugLog("\nExec start: " . date("Y-m-d H:i:s") . "\nVersion of toolkit front end: " . self::getFrontEndVersion() ."\nToolkit class: '" . __FILE__ . "'\nIPC: '" . $this->getInternalKey() . "'. Control key: $controlKeyString\nHost URL: $url\nExpected output size (plugSize): $plugSize or $outByteSize bytes\nInput XML: $inputXml\n");
+                // SSH transport doesn't use IPC/CTL/out sizes, don't mention them
+                $this->debugLog("\nExec start: " . date("Y-m-d H:i:s") . "\nVersion of toolkit front end: " . self::getFrontEndVersion() ."\nToolkit class: '" . __FILE__ . "'\nInput XML: $inputXml\n");
                 $this->execStartTime = microtime(true);
             }
 
