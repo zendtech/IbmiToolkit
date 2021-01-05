@@ -102,6 +102,7 @@ class Toolkit implements ToolkitInterface
                                 'transportType'  => 'ibm_db2', // can override in getInstance constructor as well
                                 'httpTransportUrl' => '', // for HTTP REST transport
                                 'timeReport'      => false, // *fly or *nofly; if true, return tick counts instead of data.
+                                'xmlserviceCliPath' => '/QOpenSys/pkgs/bin/xmlservice-cli', // The path to the xmlservice-cli program (or compatible API) on the IBM i system. The full path should be used because $PATH may not be set up.
     );
 
     // plug size to bytes cross-reference
@@ -401,6 +402,9 @@ class Toolkit implements ToolkitInterface
         {
             case 'ssh':
                 $transport = new SshSupp();
+                $transport->setXmlserviceCliPath(
+                    $this->getOption('xmlserviceCliPath')
+                );
                 $this->setTransport($transport);
                 break;
             case 'http':
@@ -853,8 +857,8 @@ class Toolkit implements ToolkitInterface
             $result = $this->makeDbCall($internalKey, $plugSize, $controlKeyString, $inputXml, $disconnect);
         } else if ($this->getTransport() instanceof SshSupp) {
             $transport = $this->getTransport();
-            // This is where we reset options like is done in the switch
-            // block that makes the transport for us
+            $xmlserviceCliPath = $this->getOption('xmlserviceCliPath');
+            $transport->setXmlserviceCliPath($xmlserviceCliPath);
 
             // if debug mode, log control key, and input XML.
             if ($this->isDebug()) {

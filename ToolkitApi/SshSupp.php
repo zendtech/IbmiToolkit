@@ -14,6 +14,8 @@ class SshSupp
 
     protected $conn;
 
+    protected $xmlserviceCliPath;
+
     /**
      * @param $xmlIn
      * @return string|bool
@@ -22,7 +24,7 @@ class SshSupp
     {
         // xmlservice-cli takes no options in regards to statefulness
         // (IpcDir, etc) or byte size
-        $ssh_stdio = ssh2_exec($this->conn, "/QOpenSys/pkgs/bin/xmlservice-cli");
+        $ssh_stdio = ssh2_exec($this->conn, $this->getXmlserviceCliPath());
         if (!$ssh_stdio) {
             $this->setErrorCode("SSH2_EXEC");
             $this->setErrorMsg("error executing command over SSH");
@@ -72,6 +74,22 @@ class SshSupp
     protected function setErrorMsg($errorMsg)
     {
         $this->last_errormsg = $errorMsg;
+    }
+
+    /**
+     * @param string $path
+     */
+    public function setXmlserviceCliPath($path)
+    {
+        $this->xmlserviceCliPath = $path;
+    }
+
+    /**
+     * @return null
+     */
+    public function getXmlserviceCliPath()
+    {
+        return $this->xmlserviceCliPath;
     }
 
     /**
