@@ -27,8 +27,8 @@ class SshSupp
             $this->setErrorCode("SSH2_EXEC");
             $this->setErrorMsg("error executing command over SSH");
             return false;
-	}
-	/* XXX */
+        }
+        /* XXX */
         stream_set_blocking($ssh_stdio, true);
         $written = fwrite($ssh_stdio, $xmlIn);
         if ($written === false) {
@@ -90,7 +90,7 @@ class SshSupp
         }
         if (!function_exists("ssh2_send_eof")) {
             $this->setErrorCode("SSH2_NO_SEND_EOF");
-            $this->setErrorMsg("the ssh2 extension is too old to support ssh2_end_eof");
+            $this->setErrorMsg("the ssh2 extension is too old to support ssh2_send_eof");
             return false;
         }
         // XXX: Set options on ourself here
