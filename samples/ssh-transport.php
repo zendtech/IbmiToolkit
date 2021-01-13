@@ -10,10 +10,13 @@
  * - password (default): use the password like other methods.
  * - keyfile: SSH keys (with optional passphrase)
  * - agent: Use the running SSH agent (no need to embed credentials)
+ * Alternatively, you can pass in an existing ssh2 resource that you've set up yourself,
+ * in case the Toolkit doesn't support the scenario you want.
  */
 
 require_once('ToolkitApi/ToolkitService.php');
 try {
+	// Letting Toolkit set it up for you:
 	$options = array(
 		// If this is omitted or set to false, then the Toolkit won't validate the remote fingerprint.
 		// You can set this to gain additional security (that the remote server isn't an impostor).
@@ -38,6 +41,11 @@ try {
 	);
 	$tkobj = ToolkitService::getInstance("hostname", "username", '', "ssh", $options);
 	$res = $tkobj->CLInteractiveCommand("DSPLIBL");
+	var_dump($res);
+	// Setting it up yourself:
+	$sshConn = ssh2_connect(hostname, 2222); // for example, custom port
+	ssh2_auth_agent($sshConn, "username"); // simple example
+	$tkobj = ToolkitService::getInstance($sshConn, "", "", "ssh");
 	var_dump($res);
 } catch (Exception $e) {
 	echo $e->getMessage(), "\n";

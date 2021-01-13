@@ -92,13 +92,7 @@ class SshSupp
         return $this->xmlserviceCliPath;
     }
 
-    /**
-     * @param string $server
-     * @param $user
-     * @param $password
-     * @return SshSupp|bool
-     */
-    public function connect($server, $user, $password, $options = array())
+    private function checkCompat()
     {
         // Only post-1.2 versions of ssh2 have ssh2_send_eof
         if (!extension_loaded("ssh2")) {
@@ -109,6 +103,38 @@ class SshSupp
         if (!function_exists("ssh2_send_eof")) {
             $this->setErrorCode("SSH2_NO_SEND_EOF");
             $this->setErrorMsg("the ssh2 extension is too old to support ssh2_send_eof");
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * @param resource $conn
+     * @return SshSupp|bool
+     */
+    public function connectWithExistingConnection($conn)
+    {
+        if (!$this->checkCompat()) {
+            return false;
+        }
+        if (!$conn || !is_resource($conn)) {
+            $this->setErrorCode("SSH2_NOT_RESOURCE");
+            $this->setErrorMsg("connection isn't a valid resource");
+            return false;
+        }
+        $this->conn = $conn;
+        return $this;
+    }
+
+    /**
+     * @param string $server
+     * @param $user
+     * @param $password
+     * @return SshSupp|bool
+     */
+    public function connect($server, $user, $password, $options = array())
+    {
+        if (!$this->checkCompat()) {
             return false;
         }
         // XXX: Set options on ourself here

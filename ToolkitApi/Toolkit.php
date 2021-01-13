@@ -234,11 +234,16 @@ class Toolkit implements ToolkitInterface
                 $this->debugLog("Re-using existing db connection with schema separator: $schemaSep");
             }
         } elseif ($transportType === 'ssh') {
-            $databaseName = $databaseNameOrResource;
             $user = $userOrI5NamingFlag;
             $this->chooseTransport($transportType);
             $transport = $this->getTransport();
-            $conn = $transport->connect($databaseName, $user, $password, $options);
+            if (is_resource($databaseNameOrResource)) {
+                $sshConn = $databaseNameOrResource;
+                $conn = $transport->connectWithExistingConnection($sshConn);
+            } else {
+                $serverName = $databaseNameOrResource;
+                $conn = $transport->connect($serverName, $user, $password, $options);
+            }
         } elseif ($transportType === 'http' || $transportType === 'https') {
             $databaseName = $databaseNameOrResource;
             $user = $userOrI5NamingFlag;
