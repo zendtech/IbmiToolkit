@@ -38,6 +38,8 @@ try {
 		// (optional)
 		"sshPassphrase" => "dubnobasswithmyheadman"
 		 */
+		// Override the port number
+		"sshPort" => 22,
 	);
 	$tkobj = ToolkitService::getInstance("hostname", "username", '', "ssh", $options);
 	$res = $tkobj->CLInteractiveCommand("DSPLIBL");

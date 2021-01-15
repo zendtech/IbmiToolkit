@@ -130,6 +130,7 @@ class SshSupp
      * @param string $server
      * @param $user
      * @param $password
+     * @param array $options
      * @return SshSupp|bool
      */
     public function connect($server, $user, $password, $options = array())
@@ -137,8 +138,9 @@ class SshSupp
         if (!$this->checkCompat()) {
             return false;
         }
-        // XXX: Set options on ourself here
-        $conn = ssh2_connect($server, 22);
+        // XXX: Set advanced methods here
+        $port = array_key_exists("sshPort", $options) ? $options["sshPort"] : 22;
+        $conn = ssh2_connect($server, $port);
         if (!$conn) {
             $this->setErrorCode("SSH2_CONNECT");
             $this->setErrorMsg("error connecting to SSH");
