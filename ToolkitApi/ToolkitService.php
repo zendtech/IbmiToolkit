@@ -17,7 +17,7 @@ class ToolkitService
      * @param string $userOrI5NamingFlag
      * @param string $password
      * @param string $transportType
-     * @param bool $isPersistent
+     * @param bool|array $isPersistent
      * @return bool|null
      */
     static function getInstance($databaseNameOrResource = '*LOCAL', $userOrI5NamingFlag = '', $password = '', $transportType = '', $isPersistent = false)

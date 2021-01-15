@@ -102,6 +102,7 @@ class Toolkit implements ToolkitInterface
                                 'transportType'  => 'ibm_db2', // can override in getInstance constructor as well
                                 'httpTransportUrl' => '', // for HTTP REST transport
                                 'timeReport'      => false, // *fly or *nofly; if true, return tick counts instead of data.
+                                'xmlserviceCliPath' => '/QOpenSys/pkgs/bin/xmlservice-cli', // The path to the xmlservice-cli program (or compatible API) on the IBM i system. The full path should be used because $PATH may not be set up.
     );
 
     // plug size to bytes cross-reference
@@ -139,13 +140,22 @@ class Toolkit implements ToolkitInterface
      * @param string|resource $databaseNameOrResource
      * @param string $userOrI5NamingFlag 0 = DB2_I5_NAMING_OFF or 1 = DB2_I5_NAMING_ON
      * @param string $password
-     * @param string $transportType (http, ibm_db2, odbc)
-     * @param bool $isPersistent
+     * @param string $transportType (http, ibm_db2, odbc, ssh)
+     * @param array|bool $options Connection options. bool is for just isPersistent (compatibility)
      * @throws \Exception
      */
-    public function __construct($databaseNameOrResource, $userOrI5NamingFlag = '0', $password = '', $transportType = '', $isPersistent = false)
+    public function __construct($databaseNameOrResource, $userOrI5NamingFlag = '0', $password = '', $transportType = '', $options = array("isPersistent" => false))
     {
         $this->execStartTime = '';
+        // to avoid having to rewrite the other code paths
+        $isPersistent = false;
+        if (is_bool($options)) {
+            // compatibility with legacy isPersistent
+            $isPersistent = $options;
+            $options = array("isPersistent" => $options);
+        } else if (is_array($options)) {
+            $isPersistent = array_key_exists("isPersistent", $options) ? $options["isPersistent"] : false;
+        }
 
         // stop any types that are not valid for first parameter. Invalid values may cause toolkit to try to create another database connection.
         if (!is_string($databaseNameOrResource) && !is_resource($databaseNameOrResource) && ((!is_object($databaseNameOrResource) || (is_object($databaseNameOrResource) && get_class($databaseNameOrResource) !== PDO::class)))) {
@@ -222,6 +232,17 @@ class Toolkit implements ToolkitInterface
             $this->chooseTransport('pdo');
             if ($this->isDebug()) {
                 $this->debugLog("Re-using existing db connection with schema separator: $schemaSep");
+            }
+        } elseif ($transportType === 'ssh') {
+            $user = $userOrI5NamingFlag;
+            $this->chooseTransport($transportType);
+            $transport = $this->getTransport();
+            if (is_resource($databaseNameOrResource)) {
+                $sshConn = $databaseNameOrResource;
+                $conn = $transport->connectWithExistingConnection($sshConn);
+            } else {
+                $serverName = $databaseNameOrResource;
+                $conn = $transport->connect($serverName, $user, $password, $options);
             }
         } elseif ($transportType === 'http' || $transportType === 'https') {
             $databaseName = $databaseNameOrResource;
@@ -375,15 +396,22 @@ class Toolkit implements ToolkitInterface
     }
 
     /**
-     * Choose data transport type: ibm_db2, odbc, http
+     * Choose data transport type: ibm_db2, odbc, pdo, http, https, ssh
      *
-     * @param string $transportName 'ibm_db2' or 'odbc' or 'http'
+     * @param string $transportName 'ibm_db2' or 'odbc' or 'pdo' or 'http' or 'https' or 'ssh'
      * @throws \Exception
      */
     protected function chooseTransport($transportName = '')
     {
         switch($transportName)
         {
+            case 'ssh':
+                $transport = new SshSupp();
+                $transport->setXmlserviceCliPath(
+                    $this->getOption('xmlserviceCliPath')
+                );
+                $this->setTransport($transport);
+                break;
             case 'http':
                 $transport = new httpsupp();
                 $transport->setUrl(
@@ -832,8 +860,20 @@ class Toolkit implements ToolkitInterface
         // If a database transport
         if (isset($this->db) && $this->db) {
             $result = $this->makeDbCall($internalKey, $plugSize, $controlKeyString, $inputXml, $disconnect);
-        } else {
-            // Not a DB transport. At this time, assume HTTP transport (which doesn't use a plug, by the way. uses outbytesize)
+        } else if ($this->getTransport() instanceof SshSupp) {
+            $transport = $this->getTransport();
+            $xmlserviceCliPath = $this->getOption('xmlserviceCliPath');
+            $transport->setXmlserviceCliPath($xmlserviceCliPath);
+
+            // if debug mode, log control key, and input XML.
+            if ($this->isDebug()) {
+                // SSH transport doesn't use IPC/CTL/out sizes, don't mention them
+                $this->debugLog("\nExec start: " . date("Y-m-d H:i:s") . "\nVersion of toolkit front end: " . self::getFrontEndVersion() ."\nToolkit class: '" . __FILE__ . "'\nInput XML: $inputXml\n");
+                $this->execStartTime = microtime(true);
+            }
+
+            $result = $transport->send($inputXml);
+        } else if ($this->getTransport() instanceof httpsupp) {
             $transport = $this->getTransport();
             $transport->setIpc($internalKey);
             $transport->setCtl($controlKeyString);
