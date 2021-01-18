@@ -182,7 +182,7 @@ class Toolkit implements ToolkitInterface
 
         // Optional params. Don't specify if not given in INI.
         $this->getOptionalParams('system', array('v5r4', 'ccsidBefore', 'ccsidAfter', 'useHex', 'paseCcsid', 'trace', 'dataStructureIntegrity',  'arrayIntegrity'));
-        $this->getOptionalParams('transport', array('httpTransportUrl', 'plugSize'));
+        $this->getOptionalParams('transport', array('httpTransportUrl', 'plugSize', 'xmlserviceCliPath'));
 
         // populate serviceParams with $transport, or get it from INI
         if (!$transportType) {
