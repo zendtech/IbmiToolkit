@@ -140,7 +140,7 @@ class Toolkit implements ToolkitInterface
      * @param string|resource $databaseNameOrResource
      * @param string $userOrI5NamingFlag 0 = DB2_I5_NAMING_OFF or 1 = DB2_I5_NAMING_ON
      * @param string $password
-     * @param string $transportType (http, ibm_db2, odbc, ssh)
+     * @param string $transportType (http, ibm_db2, odbc, ssh, local)
      * @param array|bool $options Connection options. bool is for just isPersistent (compatibility)
      * @throws \Exception
      */
@@ -182,7 +182,7 @@ class Toolkit implements ToolkitInterface
 
         // Optional params. Don't specify if not given in INI.
         $this->getOptionalParams('system', array('v5r4', 'ccsidBefore', 'ccsidAfter', 'useHex', 'paseCcsid', 'trace', 'dataStructureIntegrity',  'arrayIntegrity'));
-        $this->getOptionalParams('transport', array('httpTransportUrl', 'plugSize'));
+        $this->getOptionalParams('transport', array('httpTransportUrl', 'plugSize', 'xmlserviceCliPath'));
 
         // populate serviceParams with $transport, or get it from INI
         if (!$transportType) {
@@ -233,6 +233,12 @@ class Toolkit implements ToolkitInterface
             if ($this->isDebug()) {
                 $this->debugLog("Re-using existing db connection with schema separator: $schemaSep");
             }
+        } elseif ($transportType === 'local') {
+            $user = $userOrI5NamingFlag;
+            $this->chooseTransport($transportType);
+            $transport = $this->getTransport();
+            // Doesn't actually do any connecting, but does validate
+            $conn = $transport->connect($databaseNameOrResource, $user, $password, $options);
         } elseif ($transportType === 'ssh') {
             $user = $userOrI5NamingFlag;
             $this->chooseTransport($transportType);
@@ -396,15 +402,22 @@ class Toolkit implements ToolkitInterface
     }
 
     /**
-     * Choose data transport type: ibm_db2, odbc, pdo, http, https, ssh
+     * Choose data transport type: ibm_db2, odbc, pdo, http, https, ssh, local
      *
-     * @param string $transportName 'ibm_db2' or 'odbc' or 'pdo' or 'http' or 'https' or 'ssh'
+     * @param string $transportName 'ibm_db2' or 'odbc' or 'pdo' or 'http' or 'https' or 'ssh' or 'local'
      * @throws \Exception
      */
     protected function chooseTransport($transportName = '')
     {
         switch($transportName)
         {
+            case 'local':
+                $transport = new LocalSupp();
+                $transport->setXmlserviceCliPath(
+                    $this->getOption('xmlserviceCliPath')
+                );
+                $this->setTransport($transport);
+                break;
             case 'ssh':
                 $transport = new SshSupp();
                 $transport->setXmlserviceCliPath(
@@ -860,6 +873,20 @@ class Toolkit implements ToolkitInterface
         // If a database transport
         if (isset($this->db) && $this->db) {
             $result = $this->makeDbCall($internalKey, $plugSize, $controlKeyString, $inputXml, $disconnect);
+        } else if ($this->getTransport() instanceof LocalSupp) {
+            // Not divergent from SSH impl just yet
+            $transport = $this->getTransport();
+            $xmlserviceCliPath = $this->getOption('xmlserviceCliPath');
+            $transport->setXmlserviceCliPath($xmlserviceCliPath);
+
+            // if debug mode, log control key, and input XML.
+            if ($this->isDebug()) {
+                // Local transport doesn't use IPC/CTL/out sizes, don't mention them
+                $this->debugLog("\nExec start: " . date("Y-m-d H:i:s") . "\nVersion of toolkit front end: " . self::getFrontEndVersion() ."\nToolkit class: '" . __FILE__ . "'\nInput XML: $inputXml\n");
+                $this->execStartTime = microtime(true);
+            }
+
+            $result = $transport->send($inputXml);
         } else if ($this->getTransport() instanceof SshSupp) {
             $transport = $this->getTransport();
             $xmlserviceCliPath = $this->getOption('xmlserviceCliPath');

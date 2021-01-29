@@ -9,6 +9,7 @@ spl_autoload_register(function($class){
         'ToolkitApi\db2supp'            => __DIR__ . DIRECTORY_SEPARATOR . 'Db2supp.php',
         'ToolkitApi\httpsupp'           => __DIR__ . DIRECTORY_SEPARATOR . 'httpsupp.php',
         'ToolkitApi\SshSupp'            => __DIR__ . DIRECTORY_SEPARATOR . 'SshSupp.php',
+        'ToolkitApi\LocalSupp'            => __DIR__ . DIRECTORY_SEPARATOR . 'LocalSupp.php',
         'ToolkitApi\DateTimeApi'        => __DIR__ . DIRECTORY_SEPARATOR . 'DateTimeApi.php',
         'ToolkitApi\ListFromApi'        => __DIR__ . DIRECTORY_SEPARATOR . 'ListFromApi.php',
         'ToolkitApi\UserSpace'          => __DIR__ . DIRECTORY_SEPARATOR . 'UserSpace.php',
