@@ -18,7 +18,7 @@ if (!defined('CONFIG_FILE')) {
  */
 class Toolkit implements ToolkitInterface
 {
-    const VERSION =  "1.8.5"; // version number for front-end PHP toolkit
+    const VERSION =  "1.9.0"; // version number for front-end PHP toolkit
 
     /* @todo use inputXml and outputXml to make this class more flexibly OO-like. Fewer strings copied around.
      * Better would be to use a Request object that has a connection.
