@@ -1313,8 +1313,8 @@ class Toolkit implements ToolkitInterface
                         return array_slice($resultArray, 1);
                     }
                 } else {
-                    // look for a CPF code in second line. May not always be there.
-                    // will resemble: catsplf: 001-2003 Error CPF3492 found processing spool file QSYSPRT, number 2.
+                    // Look for a CPF code in second line, although the second line may not be there, nor may the CPF, depending on the error.
+                    // Second line will resemble: catsplf: 001-2003 Error CPF3492 found processing spool file QSYSPRT, number 2.
                     // or: catsplf: 001-2373 Job 579272/QTMHHTP1/WSURVEY400 was not found."
                     //
                     // @todo extract CPF code.
@@ -1322,8 +1322,10 @@ class Toolkit implements ToolkitInterface
                     if (isset($resultArray[1])) {
                         $secondLine = trim($resultArray[1]);
                         $this->cpfErr = $secondLine;
-                        return false;
                     }
+                    // A nonzero exit status indicates failure, even when there is no second line of output.
+                    // To test this principle, pass in the command "false", which always fails, but provides no second line of output.  
+                    return false;
                 }
                 /*} elseif ($exitStatus == '127') {
                     // look for errmsg in second line (e.g. cannot find command)
