@@ -49,7 +49,7 @@ class ProgramParameter
      * @param bool $useHex
      * @throws \Exception
      */
-    function __construct( $type,  $io, $comment, $varName, $value, $varying = 'off', $dimension = 0, $by = 'ref', $isArray = false, $labelSetLen = null, $labelLen = null,
+    function __construct( $type,  $io, $comment='', $varName = '', $value = '', $varying = 'off', $dimension = 0, $by = 'ref', $isArray = false, $labelSetLen = null, $labelLen = null,
                           $ccsidBefore = '', $ccsidAfter = '', $useHex = false)
     {
         // some properties are different if value is an array (implement via a data structure).
@@ -468,7 +468,7 @@ class CharParam extends ProgramParameter
      * @param string $ccsidAfter
      * @param bool $useHex
      */
-    function __construct($io, $size, $comment, $varName, $value , $varying = 'off', $dimension = 0, $by='', $isArray = false,
+    function __construct($io, $size, $comment, $varName = '', $value = '', $varying = 'off', $dimension = 0, $by='', $isArray = false,
                          $ccsidBefore = '', $ccsidAfter = '', $useHex = false)
     {
         $type = sprintf("%dA", $size);
@@ -497,7 +497,7 @@ class ZonedParam extends ProgramParameter
      * @param string $by
      * @param bool $isArray
      */
-    function __construct($io, $length, $scale, $comment, $varName, $value, $dimension=0, $by='', $isArray = false)
+    function __construct($io, $length, $scale, $comment, $varName = '', $value = '', $dimension=0, $by='', $isArray = false)
     {
         $type = sprintf("%ds%d", $length, $scale);
         parent::__construct($type, $io, $comment, $varName, $value, 'off', $dimension, $by, $isArray, null, null, '', '', false);
@@ -525,7 +525,7 @@ class PackedDecParam extends ProgramParameter
      * @param bool $isArray
      * @param null $labelSetLen
      */
-    function __construct($io, $length, $scale, $comment,  $varName, $value, $dimension=0, $by='', $isArray = false,  $labelSetLen = null)
+    function __construct($io, $length, $scale, $comment,  $varName = '', $value = '', $dimension=0, $by='', $isArray = false,  $labelSetLen = null)
     {
         $type = sprintf("%dp%d", $length, $scale);
         parent::__construct( $type, $io, $comment, $varName, $value, 'off', $dimension, $by, $isArray, $labelSetLen, null, '', '', false);
@@ -550,7 +550,7 @@ class Int32Param extends ProgramParameter
      * @param bool $isArray
      * @param null $labelSetLen
      */
-     function __construct($io, $comment, $varName, $value, $dimension=0, $by='', $isArray = false, $labelSetLen = null)
+     function __construct($io, $comment, $varName = '', $value = '', $dimension=0, $by='', $isArray = false, $labelSetLen = null)
      {
         parent::__construct('10i0', $io, $comment, $varName, $value, 'off', $dimension, $by, $isArray, $labelSetLen, null);
         return $this;
@@ -570,7 +570,7 @@ class SizeParam extends Int32Param
      * @param string $varName
      * @param string $labelSetLen
      */
-     function __construct($comment, $varName, $labelSetLen)
+     function __construct($comment, $varName = '', $labelSetLen = null)
      {
         parent::__construct('in', $comment, $varName, 0,  0, '', false, $labelSetLen);
         return $this;
@@ -590,7 +590,7 @@ class SizePackParam extends PackedDecParam
      * @param string $varName
      * @param string $labelSetLen
      */
-     function __construct($comment, $varName, $labelSetLen)
+     function __construct($comment, $varName = '', $labelSetLen = null)
      {
         parent::__construct('in', 5, 0, $comment, $varName, 0, 0, '', false, $labelSetLen);
         return $this;
@@ -613,7 +613,7 @@ class Int64Param extends ProgramParameter
      * @param string $by
      * @param bool $isArray
      */
-    function __construct($io, $comment, $varName, $value, $dimension=0, $by='', $isArray = false)
+    function __construct($io, $comment, $varName = '', $value = '', $dimension=0, $by='', $isArray = false)
     {
         parent::__construct('20i0', $io, $comment, $varName, $value, 'off', $dimension, $by, $isArray);
         return $this;
@@ -636,7 +636,7 @@ class UInt32Param extends ProgramParameter
      * @param string $by
      * @param bool $isArray
      */
-     function __construct($io, $comment, $varName, $value, $dimension=0, $by='', $isArray = false)
+     function __construct($io, $comment, $varName = '', $value = '', $dimension=0, $by='', $isArray = false)
      {
         parent::__construct('10u0', $io, $comment, $varName, $value, 'off', $dimension, $by, $isArray);
         return $this;
@@ -659,7 +659,7 @@ class UInt64Param extends ProgramParameter
      * @param string $by
      * @param bool $isArray
      */
-    function __construct($io, $comment, $varName, $value, $dimension=0, $by='', $isArray = false)
+    function __construct($io, $comment, $varName = '', $value = '', $dimension=0, $by='', $isArray = false)
     {
         parent::__construct('20u0', $io, $comment, $varName, $value, 'off', $dimension, $by, $isArray);
         return $this;
@@ -682,7 +682,7 @@ class FloatParam extends ProgramParameter
      * @param string $by
      * @param bool $isArray
      */
-    function __construct($io, $comment, $varName, $value, $dimension=0, $by='', $isArray = false)
+    function __construct($io, $comment, $varName = '', $value = '', $dimension=0, $by='', $isArray = false)
     {
         parent::__construct('4f', $io, $comment, $varName, $value, 'off', $dimension, $by, $isArray);
         return $this;
@@ -705,7 +705,7 @@ class RealParam extends ProgramParameter
      * @param string $by
      * @param bool $isArray
      */
-    function __construct($io, $comment, $varName, $value, $dimension=0, $by='', $isArray = false)
+    function __construct($io, $comment, $varName = '', $value = '', $dimension=0, $by='', $isArray = false)
     {
         parent::__construct('8f', $io, $comment, $varName, $value, 'off', $dimension, $by, $isArray);
         return $this;
@@ -751,7 +751,7 @@ class BinParam extends ProgramParameter
      * @param string $by
      * @param bool $isArray
      */
-    function __construct($io, $size , $comment, $varName, $value, $dimension=0, $by='', $isArray = false)
+    function __construct($io, $size , $comment, $varName = '', $value = '', $dimension=0, $by='', $isArray = false)
     {
         $type = sprintf("%dB", $size);
         parent::__construct($type,  $io, $comment, $varName, $value, 'off', $dimension, $by, $isArray);
