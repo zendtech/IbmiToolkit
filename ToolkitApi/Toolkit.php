@@ -1434,7 +1434,7 @@ class Toolkit implements ToolkitInterface
      * @param $labelFindLen
      * @return SizeParam
      */
-    static function AddParameterSize($comment, $varName = '', $labelFindLen)
+    static function AddParameterSize($comment, $varName = '', $labelFindLen = 0)
     {
         return new SizeParam($comment, $varName, $labelFindLen);
     }
@@ -1445,7 +1445,7 @@ class Toolkit implements ToolkitInterface
      * @param $labelFindLen
      * @return SizePackParam
      */
-    static function AddParameterSizePack($comment, $varName = '', $labelFindLen)
+    static function AddParameterSizePack($comment, $varName = '', $labelFindLen = 0)
     {
         return new SizePackParam($comment, $varName, $labelFindLen);
     }
