@@ -158,7 +158,7 @@ function noError()
  * @param array $options
  * @return mixed
  */
-function i5_connect($host='localhost', $user='', $password='', $options=array())
+function i5_connect($host='', $user='', $password='', $options=array())
 {
     // Special warning. We do not support proprietary codepagefile.
     if (isset($options[I5_OPTIONS_CODEPAGEFILE])) {
@@ -292,6 +292,11 @@ function i5_connect($host='localhost', $user='', $password='', $options=array())
             $transportType = $iniTransportType;
         }
     }
+    
+    // accommodate ('', '', '') style of connection
+    if (!$host) {
+        $host = 'localhost';
+    }    
     
     // convert host to dbname
     $dbname = getConfigValue('hosts', $host);
