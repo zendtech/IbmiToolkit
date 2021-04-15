@@ -281,7 +281,7 @@ class httpsupp
      * @param $pw
      * @return $this
      */
-    public function http_connect($db = '*LOCAL', $user, $pw)
+    public function http_connect($db, $user, $pw)
     {
         $this->_db = $db;
         $this->_user = $user;
@@ -296,7 +296,7 @@ class httpsupp
      * @param $password
      * @return httpsupp
      */
-    public function connect($database = '*LOCAL', $user, $password)
+    public function connect($database, $user, $password)
     {
         return $this->http_connect($database, $user, $password);
     

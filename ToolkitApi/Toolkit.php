@@ -1802,7 +1802,7 @@ class Toolkit implements ToolkitInterface
      * @param $lengthOfReceiverVariable
      * @return string
      */
-    static function getDummyReceiverAndLengthApiXml($paramNum = 1, $lengthOfReceiverVariable)
+    static function getDummyReceiverAndLengthApiXml($paramNum, $lengthOfReceiverVariable)
     {
         $paramNumStr = $paramNum . '.';
         $paramNumStrNext = ($paramNum + 1) . '.';
