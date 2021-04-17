@@ -303,7 +303,7 @@ class httpsupp
     public function connect($database, $user, $password)
     {
         if(!isset($database)) {
-            $db = '*LOCAL';
+            $database = '*LOCAL';
         }
 
         return $this->http_connect($database, $user, $password);
