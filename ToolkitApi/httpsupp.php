@@ -283,6 +283,10 @@ class httpsupp
      */
     public function http_connect($db, $user, $pw)
     {
+        if(!isset($db)) {
+            $db = '*LOCAL';
+        }
+
         $this->_db = $db;
         $this->_user = $user;
         $this->_pw = $pw;
