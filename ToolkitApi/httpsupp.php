@@ -283,7 +283,7 @@ class httpsupp
      */
     public function http_connect($db, $user, $pw)
     {
-        if(!isset($db)) {
+        if($db) {
             $db = '*LOCAL';
         }
 
@@ -302,7 +302,7 @@ class httpsupp
      */
     public function connect($database, $user, $password)
     {
-        if(!isset($database)) {
+        if(!$database) {
             $database = '*LOCAL';
         }
 
