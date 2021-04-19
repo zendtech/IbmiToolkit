@@ -283,6 +283,7 @@ class httpsupp
      */
     public function http_connect($db, $user, $pw)
     {
+        // accommodate ('', '', '') style of connection
         if($db) {
             $db = '*LOCAL';
         }
@@ -302,6 +303,7 @@ class httpsupp
      */
     public function connect($database, $user, $password)
     {
+        // accommodate ('', '', '') style of connection
         if(!$database) {
             $database = '*LOCAL';
         }
