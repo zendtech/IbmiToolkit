@@ -284,7 +284,7 @@ class httpsupp
     public function http_connect($db, $user, $pw)
     {
         // accommodate ('', '', '') style of connection
-        if($db) {
+        if(!$db) {
             $db = '*LOCAL';
         }
 
