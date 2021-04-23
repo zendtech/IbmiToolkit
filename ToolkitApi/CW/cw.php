@@ -3163,7 +3163,7 @@ function i5_dtaq_receive($queue, $operatorOrTimeout = '', $key = '', $timeout = 
  * @param string $key
  * @param $data
  */
-function i5_dtaq_send($queue, $key='', $data)
+function i5_dtaq_send($queue, $key, $data)
 {
     if (!$queue) {
         i5ErrorActivity(I5_ERR_PHP_ELEMENT_MISSING, I5_CAT_PHP, 'Missing data queue description', 'Missing data queue description');

@@ -201,7 +201,7 @@ class UserSpace
      * @param $value
      * @return bool
      */
-    public function WriteUserSpace($startpos = 1, $valuelen, $value)
+    public function WriteUserSpace($startpos, $valuelen, $value)
     {
         //Size ($comment, $varName = '', $labelFindLen = null) {
         $params[] =  Toolkit::AddParameterChar ('in', 20, "User space name and lib", 'usfullname', $this->getUSFullName());
@@ -226,7 +226,7 @@ class UserSpace
      * @param ProgramParameter $param
      * @return bool
      */
-    public function WriteUserSpaceCw($startPos = 1, ProgramParameter $param)
+    public function WriteUserSpaceCw($startPos, ProgramParameter $param)
     {
         /*
          if (!is_object($param) && !is_array($param)) {

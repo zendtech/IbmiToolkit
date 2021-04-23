@@ -456,7 +456,7 @@ interface ToolkitInterface
      * @param $lengthOfReceiverVariable
      * @return string
      */
-    static function getDummyReceiverAndLengthApiXml($paramNum = 1, $lengthOfReceiverVariable);
+    static function getDummyReceiverAndLengthApiXml($paramNum, $lengthOfReceiverVariable);
 
     /**
      * @return string
