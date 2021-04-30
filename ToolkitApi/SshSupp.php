@@ -102,7 +102,7 @@ class SshSupp
         }
         if (!function_exists("ssh2_send_eof")) {
             $this->setErrorCode("SSH2_NO_SEND_EOF");
-            $this->setErrorMsg("the ssh2 extension is too old to support ssh2_send_eof");
+            $this->setErrorMsg("the ssh2 extension is too old to support ssh2_send_eof, use 1.3 or newer");
             return false;
         }
         return true;
