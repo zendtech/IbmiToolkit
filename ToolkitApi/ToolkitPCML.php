@@ -71,7 +71,7 @@ class ToolkitPcml
         $this->setCountersAndCounted($countersAndCounted);
         
         // Convert PCML from ANSI format (which old toolkit required) to UTF-8 (which SimpleXML requires).
-        $encoding = getConfigValue('system', 'encoding', 'ISO-8859-1'); // XML encoding
+        $encoding = Toolkit::getConfigValue('system', 'encoding', 'ISO-8859-1'); // XML encoding
 
         /*
          * Look for optionally set <?xml encoding attribute
