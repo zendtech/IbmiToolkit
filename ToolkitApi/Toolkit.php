@@ -2479,7 +2479,26 @@ class Toolkit implements ToolkitInterface
         // if we haven't read config file yet, do so.
         if (!isset(self::$_config)) {
             // read/stat INI once and only once per request
-            self::$_config = parse_ini_file(CONFIG_FILE, true);
+            // We'll try these locations for the INI in order:
+            // - an environment variable (i.e so it can be set per-site)
+            // - a system dir (/QOpenSys prefixed on i)
+            // - where Toolkit is installed to (for back compat)
+            // It's clearer if we dynamically build it.
+            $locations = array(
+                CONFIG_FILE
+            );
+            array_unshift($locations, PHP_OS == "OS400" ?
+                "/QOpenSys/etc/php-toolkit.ini" : "etc/php-toolkit.ini");
+            $custom_ini_path = getenv("PHP_TOOLKIT_INI");
+            if ($custom_ini_path) {
+                array_unshift($locations, $custom_ini_path);
+            }
+            foreach ($locations as $location) {
+                self::$_config = parse_ini_file($location, true);
+                if (self::$_config !== false) {
+                    break;
+                }
+            }
         }
 
         if (isset(self::$_config[$heading][$key])) {
