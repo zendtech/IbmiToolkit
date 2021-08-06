@@ -200,12 +200,22 @@ class Toolkit implements ToolkitInterface
             $transportType = strtolower($transportType);
         }
         
+        $isResource = is_resource($databaseNameOrResource);
+        $isPdo = ($databaseNameOrResource instanceof PDO);
+        
         if ($this->isDebug()) {
-            $this->debugLog("Creating new conn with database: '$databaseNameOrResource', user or i5 naming flag: '$userOrI5NamingFlag', transport: '$transportType', persistence: '$isPersistent'\n");
-        }
-
+            
+            if ($isPdo) {
+                $databaseString = 'PDO driver: ' . $databaseNameOrResource->getAttribute(PDO::ATTR_DRIVER_NAME) . '. Object hash: ' . spl_object_hash($databaseNameOrResource);
+            } else {
+                $databaseString = $databaseNameOrResource;
+            } //(if ($isPdo))
+            
+            $this->debugLog("Creating new toolkit conn with database: '$databaseString', user or i5 naming flag: '$userOrI5NamingFlag', transport: '$transportType', persistence: '$isPersistent'\n");
+        } //(if ($this->isDebug()))
+        
         // do we have a DB resource "by user" or do we create one
-        if ($transportType === 'ibm_db2' && is_resource($databaseNameOrResource)) {
+        if ($transportType === 'ibm_db2' && $isResource) {
             $conn = $databaseNameOrResource;
             $this->_i5NamingFlag = $userOrI5NamingFlag;
             $schemaSep = ($this->_i5NamingFlag) ? '/' : '.';
@@ -214,7 +224,7 @@ class Toolkit implements ToolkitInterface
             if ($this->isDebug()) {
                 $this->debugLog("Re-using existing db connection with schema separator: $schemaSep");
             }
-        } elseif ($transportType === 'odbc' && is_resource($databaseNameOrResource)) {
+        } elseif ($transportType === 'odbc' && $isResource) {
             $conn = $databaseNameOrResource;
             $this->_i5NamingFlag = $userOrI5NamingFlag;
             $schemaSep = ($this->_i5NamingFlag) ? '/' : '.';
@@ -223,7 +233,7 @@ class Toolkit implements ToolkitInterface
             if ($this->isDebug()) {
                 $this->debugLog("Re-using existing db connection with schema separator: $schemaSep");
             }
-        } elseif ($databaseNameOrResource instanceof PDO && $transportType === 'pdo') {
+        } elseif ($transportType === 'pdo' && $isPdo) {
             $conn = $databaseNameOrResource;
             $this->db = $conn;
             $this->_i5NamingFlag = $userOrI5NamingFlag;
