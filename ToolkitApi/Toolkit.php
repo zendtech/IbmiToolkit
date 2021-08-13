@@ -525,7 +525,7 @@ class Toolkit implements ToolkitInterface
         // if a plug name is passed in, it overrides plugPrefix and plugSize.
         if (isset($options['plug']) && $options['plug']) {
             // @todo enumerate plug prefixes centrally, tied to db extension name, at top of this class
-            $possiblePrefixes = array('iPLUG', 'iPLUGR');
+            $possiblePrefixes = array('iPLUGR', 'iPLUG');
             $options['plugSize'] = str_replace($possiblePrefixes, '', $options['plug']); // remove prefix to get size
             $options['plugPrefix'] = str_replace($options['plugSize'], '', $options['plug']); // remove size to get prefix
 
