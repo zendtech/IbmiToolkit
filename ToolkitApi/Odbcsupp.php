@@ -8,17 +8,24 @@ namespace ToolkitApi;
  */
 class odbcsupp
 {
+    /**
+     * @var string
+     */
     private $last_errorcode;
+
+    /**
+     * @var string
+     */
     private $last_errormsg;
 
     /**
      * 
      * @todo should perhaps handle this method differently if $options are not passed
      *
-     * @param $database
-     * @param $user
-     * @param $password
-     * @param null $options
+     * @param string $database
+     * @param string $user
+     * @param string $password
+     * @param array|null $options
      * @return bool|resource
      */
     public function connect($database, $user, $password, $options = null)
@@ -40,7 +47,7 @@ class odbcsupp
     }
 
     /**
-     * @param $conn
+     * @param resource $conn
      */
     public function disconnect($conn)
     {
@@ -55,7 +62,7 @@ class odbcsupp
      * @todo: consider using GET DIAGNOSTICS for even more message text:
      * http://publib.boulder.ibm.com/infocenter/iseries/v5r4/index.jsp?topic=%2Frzala%2Frzalafinder.htm
      * 
-     * @param null $conn
+     * @param resource|null $conn
      */
     protected function setError($conn = null)
     {
@@ -70,7 +77,7 @@ class odbcsupp
     }
 
     /**
-     * @param $errorCode
+     * @param string $errorCode
      */
     protected function setErrorCode($errorCode)
     {
@@ -86,7 +93,7 @@ class odbcsupp
     }
 
     /**
-     * @param $errorMsg
+     * @param string $errorMsg
      */
     protected function setErrorMsg($errorMsg)
     {
@@ -104,9 +111,9 @@ class odbcsupp
     /**
      * this function used for special stored procedure call only
      * 
-     * @param $conn
-     * @param $stmt
-     * @param $bindArray
+     * @param resource $conn
+     * @param string $stmt
+     * @param array $bindArray
      * @return string
      */
     public function execXMLStoredProcedure($conn, $stmt, $bindArray)
@@ -152,8 +159,8 @@ class odbcsupp
     }
 
     /**
-     * @param $conn
-     * @param $stmt
+     * @param resource $conn
+     * @param string $stmt
      * @return array
      */
     public function executeQuery($conn, $stmt)

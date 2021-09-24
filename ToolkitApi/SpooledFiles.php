@@ -16,10 +16,10 @@ class SpooledFiles
     private $ErrMessage;
 
     /**
-     * @param Toolkit $ToolkitSrvObj
+     * @param ToolkitInterface $ToolkitSrvObj
      * @param null $UserLib
      */
-    public function __construct(Toolkit $ToolkitSrvObj = NULL, $UserLib = NULL)
+    public function __construct(ToolkitInterface $ToolkitSrvObj = NULL, $UserLib = NULL)
     {
         if ($ToolkitSrvObj instanceof Toolkit) {
             $this->ToolkitSrvObj = $ToolkitSrvObj;
@@ -43,7 +43,7 @@ class SpooledFiles
     /**
      *
      */
-    public function __destructor()
+    public function __destruct()
     {
         // empty
     }

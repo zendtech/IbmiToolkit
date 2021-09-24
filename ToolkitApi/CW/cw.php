@@ -7,6 +7,8 @@ use ToolkitApi\ListFromApi;
 use ToolkitApi\DataArea;
 use ToolkitApi\UserSpace;
 
+require_once 'cwclasses.php';
+
 /**
  * Procedural Compatibility Wrapper for IBM i Toolkit for PHP
  */
@@ -156,7 +158,7 @@ function noError()
  * @param array $options
  * @return mixed
  */
-function i5_connect($host='localhost', $user='', $password='', $options=array())
+function i5_connect($host='', $user='', $password='', $options=array())
 {
     // Special warning. We do not support proprietary codepagefile.
     if (isset($options[I5_OPTIONS_CODEPAGEFILE])) {
@@ -290,6 +292,11 @@ function i5_connect($host='localhost', $user='', $password='', $options=array())
             $transportType = $iniTransportType;
         }
     }
+    
+    // accommodate ('', '', '') style of connection
+    if (!$host) {
+        $host = 'localhost';
+    }    
     
     // convert host to dbname
     $dbname = getConfigValue('hosts', $host);
@@ -2704,7 +2711,7 @@ function i5_objects_list($library, $name = '*ALL', $type = '*ALL', $connection =
         <data var='USE_TIME' dtsdate='on' comment='Last-used date and time' type='8b' />
         <data var='RESET_TIME' dtsdate='on' comment='Reset date and time' type='8b' />
         <data var='USE_DAYS' comment='Days-used count' type='10i0' />
-        <data var='USE_TIME' comment='Usage information updated' type='1a' />
+        <data var='USE_INFUPD' comment='Usage information updated' type='1a' />
         <data var='FILER5' comment='Filler to end of format (object and lib ASP, reserved)' type='23h' />
         <data var='OBJ_SIZE' comment='Object size' type='10i0' />
         <data var='SIZE_MLTP' comment='Object size multiplier' type='10i0' />
@@ -3156,7 +3163,7 @@ function i5_dtaq_receive($queue, $operatorOrTimeout = '', $key = '', $timeout = 
  * @param string $key
  * @param $data
  */
-function i5_dtaq_send($queue, $key='', $data)
+function i5_dtaq_send($queue, $key, $data)
 {
     if (!$queue) {
         i5ErrorActivity(I5_ERR_PHP_ELEMENT_MISSING, I5_CAT_PHP, 'Missing data queue description', 'Missing data queue description');

@@ -1,17 +1,24 @@
 <?php
 namespace ToolkitApi;
-include_once 'ToolkitServiceSet.php';
 
-define('CONFIG_FILE', 'toolkit.ini');
+use PDO;
+
+include_once __DIR__ . DIRECTORY_SEPARATOR . 'ToolkitServiceSet.php';
+include_once __DIR__ . DIRECTORY_SEPARATOR . 'ToolkitService.php';
+
+if (!defined('CONFIG_FILE')) {
+    define('CONFIG_FILE', 'toolkit.ini');
+}
+
 
 /**
  * Class Toolkit
  *
  * @package ToolkitApi
  */
-class Toolkit
+class Toolkit implements ToolkitInterface
 {
-    const VERSION =  "1.7.0"; // version number for front-end PHP toolkit
+    const VERSION =  "1.9.0"; // version number for front-end PHP toolkit
 
     /* @todo use inputXml and outputXml to make this class more flexibly OO-like. Fewer strings copied around.
      * Better would be to use a Request object that has a connection.
@@ -29,6 +36,10 @@ class Toolkit
 
     // $db2 variable may not be needed. Consider deprecating in future.
     protected $db2 = false;
+
+    /**
+     * @var null|resource|PDO|PdoSupp|odbcsupp|db2supp
+     */
     protected $db = null; // contains class for db connections
 
     protected $_i5NamingFlag = 0; // same as DB2_I5_NAMING_OFF; // Other value could be 1 (DB2_I5_NAMING_ON).
@@ -91,6 +102,7 @@ class Toolkit
                                 'transportType'  => 'ibm_db2', // can override in getInstance constructor as well
                                 'httpTransportUrl' => '', // for HTTP REST transport
                                 'timeReport'      => false, // *fly or *nofly; if true, return tick counts instead of data.
+                                'xmlserviceCliPath' => '/QOpenSys/pkgs/bin/xmlservice-cli', // The path to the xmlservice-cli program (or compatible API) on the IBM i system. The full path should be used because $PATH may not be set up.
     );
 
     // plug size to bytes cross-reference
@@ -125,16 +137,41 @@ class Toolkit
     /**
      * if passing an existing resource and naming, don't need the other params.
      *
-     * @param $databaseNameOrResource
+     * @param string|resource|PDO $databaseNameOrResource
      * @param string $userOrI5NamingFlag 0 = DB2_I5_NAMING_OFF or 1 = DB2_I5_NAMING_ON
      * @param string $password
-     * @param string $transportType (http, ibm_db2, odbc)
-     * @param bool $isPersistent
+     * @param string $transportType (http, ibm_db2, odbc, ssh, local)
+     * @param array|bool $options Connection options. bool is for just isPersistent (compatibility)
      * @throws \Exception
      */
-    public function __construct($databaseNameOrResource, $userOrI5NamingFlag = '0', $password = '', $transportType = '', $isPersistent = false)
+    public function __construct($databaseNameOrResource, $userOrI5NamingFlag = '0', $password = '', $transportType = '', $options = array("isPersistent" => false))
     {
         $this->execStartTime = '';
+        // to avoid having to rewrite the other code paths
+        $isPersistent = false;
+        if (is_bool($options)) {
+            // compatibility with legacy isPersistent
+            $isPersistent = $options;
+            $options = array("isPersistent" => $options);
+        } else if (is_array($options)) {
+            $isPersistent = array_key_exists("isPersistent", $options) ? $options["isPersistent"] : false;
+        }
+
+        // stop any types that are not valid for first parameter. Invalid values may cause toolkit to try to create another database connection.
+        if (!is_string($databaseNameOrResource) && !is_resource($databaseNameOrResource) && ((!is_object($databaseNameOrResource) || (is_object($databaseNameOrResource) && get_class($databaseNameOrResource) !== PDO::class)))) {
+
+            // initialize generic message
+            $this->error = "\nFailed to connect. databaseNameOrResource " . var_export($databaseNameOrResource, true) . " not valid.";
+
+            // change to a more specific helpful message if a boolean false arising from a failed database connection passed in
+            if (false === $databaseNameOrResource) {
+                $this->error = "\nFailed to connect. If you passed in a database connection, it was a failed one with a value of false.";
+            }
+
+            $this->debugLog($this->error);
+            throw new \Exception($this->error);
+
+        } // (if (!is_string....)
 
         // set service parameters to use in object.
         $this->serviceParams = $this->getDefaultServiceParams();
@@ -145,7 +182,7 @@ class Toolkit
 
         // Optional params. Don't specify if not given in INI.
         $this->getOptionalParams('system', array('v5r4', 'ccsidBefore', 'ccsidAfter', 'useHex', 'paseCcsid', 'trace', 'dataStructureIntegrity',  'arrayIntegrity'));
-        $this->getOptionalParams('transport', array('httpTransportUrl', 'plugSize'));
+        $this->getOptionalParams('transport', array('httpTransportUrl', 'plugSize', 'xmlserviceCliPath'));
 
         // populate serviceParams with $transport, or get it from INI
         if (!$transportType) {
@@ -157,14 +194,28 @@ class Toolkit
         // set up options in this object. Includes debugging, logging, transport.
         $this->setOptions($this->serviceParams);
 
-        // get transport type from options, wherever it came from.
+        // get transport type from options, wherever it came from, and lowercase it.
         $transportType = $this->getOption('transportType');
-        if ($this->isDebug()) {
-            $this->debugLog("Creating new conn with database: '$databaseNameOrResource', user or i5 naming flag: '$userOrI5NamingFlag', transport: '$transportType', persistence: '$isPersistent'\n");
+        if (is_string($transportType)) {
+            $transportType = strtolower($transportType);
         }
-
+        
+        $isResource = is_resource($databaseNameOrResource);
+        $isPdo = ($databaseNameOrResource instanceof PDO);
+        
+        if ($this->isDebug()) {
+            
+            if ($isPdo) {
+                $databaseString = 'PDO driver: ' . $databaseNameOrResource->getAttribute(PDO::ATTR_DRIVER_NAME) . '. Object hash: ' . spl_object_hash($databaseNameOrResource);
+            } else {
+                $databaseString = $databaseNameOrResource;
+            } //(if ($isPdo))
+            
+            $this->debugLog("Creating new toolkit conn with database: '$databaseString', user or i5 naming flag: '$userOrI5NamingFlag', transport: '$transportType', persistence: '$isPersistent'\n");
+        } //(if ($this->isDebug()))
+        
         // do we have a DB resource "by user" or do we create one
-        if ($transportType === 'ibm_db2' && is_resource($databaseNameOrResource)) {
+        if ($transportType === 'ibm_db2' && $isResource) {
             $conn = $databaseNameOrResource;
             $this->_i5NamingFlag = $userOrI5NamingFlag;
             $schemaSep = ($this->_i5NamingFlag) ? '/' : '.';
@@ -172,6 +223,42 @@ class Toolkit
             $this->chooseTransport('ibm_db2');
             if ($this->isDebug()) {
                 $this->debugLog("Re-using existing db connection with schema separator: $schemaSep");
+            }
+        } elseif ($transportType === 'odbc' && $isResource) {
+            $conn = $databaseNameOrResource;
+            $this->_i5NamingFlag = $userOrI5NamingFlag;
+            $schemaSep = ($this->_i5NamingFlag) ? '/' : '.';
+            $this->setOptions(array('schemaSep' => $schemaSep));
+            $this->chooseTransport('odbc');
+            if ($this->isDebug()) {
+                $this->debugLog("Re-using existing db connection with schema separator: $schemaSep");
+            }
+        } elseif ($transportType === 'pdo' && $isPdo) {
+            $conn = $databaseNameOrResource;
+            $this->db = $conn;
+            $this->_i5NamingFlag = $userOrI5NamingFlag;
+            $schemaSep = ($this->_i5NamingFlag) ? '/' : '.';
+            $this->setOptions(array('schemaSep' => $schemaSep));
+            $this->chooseTransport('pdo');
+            if ($this->isDebug()) {
+                $this->debugLog("Re-using existing db connection with schema separator: $schemaSep");
+            }
+        } elseif ($transportType === 'local') {
+            $user = $userOrI5NamingFlag;
+            $this->chooseTransport($transportType);
+            $transport = $this->getTransport();
+            // Doesn't actually do any connecting, but does validate
+            $conn = $transport->connect($databaseNameOrResource, $user, $password, $options);
+        } elseif ($transportType === 'ssh') {
+            $user = $userOrI5NamingFlag;
+            $this->chooseTransport($transportType);
+            $transport = $this->getTransport();
+            if (is_resource($databaseNameOrResource)) {
+                $sshConn = $databaseNameOrResource;
+                $conn = $transport->connectWithExistingConnection($sshConn);
+            } else {
+                $serverName = $databaseNameOrResource;
+                $conn = $transport->connect($serverName, $user, $password, $options);
             }
         } elseif ($transportType === 'http' || $transportType === 'https') {
             $databaseName = $databaseNameOrResource;
@@ -209,8 +296,6 @@ class Toolkit
         }
 
         $this->conn = $conn;
-
-        return $this;
     }
 
     /**
@@ -291,7 +376,7 @@ class Toolkit
      */
     protected function validPlugSizeList()
     {
-        return implode($this->validPlugSizes(), ', ');
+        return implode(', ', $this->validPlugSizes());
     }
 
     /**
@@ -327,15 +412,29 @@ class Toolkit
     }
 
     /**
-     * Choose data transport type: ibm_db2, odbc, http
+     * Choose data transport type: ibm_db2, odbc, pdo, http, https, ssh, local
      *
-     * @param string $transportName 'ibm_db2' or 'odbc' or 'http'
+     * @param string $transportName 'ibm_db2' or 'odbc' or 'pdo' or 'http' or 'https' or 'ssh' or 'local'
      * @throws \Exception
      */
     protected function chooseTransport($transportName = '')
     {
         switch($transportName)
         {
+            case 'local':
+                $transport = new LocalSupp();
+                $transport->setXmlserviceCliPath(
+                    $this->getOption('xmlserviceCliPath')
+                );
+                $this->setTransport($transport);
+                break;
+            case 'ssh':
+                $transport = new SshSupp();
+                $transport->setXmlserviceCliPath(
+                    $this->getOption('xmlserviceCliPath')
+                );
+                $this->setTransport($transport);
+                break;
             case 'http':
                 $transport = new httpsupp();
                 $transport->setUrl(
@@ -391,6 +490,9 @@ class Toolkit
                 //for odbc will be different default stored procedure call
                 $this->setOptions(array('plugPrefix' => 'iPLUGR')); // "R" = "result set" which is how ODBC driver returns param results
                 $this->db = new odbcsupp();
+        } elseif ($extensionName === 'pdo') {
+            $this->setOptions(array('plugPrefix' => 'iPLUGR'));
+            $this->db = new PdoSupp($this->db);
         }
 
         // transport, too, to be generic
@@ -423,7 +525,7 @@ class Toolkit
         // if a plug name is passed in, it overrides plugPrefix and plugSize.
         if (isset($options['plug']) && $options['plug']) {
             // @todo enumerate plug prefixes centrally, tied to db extension name, at top of this class
-            $possiblePrefixes = array('iPLUG', 'iPLUGR');
+            $possiblePrefixes = array('iPLUGR', 'iPLUG');
             $options['plugSize'] = str_replace($possiblePrefixes, '', $options['plug']); // remove prefix to get size
             $options['plugPrefix'] = str_replace($options['plugSize'], '', $options['plug']); // remove size to get prefix
 
@@ -781,8 +883,34 @@ class Toolkit
         // If a database transport
         if (isset($this->db) && $this->db) {
             $result = $this->makeDbCall($internalKey, $plugSize, $controlKeyString, $inputXml, $disconnect);
-        } else {
-            // Not a DB transport. At this time, assume HTTP transport (which doesn't use a plug, by the way. uses outbytesize)
+        } else if ($this->getTransport() instanceof LocalSupp) {
+            // Not divergent from SSH impl just yet
+            $transport = $this->getTransport();
+            $xmlserviceCliPath = $this->getOption('xmlserviceCliPath');
+            $transport->setXmlserviceCliPath($xmlserviceCliPath);
+
+            // if debug mode, log control key, and input XML.
+            if ($this->isDebug()) {
+                // Local transport doesn't use IPC/CTL/out sizes, don't mention them
+                $this->debugLog("\nExec start: " . date("Y-m-d H:i:s") . "\nVersion of toolkit front end: " . self::getFrontEndVersion() ."\nToolkit class: '" . __FILE__ . "'\nInput XML: $inputXml\n");
+                $this->execStartTime = microtime(true);
+            }
+
+            $result = $transport->send($inputXml);
+        } else if ($this->getTransport() instanceof SshSupp) {
+            $transport = $this->getTransport();
+            $xmlserviceCliPath = $this->getOption('xmlserviceCliPath');
+            $transport->setXmlserviceCliPath($xmlserviceCliPath);
+
+            // if debug mode, log control key, and input XML.
+            if ($this->isDebug()) {
+                // SSH transport doesn't use IPC/CTL/out sizes, don't mention them
+                $this->debugLog("\nExec start: " . date("Y-m-d H:i:s") . "\nVersion of toolkit front end: " . self::getFrontEndVersion() ."\nToolkit class: '" . __FILE__ . "'\nInput XML: $inputXml\n");
+                $this->execStartTime = microtime(true);
+            }
+
+            $result = $transport->send($inputXml);
+        } else if ($this->getTransport() instanceof httpsupp) {
             $transport = $this->getTransport();
             $transport->setIpc($internalKey);
             $transport->setCtl($controlKeyString);
@@ -799,12 +927,10 @@ class Toolkit
             }
 
             $result = $transport->send($inputXml, $outByteSize);
-
-            // workaround: XMLSERVICE as of 1.7.4 returns a single space instead of empty string when no content was requested.
-            if ($result == ' ') {
-                $result = '';
-            }
         }
+
+        // workaround: XMLSERVICE as of 1.7.4 returns a single space instead of empty string when no content was requested.
+        $result = trim($result);
 
         if ($this->isDebug() && $result) {
             $end = microtime(true);
@@ -816,12 +942,12 @@ class Toolkit
     }
 
     /**
-     * @param $internalKey
-     * @param $plugSize
-     * @param $controlKeyString
-     * @param $inputXml
+     * @param string $internalKey
+     * @param string $plugSize
+     * @param string $controlKeyString
+     * @param string $inputXml
      * @param bool $disconnect
-     * @return array
+     * @return string
      */
     protected function makeDbCall($internalKey, $plugSize, $controlKeyString, $inputXml, $disconnect = false)
     {
@@ -857,7 +983,7 @@ class Toolkit
 
         // can return false if prepare or exec failed.
         $outputXml = $this->db->execXMLStoredProcedure($this->conn, $sql, $bindArray);
-        if (!$outputXml) {
+        if (false === $outputXml) {
             // if false returned, was a database error (stored proc prepare or execute error)
             // @todo add ODBC SQL State codes
 
@@ -956,7 +1082,6 @@ class Toolkit
     public function sendXml($inputXml, $disconnect=false)
     {
         return $this->ExecuteProgram($inputXml, $disconnect);
-
     }
 
     /**
@@ -1198,8 +1323,8 @@ class Toolkit
                         return array_slice($resultArray, 1);
                     }
                 } else {
-                    // look for a CPF code in second line. May not always be there.
-                    // will resemble: catsplf: 001-2003 Error CPF3492 found processing spool file QSYSPRT, number 2.
+                    // Look for a CPF code in second line, although the second line may not be there, nor may the CPF, depending on the error.
+                    // Second line will resemble: catsplf: 001-2003 Error CPF3492 found processing spool file QSYSPRT, number 2.
                     // or: catsplf: 001-2373 Job 579272/QTMHHTP1/WSURVEY400 was not found."
                     //
                     // @todo extract CPF code.
@@ -1207,8 +1332,10 @@ class Toolkit
                     if (isset($resultArray[1])) {
                         $secondLine = trim($resultArray[1]);
                         $this->cpfErr = $secondLine;
-                        return false;
                     }
+                    // A nonzero exit status indicates failure, even when there is no second line of output.
+                    // To test this principle, pass in the command "false", which always fails, but provides no second line of output.  
+                    return false;
                 }
                 /*} elseif ($exitStatus == '127') {
                     // look for errmsg in second line (e.g. cannot find command)
@@ -1317,7 +1444,7 @@ class Toolkit
      * @param $labelFindLen
      * @return SizeParam
      */
-    static function AddParameterSize($comment, $varName = '', $labelFindLen)
+    static function AddParameterSize($comment, $varName = '', $labelFindLen = 0)
     {
         return new SizeParam($comment, $varName, $labelFindLen);
     }
@@ -1328,7 +1455,7 @@ class Toolkit
      * @param $labelFindLen
      * @return SizePackParam
      */
-    static function AddParameterSizePack($comment, $varName = '', $labelFindLen)
+    static function AddParameterSizePack($comment, $varName = '', $labelFindLen = 0)
     {
         return new SizePackParam($comment, $varName, $labelFindLen);
     }
@@ -1685,7 +1812,7 @@ class Toolkit
      * @param $lengthOfReceiverVariable
      * @return string
      */
-    static function getDummyReceiverAndLengthApiXml($paramNum = 1, $lengthOfReceiverVariable)
+    static function getDummyReceiverAndLengthApiXml($paramNum, $lengthOfReceiverVariable)
     {
         $paramNumStr = $paramNum . '.';
         $paramNumStrNext = ($paramNum + 1) . '.';

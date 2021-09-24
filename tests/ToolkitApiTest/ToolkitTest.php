@@ -1,8 +1,10 @@
 <?php
 namespace ToolkitApiTest;
 
+use PHPUnit\Framework\TestCase;
 use ToolkitApi\BinParam;
 use ToolkitApi\CharParam;
+use ToolkitApi\DataArea;
 use ToolkitApi\FloatParam;
 use ToolkitApi\HoleParam;
 use ToolkitApi\Int16Param;
@@ -14,24 +16,26 @@ use ToolkitApi\RealParam;
 use ToolkitApi\SizePackParam;
 use ToolkitApi\SizeParam;
 use ToolkitApi\Toolkit;
+use ToolkitApi\ToolkitInterface;
 use ToolkitApi\UInt16Param;
 use ToolkitApi\UInt32Param;
 use ToolkitApi\UInt64Param;
 use ToolkitApi\UInt8Param;
 use ToolkitApi\ZonedParam;
+use Exception;
 
 /**
  * Class ToolkitTest
  * @package ToolkitApiTest
  */
-class ToolkitTest extends \PHPUnit_Framework_TestCase
+final class ToolkitTest extends TestCase
 {
     /**
-     * @var Toolkit $toolkit
+     * @var ToolkitInterface $toolkit
      */
     protected $toolkit;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->toolkit = new Toolkit('*LOCAL', '0', 'testPwd', 'http', false);
     }
@@ -141,18 +145,6 @@ class ToolkitTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($parameter instanceof BinParam);
     }
 
-    public function testCanAddArrayParameter()
-    {
-/*        $array = array(
-            array(
-                'type' => ''
-            ),
-            array(
-
-            )
-        );*/
-    }
-
     public function testCanAddParameterSize()
     {
         $size = $this->toolkit->AddParameterSize('test comment', 'varName', 3);
@@ -195,6 +187,48 @@ class ToolkitTest extends \PHPUnit_Framework_TestCase
         $isRunningOnIbmI = (php_uname('s') === 'OS400');
 
         $this->assertEquals($isRunningOnIbmI, $this->toolkit->isPhpRunningOnIbmI());
+    }
+
+    public function testDatabaseNameOrResourceIsNotBoolean()
+    {
+        $resource = false;
+        $this->expectException(Exception::class);
+        new Toolkit($resource);
+    }
+
+    public function testDatabaseNameOrResourceIsNotFloat()
+    {
+        $resource = 1.81;
+        $this->expectException(Exception::class);
+        new Toolkit($resource);
+    }
+
+    public function testDatabaseNameOrResourceIsNotObject()
+    {
+        $resource = new DataArea();
+        $this->expectException(Exception::class);
+        new Toolkit($resource);
+    }
+
+    public function testDatabaseNameOrResourceIsNotInteger()
+    {
+        $resource = 12;
+        $this->expectException(Exception::class);
+        new Toolkit($resource);
+    }
+
+    public function testDatabaseNameOrResourceIsNotArray()
+    {
+        $resource = array(1, 2, 3);
+        $this->expectException(Exception::class);
+        new Toolkit($resource);
+    }
+
+    public function testDatabaseNameOrResourceIsNotNull()
+    {
+        $resource = null;
+        $this->expectException(Exception::class);
+        new Toolkit($resource);
     }
 
 }

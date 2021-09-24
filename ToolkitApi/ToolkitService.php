@@ -1,5 +1,5 @@
 <?php
-require_once 'autoload.php';
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'autoload.php';
 
 use ToolkitApi\Toolkit;
 /**
@@ -17,8 +17,8 @@ class ToolkitService
      * @param string $userOrI5NamingFlag
      * @param string $password
      * @param string $transportType
-     * @param bool $isPersistent
-     * @return bool|null
+     * @param bool|array $isPersistent
+     * @return Toolkit
      */
     static function getInstance($databaseNameOrResource = '*LOCAL', $userOrI5NamingFlag = '', $password = '', $transportType = '', $isPersistent = false)
     {

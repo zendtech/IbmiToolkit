@@ -1,6 +1,7 @@
 <?php
 namespace ToolkitApiTest;
 
+use PHPUnit\Framework\TestCase;
 use ToolkitApi\BinParam;
 use ToolkitApi\ProgramParameter;
 
@@ -8,7 +9,7 @@ use ToolkitApi\ProgramParameter;
  * Class ProgramParameterTest
  * @package ToolkitApiTest
  */
-class ProgramParameterTest extends \PHPUnit_Framework_TestCase
+final class ProgramParameterTest extends TestCase
 {
     /**
      * @var ProgramParameter $programParameter
@@ -24,7 +25,7 @@ class ProgramParameterTest extends \PHPUnit_Framework_TestCase
     protected $dim;
     protected $by;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->size = 20;
         $this->type = sprintf('%dB', $this->size);
@@ -155,7 +156,7 @@ class HoleParamTest extends \PHPUnit_Framework_TestCase
  * Class BinParamTest
  * @package ToolkitApiTest
  */
-class BinParamTest extends \PHPUnit_Framework_TestCase
+final class BinParamTest extends TestCase
 {
     /**
      * @var BinParam $binParam
@@ -167,7 +168,7 @@ class BinParamTest extends \PHPUnit_Framework_TestCase
      */
     protected $programParameter;
 
-    public function setUp()
+    public function setUp(): void
     {
         $size = 20;
         $this->binParam = new BinParam('both', $size, 'UncodeSample', 'p1', 'test');

@@ -1,12 +1,12 @@
 <?php
 namespace ToolkitApi;
 
-class TmpUserSpace
+class TmpUserSpace extends UserSpace
 {
     private $TMPUSName;
 
     /**
-     * @param Toolkit $Toolkit
+     * @param ToolkitInterface $Toolkit
      * @param string $UsLib
      * @param int $DftUsSize
      * @throws \Exception

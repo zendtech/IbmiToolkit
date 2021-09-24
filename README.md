@@ -15,8 +15,8 @@ The PHP Toolkit for IBM i (Toolkit) is a PHP-based front end to [XMLSERVICE](htt
 
 The Toolkit is open source and has been developed with help from Alan Seiden and the community. 
 
-Discussion of the Toolkit (usage and how to contribute) happens at the ‘Club Seiden’ forum:
-http://club.alanseiden.com/community/
+Discussion of the Toolkit takes place in GitHub Discussions:
+https://github.com/zendtech/IbmiToolkit/discussions
 
 Current Main Features:
 
@@ -28,14 +28,12 @@ Current Main Features:
 
 Planned Features:
 
-- More and better code samples 
-- Run SQL
+- More and better code samples (coming along: https://github.com/zendtech/IbmiToolkit/tree/master/samples) 
 - Inline transport (not requiring DB2 connection)
 - Improve usability of the API
 - Optimizations for larger data sets
-- More (to be added to GitHub issues)
 
-XMLSERVICE and the IBM i Toolkit are already shipped with Zend Server. But being 
+XMLSERVICE and the IBM i Toolkit are already shipped with Zend Server and Seiden CommunityPlus+ PHP. But being 
 open source they can also be downloaded, installed, and upgraded separately.
 
 For more information and examples, please visit the wiki:

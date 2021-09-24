@@ -5,8 +5,11 @@ spl_autoload_register(function($class){
     // Define classmap
     $classmap = array(
         'ToolkitApi\Toolkit'            => __DIR__ . DIRECTORY_SEPARATOR . 'Toolkit.php',
+        'ToolkitApi\ToolkitInterface'   => __DIR__ . DIRECTORY_SEPARATOR . 'ToolkitInterface.php',
         'ToolkitApi\db2supp'            => __DIR__ . DIRECTORY_SEPARATOR . 'Db2supp.php',
         'ToolkitApi\httpsupp'           => __DIR__ . DIRECTORY_SEPARATOR . 'httpsupp.php',
+        'ToolkitApi\SshSupp'            => __DIR__ . DIRECTORY_SEPARATOR . 'SshSupp.php',
+        'ToolkitApi\LocalSupp'            => __DIR__ . DIRECTORY_SEPARATOR . 'LocalSupp.php',
         'ToolkitApi\DateTimeApi'        => __DIR__ . DIRECTORY_SEPARATOR . 'DateTimeApi.php',
         'ToolkitApi\ListFromApi'        => __DIR__ . DIRECTORY_SEPARATOR . 'ListFromApi.php',
         'ToolkitApi\UserSpace'          => __DIR__ . DIRECTORY_SEPARATOR . 'UserSpace.php',
@@ -18,6 +21,7 @@ spl_autoload_register(function($class){
         'ToolkitApi\SystemValues'       => __DIR__ . DIRECTORY_SEPARATOR . 'SystemValues.php',
         'ToolkitApi\DataArea'           => __DIR__ . DIRECTORY_SEPARATOR . 'DataArea.php',
         'ToolkitApi\odbcsupp'           => __DIR__ . DIRECTORY_SEPARATOR . 'Odbcsupp.php',
+        'ToolkitApi\PdoSupp'            => __DIR__ . DIRECTORY_SEPARATOR . 'PdoSupp.php',
         'ToolkitApi\ToolkitPcml'        => __DIR__ . DIRECTORY_SEPARATOR . 'ToolkitPCML.php',
         'ToolkitApi\ProgramParameter'   => __DIR__ . DIRECTORY_SEPARATOR . 'ToolkitServiceParameter.php',
         'ToolkitApi\DataStructure'      => __DIR__ . DIRECTORY_SEPARATOR . 'ToolkitServiceParameter.php',

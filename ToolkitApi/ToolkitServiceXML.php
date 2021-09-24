@@ -361,13 +361,16 @@ class XMLWrapper
      * 
      * @param string|array $inputOutputParams
      * @param array $returnParams
-     * @param $pgm
+     * @param $pgm Not actually optional, but should be the first option. This
+     *        is only optional before the first two arguments can be, but the
+     *        API was already made and we don't want to break backwards
+     *        compatibility. Consider this a warning to call this correctly.
      * @param string $lib blank library means use current/default or library list
      * @param null $function
      * @return string
      */
     public function buildXmlIn($inputOutputParams = NULL, array $returnParams = NULL,
-                    $pgm,
+                    $pgm = "",
                     $lib = "",
                     $function = NULL)
     {
@@ -426,9 +429,9 @@ class XMLWrapper
         }
         
         $pgmtag = $this->getPgmTag($pgm, $lib, $function);
-        
+
         $xmlIn = "{$pgmtag}\n{$parametersXml}{$returnParametersXml}</pgm>";
-        
+
         return $this->addOuterTags($xmlIn);
     }
     

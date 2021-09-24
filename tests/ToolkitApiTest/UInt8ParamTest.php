@@ -1,6 +1,7 @@
 <?php
 namespace ToolkitApiTest;
 
+use PHPUnit\Framework\TestCase;
 use ToolkitApi\ProgramParameter;
 use ToolkitApi\UInt8Param;
 
@@ -8,7 +9,7 @@ use ToolkitApi\UInt8Param;
  * Class UInt8ParamTest
  * @package ToolkitApiTest
  */
-class UInt8ParamTest extends \PHPUnit_Framework_TestCase
+final class UInt8ParamTest extends TestCase
 {
     public function testCanCreateInstance()
     {

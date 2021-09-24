@@ -4,6 +4,7 @@ namespace ToolkitApi\CW;
 use ToolkitApi\DataStructure;
 use ToolkitApi\ProgramParameter;
 use ToolkitApi\Toolkit;
+use ToolkitApi\ToolkitInterface;
 
 /**
  * Object to manage the old toolkit's style of data structure definitions
@@ -55,10 +56,10 @@ class DataDescription
      *
      * @param string $objName name of program, data queue, etc. lib/pgm(svcfunc) or the like.
      * @param array $dataDescription array of parameter definitions
-     * @param Toolkit $connection connection object for toolkit
+     * @param ToolkitInterface $connection connection object for toolkit
      * @internal param I5Error $errorObj during validation we may set properties of this object.
      */
-    public function __construct($objName, array $dataDescription, Toolkit $connection)
+    public function __construct($objName, array $dataDescription, ToolkitInterface $connection)
     {
         if (is_string($objName)) {
             $this->setOriginalObjName($objName);
@@ -226,7 +227,7 @@ class DataDescription
 
     /**
      * Return toolkit object that was passed in
-     * @return Toolkit
+     * @return ToolkitInterface
      */
     public function getConnection()
     {
