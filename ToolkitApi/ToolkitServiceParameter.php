@@ -42,8 +42,8 @@ class ProgramParameter
      * @param int $dimension
      * @param string $by
      * @param bool $isArray
-     * @param null $labelSetLen
-     * @param null $labelLen
+     * @param int|null $labelSetLen
+     * @param int|null $labelLen
      * @param string $ccsidBefore
      * @param string $ccsidAfter
      * @param bool $useHex
@@ -472,7 +472,7 @@ class DataStructure extends ProgramParameter
      * @param string $comment
      * @param string $by
      * @param bool $isArray
-     * @param null $labelLen
+     * @param int|null $labelLen
      * @param string $io
      */
     function __construct($paramsArray, $struct_name ="DataStruct", $dim=0, $comment = '', $by='', $isArray=false, $labelLen = null, $io = 'both')
@@ -557,11 +557,11 @@ class PackedDecParam extends ProgramParameter
      * @param string $scale
      * @param string $comment
      * @param string $varName
-     * @param string $value
+     * @param mixed $value
      * @param int $dimension
      * @param string $by
      * @param bool $isArray
-     * @param null $labelSetLen
+     * @param int|null $labelSetLen
      */
     function __construct($io, $length, $scale, $comment,  $varName = '', $value = '', $dimension=0, $by='', $isArray = false,  $labelSetLen = null)
     {
@@ -586,7 +586,7 @@ class Int32Param extends ProgramParameter
      * @param int $dimension
      * @param string $by
      * @param bool $isArray
-     * @param null $labelSetLen
+     * @param int|null $labelSetLen
      */
      function __construct($io, $comment, $varName = '', $value = '', $dimension=0, $by='', $isArray = false, $labelSetLen = null)
      {
