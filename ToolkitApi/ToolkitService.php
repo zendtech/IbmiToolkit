@@ -27,22 +27,6 @@ class ToolkitService
 
 }
 
-
-/**
- * @todo integrate these functions into toolkit class. Back-ported from CW.
- *
- * keep non-OO functions for backward compatibility and CW support
- *
- * @param $heading
- * @param $key
- * @param null $default
- * @return bool|null
- */
-function getConfigValue($heading, $key, $default = null)
-{
-    return Toolkit::getConfigValue($heading, $key, $default);
-}
-
 /**
  * non-OO logging function ported from CW
  *
@@ -52,7 +36,7 @@ function getConfigValue($heading, $key, $default = null)
  */
 function logThis($msg)
 {
-    $logFile = getConfigValue('log','logfile');
+    $logFile = Toolkit::getConfigValue('log','logfile');
     if ($logFile) {
         // it's configured so let's write to it. ("3" means append to a specific file)
         $formattedMsg = "\n" . microDateTime() . ' ' . $msg;

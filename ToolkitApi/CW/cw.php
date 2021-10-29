@@ -279,7 +279,7 @@ function i5_connect($host='', $user='', $password='', $options=array())
     
     // check and store CW_TRANSPORT_TYPE, if given. It's optional.
     $transportType = ''; // empty is ok.
-    $iniTransportType = isset( $options [CW_TRANSPORT_TYPE]) ? $options [CW_TRANSPORT_TYPE] : getConfigValue('transport', 'transportType', 'ibm_db2');
+    $iniTransportType = isset( $options [CW_TRANSPORT_TYPE]) ? $options [CW_TRANSPORT_TYPE] : Toolkit::getConfigValue('transport', 'transportType', 'ibm_db2');
     if ($iniTransportType) {
         $validTransports = array ('ibm_db2', 'odbc', 'http', 'https');
         if (!in_array($iniTransportType, $validTransports)) {
@@ -299,7 +299,7 @@ function i5_connect($host='', $user='', $password='', $options=array())
     }    
     
     // convert host to dbname
-    $dbname = getConfigValue('hosts', $host);
+    $dbname = Toolkit::getConfigValue('hosts', $host);
     
     if (!$dbname) {
         i5ErrorActivity(I5_CONN_TIMEOUT, I5_CAT_TCPIP, "Undefined host ('$host')", "Try 'localhost' instead, or specify lookup in " . CONFIG_FILE . " ($host=DBNAME).");
@@ -334,7 +334,7 @@ function i5_connect($host='', $user='', $password='', $options=array())
     // Check if INI file has asked us to always close previous connection before initiating new one within a single PHP request/script run. 
     // For compatibility with old toolkit behavior where a new connection would reset library lists and the like.
     // It's false by default for backward compatibility with older releases of CW.
-    $forceNew = getConfigValue('cw', 'fullDbClose', false);
+    $forceNew = Toolkit::getConfigValue('cw', 'fullDbClose', false);
     
     // get instance of toolkit (singleton)
     try {
@@ -381,8 +381,8 @@ function i5_connect($host='', $user='', $password='', $options=array())
     $tkit->setIsCw(true);
     
     // override toolkit settings if nec.
-    $sbmjobParams = getConfigValue('system', 'sbmjob_params');
-    $xmlServiceLib = getConfigValue('system', 'XMLServiceLib', 'ZENDSVR');
+    $sbmjobParams = Toolkit::getConfigValue('system', 'sbmjob_params');
+    $xmlServiceLib = Toolkit::getConfigValue('system', 'XMLServiceLib', 'ZENDSVR');
 
     $stateless = false; // default
 
@@ -399,7 +399,7 @@ function i5_connect($host='', $user='', $password='', $options=array())
         
     } else {
         // Not private. We may be stateless (inline).
-        $stateless = getConfigValue('system', 'stateless', false);
+        $stateless = Toolkit::getConfigValue('system', 'stateless', false);
 
         if ($stateless) {
             // don't need IPC if stateless, running in QSQ job.
@@ -416,7 +416,7 @@ function i5_connect($host='', $user='', $password='', $options=array())
     }   
     
     // If INI file tells us to log CW's connection messages, do so.
-    if (getConfigValue('log', 'logCwConnect', true)) {
+    if (Toolkit::getConfigValue('log', 'logCwConnect', true)) {
         logThis($connectionMsg);
     }
     
@@ -573,7 +573,7 @@ function i5_close(ToolkitServiceCw &$connection)
     }
 
     // or explicitly asked to close by INI file.
-    $fullDbClose = getConfigValue('cw', 'fullDbClose', false);
+    $fullDbClose = Toolkit::getConfigValue('cw', 'fullDbClose', false);
     if ($fullDbClose) {
         $connection->disconnect();
     }
