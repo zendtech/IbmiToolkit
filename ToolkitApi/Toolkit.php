@@ -2488,7 +2488,7 @@ class Toolkit implements ToolkitInterface
                 CONFIG_FILE
             );
             array_unshift($locations, PHP_OS == "OS400" ?
-                "/QOpenSys/etc/php-toolkit.ini" : "etc/php-toolkit.ini");
+                "/QOpenSys/etc/php-toolkit.ini" : "/etc/php-toolkit.ini");
             $custom_ini_path = getenv("PHP_TOOLKIT_INI");
             if ($custom_ini_path) {
                 array_unshift($locations, $custom_ini_path);
