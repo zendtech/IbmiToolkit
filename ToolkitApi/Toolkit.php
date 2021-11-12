@@ -177,12 +177,16 @@ class Toolkit implements ToolkitInterface
         // set service parameters to use in object.
         $this->serviceParams = $this->getDefaultServiceParams();
 
+        /* We don't add these in getOptionalParams because the names are different */
         if ($this->getConfigValue('system', 'sbmjob_params')) {
             $this->serviceParams['sbmjobParams'] = $this->getConfigValue('system', 'sbmjob_params');
         }
+        if ($this->getConfigValue('system', 'stateless_mode_default')) {
+            $this->serviceParams['stateless'] = $this->getConfigValue('system', 'stateless_mode_default');
+        }
 
         // Optional params. Don't specify if not given in INI.
-        $this->getOptionalParams('system', array('stateless_mode_default', 'v5r4', 'ccsidBefore', 'ccsidAfter', 'useHex', 'paseCcsid', 'trace', 'dataStructureIntegrity', 'arrayIntegrity'));
+        $this->getOptionalParams('system', array('v5r4', 'ccsidBefore', 'ccsidAfter', 'useHex', 'paseCcsid', 'trace', 'dataStructureIntegrity', 'arrayIntegrity'));
         $this->getOptionalParams('transport', array('httpTransportUrl', 'plugSize', 'xmlserviceCliPath'));
 
         // populate serviceParams with $transport, or get it from INI
