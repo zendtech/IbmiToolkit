@@ -1858,16 +1858,13 @@ class Toolkit implements ToolkitInterface
     }
 
     /**
+     * See if stateless mode has been turned on. Affects both CW and not-CW.
+     *
      * @return bool|void
      */
     public function isStateless()
     {
-        if ($this->getIsCw()){
-            return $this->getOption('stateless');
-        }
-        else{
-            return $this->getOption('stateless_mode_default');
-        }
+        return $this->getOption('stateless');
     }
 
     /**
