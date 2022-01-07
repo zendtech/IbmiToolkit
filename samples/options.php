@@ -20,7 +20,7 @@ $conn->setOptions(array('stateless' => true));  // specify true unless you have 
 // The job will remain running until ended *IMMED or timed out using a timeout option (see below)
 // Note: omitting InternalKey in stateful mode would cause a default key of '/tmp/Toolkit' to be used, which would mean everyone is sharing a single XMLSERVICE job.
 $conn->setOptions(array('stateless' => false, 
-                        'InternalKey' => "/tmp/alan2",
+                        'InternalKey' => "/tmp/alan2"
 ));
 
 // # 'idleTimeout' => $idleTimeoutSeconds 
@@ -34,7 +34,15 @@ $conn->setOptions(array('stateless' => false,
                         'idleTimeout' => 3600
 ));
   
+// # 'customControl' => $customControlKeys
+
+// 'customControl' is useful when you need to send control keys supported by XMLSERVICE but that aren't directly exposed by the PHP Toolkit. 
+// Helpful for the less popular control keys that you might still need from time to time.
+// Example: *java when calling an RPG program that includes java. 
+// To send multiple keys, include a space between each.
+
+$conn->setOptions(array('stateless' => true, 
+                        'customControl'=>'*java'
+));
 
 ?>
-
-
