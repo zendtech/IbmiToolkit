@@ -45,4 +45,19 @@ $conn->setOptions(array('stateless' => true,
                         'customControl'=>'*java'
 ));
 
+// # 'debug' => true or false
+// # 'debugLogFile' => path of log file
+// For both, defaults are set in toolkit.ini under the [system] group.
+
+// The debug log, when enabled, logs all XML sent/received, as well as connection information, and timing of each request.
+// It is invaluable for troubleshooting performance and program calls.
+// Make sure the PHP user (probably QTMHHTTP if running from the web) has *RW access to the file,
+// and, if the file doesn't yet exist, *RWX access to the parent directory so PHP can create the file. 
+// The file can get large, so we recommend setting debug => false when logging is not needed.
+
+$conn->setOptions(array('debug' => true, 
+                        'debugLogFile'=>'/my/path/tkit_debug.log'
+));
+
+
 ?>
