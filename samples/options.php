@@ -38,12 +38,20 @@ $conn->setOptions(array('stateless' => false,
 
 // 'customControl' is useful when you need to send control keys supported by XMLSERVICE but that aren't directly exposed by the PHP Toolkit. 
 // Helpful for the less popular control keys that you might still need from time to time.
-// Example: *java when calling an RPG program that includes java. 
 // To send multiple keys, include a space between each.
+
+// Example #1: *java when calling an RPG program that includes java. 
 
 $conn->setOptions(array('stateless' => true, 
                         'customControl'=>'*java'
 ));
+
+// Example #2: *call and *sbmjob. Useful for setting a timeout on a hanging or looping RPG program when called in stateful (IPC) mode.
+$conn->setOptions(array('stateless'    => false, // explicitly be stateful when using this timeout option
+                        'internalKey'  => '/tmp/tkitjob2', // arbitrary directory name under /tmp to represent unique job  
+                        'customControl'=> '*call(15/kill/server) *sbmjob', // return control to PHP after waiting 15 seconds. CPF is available in error code as well. 
+));
+
 
 // # 'debug' => true or false
 // # 'debugLogFile' => path of log file
