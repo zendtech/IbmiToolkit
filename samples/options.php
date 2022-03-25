@@ -67,5 +67,30 @@ $conn->setOptions(array('debug' => true,
                         'debugLogFile'=>'/my/path/tkit_debug.log'
 ));
 
+// sbmjobCommand is an advanced keyword, so use with caution. It can let you set your own job name and much more. 
+// # 'sbmjobCommand' => full sbmjob command for full control of stateful toolkit job parameters (advanced)
+
+// Set these three values according to your needs (sample values given here)
+$internalKey = '/tmp/mykey123'; // unique identifier for job
+$jobName = 'MYTOOLKIT3'; 
+$jobQueue = 'QSYS/QSYSNOMAX';
+
+// set up the basics for this advanced stateful connection
+$conn->setOptions(['stateless' => false,
+                   'internalKey' => $internalKey,
+]);
+
+// Set up values needed in the sbmjob command
+$ipc = trim($conn->getInternalKey());
+$serviceLibrary = trim($conn->getOption('XMLServiceLib'));
+$jobNameParam = "JOB($jobName)";
+$jobqParam = "JOBQ($jobQueue)";
+
+// build the SBMJOB command and set it up in the toolkit
+$sbmjobCommand = "SBMJOB CMD(CALL PGM({$serviceLibrary}/XMLSERVICE) PARM('$ipc')) {$jobNameParam} {$jobqParam}"; 
+$conn->setOptions(['sbmjobCommand' => $sbmjobCommand,
+                   'sbmjobParams'  => '', // empty because set these values in sbmjobCommand 
+                   'customControl' => '*sbmjob', // required when setting sbmjobCommand
+]);
 
 ?>
