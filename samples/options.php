@@ -67,7 +67,8 @@ $conn->setOptions(array('debug' => true,
                         'debugLogFile'=>'/my/path/tkit_debug.log'
 ));
 
-// sbmjobCommand is an advanced keyword, so use with caution. It can let you set your own job name and much more. 
+
+// sbmjobCommand is an advanced keyword. Use it when you need to set your own job name or other parameters for a stateful toolkit job. 
 // # 'sbmjobCommand' => full sbmjob command for full control of stateful toolkit job parameters (advanced)
 
 // Set these three values according to your needs (sample values given here)
@@ -75,7 +76,7 @@ $internalKey = '/tmp/mykey123'; // unique identifier for job
 $jobName = 'MYTOOLKIT3'; 
 $jobQueue = 'QSYS/QSYSNOMAX';
 
-// set up the basics for this advanced stateful connection
+// specify stateful mode and the internal key (IPC) we established earlier.
 $conn->setOptions(['stateless' => false,
                    'internalKey' => $internalKey,
 ]);
