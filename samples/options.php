@@ -46,7 +46,12 @@ $conn->setOptions(array('stateless' => true,
                         'customControl'=>'*java'
 ));
 
-// Example #2: *call and *sbmjob. Useful for setting a timeout on a hanging or looping RPG program when called in stateful (IPC) mode.
+// Example #2: *call. Useful for setting a timeout on a hanging or looping RPG program. This example for stateless mode.
+$conn->setOptions(array('stateless'    => true, 
+                        'customControl'=> '*call(15/kill/server)', // return control to PHP after waiting 15 seconds. CPF is available in error code as well. 
+));
+
+// Example #3: *call and *sbmjob. Useful for setting a timeout on a hanging or looping RPG program. This example for stateful (IPC) mode.
 $conn->setOptions(array('stateless'    => false, // explicitly be stateful when using this timeout option
                         'internalKey'  => '/tmp/tkitjob2', // arbitrary directory name under /tmp to represent unique job  
                         'customControl'=> '*call(15/kill/server) *sbmjob', // return control to PHP after waiting 15 seconds. CPF is available in error code as well. 
