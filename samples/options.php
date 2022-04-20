@@ -92,7 +92,7 @@ $serviceLibrary = trim($conn->getOption('XMLServiceLib'));
 $jobNameParam = "JOB($jobName)";
 $jobqParam = "JOBQ($jobQueue)";
 
-// build the SBMJOB command and set it up in the toolkit
+// Fully customize where and how XMLSERVICE runs by building the SBMJOB command and set it up in the toolkit
 $sbmjobCommand = "SBMJOB CMD(CALL PGM({$serviceLibrary}/XMLSERVICE) PARM('$ipc')) {$jobNameParam} {$jobqParam}"; 
 $conn->setOptions(['sbmjobCommand' => $sbmjobCommand,
                    'sbmjobParams'  => '', // empty because set these values in sbmjobCommand 
