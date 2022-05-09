@@ -40,6 +40,7 @@ $conn->setOptions(array('stateless'=>true));
 //$conn->setOptions(array('parseOnly'=>true, 'parseDebugLevel'=>1));
 
 // define several input/output params
+$params = []; // start with empty array
 $params[] = $conn->AddParameterChar('in', 1,'Division', 'DIV', 'A');
 $params[] = $conn->AddParameterChar('in', 6,'Product', 'PROD', '123456');
 $params[] = $conn->AddParameterPackDec('both', 7, 2, 'Quantity', 'QTY', '4.53');
