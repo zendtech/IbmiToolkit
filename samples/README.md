@@ -1,4 +1,4 @@
-# Overview of PHP Toolkit sample scripts 
+# PHP Toolkit sample scripts 
 
 - [`call-procedure.php`](https://github.com/zendtech/IbmiToolkit/blob/master/samples/call-procedure.php): 
    Complete example of calling an RPG procedure (service program)
