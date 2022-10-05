@@ -6,7 +6,7 @@ namespace ToolkitApi;
  * provides an 'http' driverless transport.
  * 
  * To set up your server for HTTP/CGI look here:
- * http://174.79.32.155/wiki/index.php/XMLService/XMLService
+ * http://www.youngiprofessionals.com/wiki/index.php/XMLService/XMLService
  * and read: "Optional XMLSERVICE REST interface via RPG CGI (xmlcgi.pgm)" 
  *
  * transport: REST POST

@@ -27,7 +27,7 @@ encoding = "ISO-8859-1"
 
 ; Advanced CCSID options. Use all three options together.
 ; Details under the heading "CCSID user override - xmlservice options (hex/before/after)":
-; http://174.79.32.155/wiki/index.php/XMLSERVICE/XMLSERVICECCSID
+; http://www.youngiprofessionals.com/wiki/index.php/XMLSERVICE/XMLSERVICECCSID
 ;ccsidBefore = "819/37"
 ;ccsidAfter = "37/819"
 ;useHex = true

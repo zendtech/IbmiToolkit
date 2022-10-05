@@ -1073,7 +1073,7 @@ class XMLWrapper
         foreach ($params as $simpleXMLElement) {
             // If hex, get data from script->$parent->hex
             // Then can un-hex (pack) that and do simplexml load string on it, and proceed as below afterward.
-            // Examples from XMLSERVICE documentation: http://174.79.32.155/wiki/index.php/XMLSERVICE/XMLSERVICECCSID
+            // Examples from XMLSERVICE documentation: http://www.youngiprofessionals.com/wiki/index.php/XMLSERVICE/XMLSERVICECCSID
             // if hex info was sent back
             
             //  <sh rows='on' hex='on' before='819/37' after='37/819'>
