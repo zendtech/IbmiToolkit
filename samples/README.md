@@ -10,6 +10,8 @@
 Get results back from an "interactive/5250" CL command. 
 - [`local-transport.php`](https://github.com/zendtech/IbmiToolkit/blob/master/samples/local-transport.php):
 Uses xmlservice-cli to make a program call without needing a database connection.
+- [`omit.php`](https://github.com/zendtech/IbmiToolkit/blob/master/samples/omit.php):
+When an RPG program makes a parameter optional by specifying `OPTION(*OMIT)`, this snippet shows how to to specify on the PHP side that the parameter will not be passed.
 - [`options.php`](https://github.com/zendtech/IbmiToolkit/blob/master/samples/options.php):
 Connection options, both basic and advanced. Recommended reading.
 - [`ssh-transport.php`](https://github.com/zendtech/IbmiToolkit/blob/master/samples/ssh-transport.php):
