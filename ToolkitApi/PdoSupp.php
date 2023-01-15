@@ -148,8 +148,8 @@ final class PdoSupp
 
         if (!$bindArray['disconnect']) {
             foreach ($statement->fetchAll() as $result) {
-                $tmp = $result[0];
-
+                // get XML string from first and only array element, no matter whether key is associative or indexed (numeric)
+                $tmp = reset($result); 
                 if ($tmp) {
                     // because of ODBC problem blob transferring should execute some "clean" on returned data
                     if (strstr($tmp , "</script>")) {
