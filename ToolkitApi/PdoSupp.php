@@ -142,27 +142,25 @@ final class PdoSupp
             return "PDO error code: " . $this->pdo->errorCode() . ' msg: ' . $this->pdo->errorInfo();
         }
 
-        // disconnect operation cause crush in fetch, nothing appears as sql script.
-        $row='';
-        $outputXML = '';
 
-        if (!$bindArray['disconnect']) {
-            foreach ($statement->fetchAll() as $result) {
-                // get XML string from first and only array element, no matter whether key is associative or indexed (numeric)
-                $tmp = reset($result); 
-                if ($tmp) {
-                    // because of ODBC problem blob transferring should execute some "clean" on returned data
-                    if (strstr($tmp , "</script>")) {
-                        $pos = strpos($tmp, "</script>");
-                        $pos += strlen("</script>"); // @todo why append this value?
-                        $row .= substr($tmp, 0, $pos);
+        if (!$bindArray['disconnect']) { // a disconnect request won't return data
+            // Loop through rows, concatenating XML into a final XML string.
+            foreach ($statement->fetchAll() as $row) {
+                // for each row, get XML string from first and only array element, 
+                // no matter whether assoc or numeric key
+                $xmlChunk = reset($row); 
+                if ($xmlChunk) {
+                    // Remove any "garbage" from after ending </script> tag (there used to be an ODBC clob issue)
+                    if (strstr($xmlChunk , "</script>")) {
+                        $pos = strpos($xmlChunk, "</script>");
+                        $pos += strlen("</script>"); 
+                        $outputXml .= substr($xmlChunk, 0, $pos);
                         break;
                     } else {
-                        $row .= $tmp;
+                        $outputXml .= $xmlChunk;
                     }
                 }
             }
-            $outputXML = $row;
         }
 
         return $outputXML;
