@@ -17,7 +17,18 @@
     ],
     "require": {
       "php": ">=5.3.3",
-        "ext-pdo": "*"
+      "ext-mbstring": "*",
+      "ext-pcre": "*",
+      "ext-pdo": "*",
+      "ext-simplexml": "*"
+    },
+    "suggest": {
+      "ext-ibm_db2": "For the Db2 transport",
+      "ext-odbc": "For the ODBC transport",
+      "ext-pdo_ibm": "For the PDO Db2 transport",
+      "ext-pdo_odbc": "For the PDO ODBC transport",
+      "ext-pcntl": "For the local transport",
+      "ext-ssh2": "For the SSH transport"
     },
     "autoload": {
         "classmap": ["ToolkitApi/"],
@@ -33,7 +44,6 @@
         }
     },
     "require-dev": {
-        "ext-pdo": "*",
         "phpunit/phpunit": "^8.2",
         "symfony/process": "^4.3"
     }
