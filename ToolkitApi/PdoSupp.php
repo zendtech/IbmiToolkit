@@ -142,6 +142,7 @@ final class PdoSupp
             return "PDO error code: " . $this->pdo->errorCode() . ' msg: ' . $this->pdo->errorInfo();
         }
 
+        $outputXml = '';
 
         if (!$bindArray['disconnect']) { // a disconnect request won't return data
             // Loop through rows, concatenating XML into a final XML string.
@@ -163,7 +164,7 @@ final class PdoSupp
             }
         }
 
-        return $outputXML;
+        return $outputXml;
     }
 
     /**
