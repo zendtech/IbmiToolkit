@@ -6,6 +6,8 @@
    How to connect to the toolkit using PDO_ODBC 
 - [`data-structure-array-with-counter.php`](https://github.com/zendtech/IbmiToolkit/blob/master/samples/data-structure-array-with-counter.php): 
    Efficient way to receive an array of data back
+- [`data-types.md`](https://github.com/zendtech/IbmiToolkit/blob/master/samples/data-types.md): 
+   Reference guide to XMLSERVICE data types and equivalent PHP Toolkit functions
 - [`display-library-list.php`](https://github.com/zendtech/IbmiToolkit/blob/master/samples/display-library-list.php):
 Get results back from an "interactive/5250" CL command. 
 - [`local-transport.php`](https://github.com/zendtech/IbmiToolkit/blob/master/samples/local-transport.php):
