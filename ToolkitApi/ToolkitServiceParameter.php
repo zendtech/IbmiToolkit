@@ -21,6 +21,7 @@ class ProgramParameter
     protected  $labelLen;  /* use this on a data structure to get the size/length */
     protected  $labelDoUntil = '';   /* use on a data structure array along with 'dim' to to set # of records to return based on labelEndDo (see below) */
     protected  $labelEndDo = '';  /* use this on an integer "count" field to control the number of records to return in n array data structure (see labelDoUntil above) */
+    protected  $returnParameter;
     
     // CCSID/hex support
     protected $_ccsidBefore;
