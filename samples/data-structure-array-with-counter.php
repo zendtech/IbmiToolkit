@@ -20,7 +20,7 @@ $ds[] = $conn->AddParameterZoned('out', 9, 2, 'Price', 'PTPRC', $out);
 
 // Multi-occurrence data structure with maximum dimension set to 10000 but whose final output count will be determined by MYCOUNTER. Name the counter whatever you wish.
 $param[] = $conn->AddDataStruct($ds, 'MULTDS')
-                              ->setParamDimension(10000) // max of 10000 records
+                              ->setParamDimension(10000) // if your RPG array has max of 10000 records
                               ->setParamLabelCounted('MYCOUNTER'); // create your own counter name
 
 // COUNTVAR is a counter field. Value is set by RPG/COBOL program. Value will control the number of MULTDS fields that return (see data structure MULTDS below)
