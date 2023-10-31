@@ -124,7 +124,7 @@ class XMLWrapper
      */
     protected function encodeString($string) 
     {
-        if ($this->getOption('useHex')) {
+        if ($this->getOption('useHex') && !empty($string)) {
             return bin2hex($string);
         } else {
             return $string;
