@@ -15,8 +15,9 @@ $conn->setOptions(array('stateless' => true));  // specify true unless you have 
 // # 'InternalKey' => $artibitraryDirectory 
 
 // 'InternalKey', combined with turning on stateful mode, will cause a stateful toolkit job to be identified uniquely by the system.
-// Its value should be an empty directory, typically under /tmp.
-// Any toolkit script specifying this InternalKey value and stateful mode will return to the same XMLSERVICE job later.
+// The value of InternalKey should be an empty directory, typically under /tmp.
+// Any toolkit script specifying this InternalKey value and stateful mode can access the same XMLSERVICE job later as needed.
+// The stateful technique is useful for accessing QTEMP and *LDA resources in this unique job. 
 // The job will remain running until ended *IMMED or timed out using a timeout option (see below)
 // Note: omitting InternalKey in stateful mode would cause a default key of '/tmp/Toolkit' to be used, which would mean everyone is sharing a single XMLSERVICE job.
 $conn->setOptions(array('stateless' => false, 
