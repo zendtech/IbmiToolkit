@@ -20,7 +20,7 @@ Current Main Features:
 
 - Ability to call RPG, CL, and COBOL
 - Run interactive commands such as ‘wrkactjob’
-- Designed to used a choice of transports including DB2, ODBC, and HTTP
+- Transport-neutral, supporting DB2, ODBC, and HTTP, and others as needed
 - Compatibility wrapper to execute Easycom syntax
 - Support of all RPG parameter types, including data structures, packed decimal, and output parameters
 
