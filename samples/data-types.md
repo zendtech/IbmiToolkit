@@ -1,6 +1,6 @@
 # Data Types for XMLSERVICE and PHP Toolkit #
 
-This reference, written by Tony Cairns while at IBM, used to be housed at `http://www.youngiprofessionals.com/wiki/index.php/XMLService/DataTypes`, but that site is no longer available, so we have made it available here, and added to it.
+This reference, begun by Tony Cairns while at IBM, used to be housed at `http://www.youngiprofessionals.com/wiki/index.php/XMLService/DataTypes`, but that site is no longer available, so we have made it available here, and added to it.
 
 ## Data Type Equivalents for C / RPG / XMLSERVICE XML / SQL ##
 
