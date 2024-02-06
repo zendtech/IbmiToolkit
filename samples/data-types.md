@@ -31,6 +31,13 @@ uint64/ulonglong D myuint64 20u 0              <data type='20u0'/>
 [indicator]      D myind     1a                <data type='1a'/>
 
 ```
+* VARCHAR notes:
+  * varchar2: accommodates a string of 1-65535 bytes.
+  * varchar4: use if string may be larger than 65535 bytes.
+  * https://www.ibm.com/docs/en/i/7.5?topic=keywords-varcharlength-2-4 [https://www.ibm.com/docs/en/i/7.5?topic=keywords-varcharlength-2-4]
+  * https://www.ibm.com/docs/en/i/7.5?topic=type-variable-length-character-graphic-ucs-2-formats [https://www.ibm.com/docs/en/i/7.5?topic=type-variable-length-character-graphic-ucs-2-formats]
+  
+
 
 ## PHP Toolkit Functions That Implement the XMLSERVICE Data Types Shown Above ### 
  
