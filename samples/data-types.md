@@ -65,6 +65,7 @@ new ProgramParameter    ("3u0","both",     "ubyte",      "myuint8",    0); // wo
 new ProgramParameter    ("5u0","both",     "ushort",     "myuint16",   0); // work around missing $tk->AddParameterUInt16
 $tk->AddParameterUInt32 (      "both",     "uint",       "myuint32",   0);
 $tk->AddParameterUInt64 (      "both",     "ulonglong",  "myuint64",   0);
-$tk->AddParameterChar   (      "out",  1,  "ind '0'/'1'" "myind",     ""); // indicator type is boolean 1-byte character 
+$tk->AddParameterChar   (      "out",  1,  "ind '0'/'1'" "myind",     ""); // indicator type is boolean 1-byte character
+$tk->AddDataStruct      ([array of parameters],          "myds"         );  
 
 ```
