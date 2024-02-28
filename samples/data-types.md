@@ -38,7 +38,7 @@ uint64/ulonglong D myuint64 20u 0              <data type='20u0'/>
     * https://www.ibm.com/docs/en/i/7.5?topic=keywords-varcharlength-2-4 [https://www.ibm.com/docs/en/i/7.5?topic=keywords-varcharlength-2-4]
     * https://www.ibm.com/docs/en/i/7.5?topic=type-variable-length-character-graphic-ucs-2-formats [https://www.ibm.com/docs/en/i/7.5?topic=type-variable-length-character-graphic-ucs-2-formats]
 * Note on TIMFMT and DATFMT: see your own RPG source code for the format required by the parameter.
-   * We assume *ISO for these examples.
+   * We assume a default of *ISO if not specified.
    * Example: https://github.com/IBM/xmlservice/blob/84de343df1dc513d5774f5c1f470ada6701f6488/src/zzvlad.rpgle#L6
    * Reference for date formats: https://www.ibm.com/docs/en/i/7.1?topic=80-datfmt-date-format-keyword-display-files  
 
