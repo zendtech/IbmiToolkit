@@ -18,5 +18,7 @@ When an RPG program makes a parameter optional by specifying `OPTION(*OMIT)`, th
 Connection options, both basic and advanced. Recommended reading.
 - [`ssh-transport.php`](https://github.com/zendtech/IbmiToolkit/blob/master/samples/ssh-transport.php):
 Uses the SSH transport for connecting to the toolkit. Ideal for running the toolkit on a PC or other system and connecting to a remote IBM i. 
+- [`simple-parameters.php`](samples/simple-parameters.php):
+Example with ordinary parameters only; no data structures, arrays, or procedure return values.
 - [`classic` folder](https://github.com/zendtech/IbmiToolkit/tree/master/samples/classic): 
    Contains the original Zend Server examples from 2011. For historical purposes only.
