@@ -37,7 +37,8 @@ class odbcsupp
                 $conn = odbc_connect($database, $user, $password);
             }
 
-            if (is_resource($conn)) {
+            if ((version_compare(PHP_VERSION, '8.4.0', '<') && is_resource($conn)) ||
+                (version_compare(PHP_VERSION, '8.4.0', '>=') && $conn instanceof \Odbc\Connection)) {
                 return $conn;
             }
         }
@@ -51,7 +52,8 @@ class odbcsupp
      */
     public function disconnect($conn)
     {
-        if (is_resource($conn)) {
+        if ((version_compare(PHP_VERSION, '8.4.0', '<') && is_resource($conn)) ||
+            (version_compare(PHP_VERSION, '8.4.0', '>=') && $conn instanceof \Odbc\Connection)) {
             odbc_close($conn);
         }
     }
@@ -168,7 +170,8 @@ class odbcsupp
         $txt = array();
         $crsr = odbc_exec($conn, $stmt);
         
-        if (is_resource($crsr)) {      
+        if ((version_compare(PHP_VERSION, '8.4.0', '<') && is_resource($crsr)) ||
+            (version_compare(PHP_VERSION, '8.4.0', '>=') && $crsr instanceof \Odbc\Result)) {     
             while (odbc_fetch_row($crsr)) {  
                 $row = odbc_result($crsr, 1);
                 
