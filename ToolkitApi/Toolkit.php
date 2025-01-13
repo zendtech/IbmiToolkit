@@ -285,7 +285,8 @@ class Toolkit implements ToolkitInterface
                 $this->debugLog("Created a new db connection in $durationCreate seconds.");
             }
 
-            if (!$conn) {
+            if ((version_compare(PHP_VERSION, '8.4.0', '<') && !is_resource($conn)) ||
+                (version_compare(PHP_VERSION, '8.4.0', '>=') && !($conn instanceof \Odbc\Connection))) {
                 // Note: SQLState 08001 (with or without SQLCODE=-30082) usually means invalid user or password. This is true for DB2 and ODBC.
                 $sqlState = $transport->getErrorCode();
                 $this->error = $transport->getErrorMsg();
