@@ -158,7 +158,7 @@ class Toolkit implements ToolkitInterface
         }
 
         // stop any types that are not valid for first parameter. Invalid values may cause toolkit to try to create another database connection.
-        if (!is_string($databaseNameOrResource) && !is_resource($databaseNameOrResource) && ((!is_object($databaseNameOrResource) || (is_object($databaseNameOrResource) && get_class($databaseNameOrResource) !== PDO::class)))) {
+        if (!is_string($databaseNameOrResource) && !is_resource($databaseNameOrResource) && ((!is_object($databaseNameOrResource) || (is_object($databaseNameOrResource) && !in_array(get_class($databaseNameOrResource), [PDO::class, \Odbc\Connection::class], true))))) {
 
             // initialize generic message
             $this->error = "\nFailed to connect. databaseNameOrResource " . var_export($databaseNameOrResource, true) . " not valid.";
@@ -224,7 +224,7 @@ class Toolkit implements ToolkitInterface
             if ($this->isDebug()) {
                 $this->debugLog("Re-using existing db connection with schema separator: $schemaSep");
             }
-        } elseif ($transportType === 'odbc' && $isResource) {
+        } elseif ($transportType === 'odbc' && ($isResource || $databaseNameOrResource instanceof \Odbc\Connection)) {
             $conn = $databaseNameOrResource;
             $this->_i5NamingFlag = $userOrI5NamingFlag;
             $schemaSep = ($this->_i5NamingFlag) ? '/' : '.';

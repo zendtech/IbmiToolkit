@@ -1,6 +1,7 @@
 <?php
 return [
     'db' => [
+        'mockDb2UsingSqlite' => false,
         'odbc' => [
             'dsn' => 'DSN=*LOCAL;',
             'username' => 'MYUSER',
