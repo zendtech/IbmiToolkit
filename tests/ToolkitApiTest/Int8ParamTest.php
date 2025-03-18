@@ -11,7 +11,7 @@ use ToolkitApi\ProgramParameter;
  */
 final class Int8ParamTest extends TestCase
 {
-    public function testCanCreateInstance()
+    public function testCanCreateInstance(): void
     {
         $parameter = new Int8Param('both', 'test comment', 'testVar', 8);
         $this->assertTrue($parameter instanceof ProgramParameter);
