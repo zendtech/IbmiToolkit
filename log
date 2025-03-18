@@ -1,0 +1,179 @@
+diff --git a/ToolkitApi/CW/cw.php b/ToolkitApi/CW/cw.php
+index 38cf73f..afd85fb 100644
+--- a/ToolkitApi/CW/cw.php
++++ b/ToolkitApi/CW/cw.php
+@@ -615,7 +615,7 @@ function i5_pclose(ToolkitServiceCw &$connection)
+  * @param ToolkitServiceCw $connection [optional] the result of i5_connect(), or omit
+  * @return boolean  True on success, False on failure
+  */
+-function i5_adopt_authority($user, $password, ToolkitServiceCw $connection=null)
++function i5_adopt_authority($user, $password, ?ToolkitServiceCw $connection=null)
+ {
+     // if conn not passed in, get instance of toolkit. If can't be obtained, return false.
+     if (!$connection = verifyConnection($connection)) {
+@@ -801,7 +801,7 @@ function i5_errormsg()
+  * @param ToolkitServiceCw $connection Optional connection object
+  * @return boolean for success/failure
+  */
+-function i5_command($cmdString, $input = array(), $output = array(), ToolkitServiceCw $connection = null)
++function i5_command($cmdString, $input = array(), $output = array(), ?ToolkitServiceCw $connection = null)
+ {
+     // if conn not passed in, get instance of toolkit. If can't be obtained, return false.
+     if (!$connection = verifyConnection($connection)) {
+@@ -1464,7 +1464,7 @@ function i5_jobLog_list_close(&$list = null)
+  * @param ToolkitServiceCw $connection
+  * @return bool|null
+  */
+-function verifyConnection(ToolkitServiceCw $connection = null)
++function verifyConnection(?ToolkitServiceCw $connection = null)
+ {
+     // if conn passed and non-null but it's bad
+     if ($connection && !is_a($connection, 'ToolkitApi\CW\ToolkitServiceCw')) {
+@@ -2082,7 +2082,7 @@ function i5_data_area_read($name, $offsetOrConnection = null, $length = null, $c
+  * @param ToolkitServiceCw $connection
+  * @return boolean          True on success, false on failure
+  */
+-function i5_data_area_write($name, $value, $offsetOrConnection = null, $length = null, ToolkitServiceCw $connection=null)
++function i5_data_area_write($name, $value, $offsetOrConnection = null, $length = null, ?ToolkitServiceCw $connection=null)
+ {
+     if (isset($length)) {
+         // assume offset and length are both provided, since they come as a pair.
+@@ -2851,7 +2851,7 @@ function i5_objects_list_close(&$list)
+  * @param ToolkitServiceCw $connection
+  * @return \ToolkitApi\CW\DataDescription
+  */
+-function i5_dtaq_prepare($name, $description, $keySizeOrConnection = 0, ToolkitServiceCw $connection = null)
++function i5_dtaq_prepare($name, $description, $keySizeOrConnection = 0, ?ToolkitServiceCw $connection = null)
+ {
+     $keySize = 0; // init
+     // user is allowed to omit $keySize, so there may be a variable number of parameters
+diff --git a/ToolkitApi/DataArea.php b/ToolkitApi/DataArea.php
+index fe63b5b..529dc3a 100644
+--- a/ToolkitApi/DataArea.php
++++ b/ToolkitApi/DataArea.php
+@@ -16,7 +16,7 @@ class DataArea
+     /**
+      * @param ToolkitInterface $ToolkitSrvObj
+      */
+-    public function __construct(ToolkitInterface $ToolkitSrvObj = null)
++    public function __construct(?ToolkitInterface $ToolkitSrvObj = null)
+     {
+         if ($ToolkitSrvObj instanceof Toolkit) {
+             $this->ToolkitSrvObj = $ToolkitSrvObj;
+diff --git a/ToolkitApi/DataQueue.php b/ToolkitApi/DataQueue.php
+index e218877..cd7c273 100644
+--- a/ToolkitApi/DataQueue.php
++++ b/ToolkitApi/DataQueue.php
+@@ -17,7 +17,7 @@ class DataQueue
+     /**
+      * @param ToolkitInterface $ToolkitSrvObj
+      */
+-    public function __construct(ToolkitInterface $ToolkitSrvObj = null)
++    public function __construct(?ToolkitInterface $ToolkitSrvObj = null)
+     {
+         if ($ToolkitSrvObj instanceof Toolkit) {
+             $this->Toolkit = $ToolkitSrvObj ;
+diff --git a/ToolkitApi/DateTimeApi.php b/ToolkitApi/DateTimeApi.php
+index 7f0c02d..7fcda74 100644
+--- a/ToolkitApi/DateTimeApi.php
++++ b/ToolkitApi/DateTimeApi.php
+@@ -13,7 +13,7 @@ class DateTimeApi
+     /**
+      * @param ToolkitInterface $ToolkitSrvObj
+      */
+-    public function __construct(ToolkitInterface $ToolkitSrvObj = null)
++    public function __construct(?ToolkitInterface $ToolkitSrvObj = null)
+     {
+         if ($ToolkitSrvObj instanceof Toolkit) {
+             $this->ToolkitSrvObj = $ToolkitSrvObj ;
+diff --git a/ToolkitApi/JobLogs.php b/ToolkitApi/JobLogs.php
+index 46bc1c1..1c50e67 100644
+--- a/ToolkitApi/JobLogs.php
++++ b/ToolkitApi/JobLogs.php
+@@ -19,7 +19,7 @@ class JobLogs
+      * @param ToolkitInterface $ToolkitSrvObj
+      * @param string $tmpUSLib
+      */
+-    public function __construct(ToolkitInterface $ToolkitSrvObj = null, $tmpUSLib = DFTLIB)
++    public function __construct(?ToolkitInterface $ToolkitSrvObj = null, $tmpUSLib = DFTLIB)
+     {
+         if ($ToolkitSrvObj instanceof Toolkit ) {
+             $this->ToolkitSrvObj = $ToolkitSrvObj;
+diff --git a/ToolkitApi/ListFromApi.php b/ToolkitApi/ListFromApi.php
+index cf687de..2a83860 100644
+--- a/ToolkitApi/ListFromApi.php
++++ b/ToolkitApi/ListFromApi.php
+@@ -20,7 +20,7 @@ class ListFromApi
+      * @param $lengthOfReceiverVariable
+      * @param ToolkitInterface $ToolkitSrvObj
+      */
+-    public function __construct($requestHandle, $totalRecords, $receiverDs, $lengthOfReceiverVariable, ToolkitInterface $ToolkitSrvObj = null)
++    public function __construct($requestHandle, $totalRecords, $receiverDs, $lengthOfReceiverVariable, ?ToolkitInterface $ToolkitSrvObj = null)
+     {
+         if ($ToolkitSrvObj instanceof Toolkit) {
+             $this->ToolkitSrvObj = $ToolkitSrvObj;
+diff --git a/ToolkitApi/ObjectLists.php b/ToolkitApi/ObjectLists.php
+index 41085d4..6034c67 100644
+--- a/ToolkitApi/ObjectLists.php
++++ b/ToolkitApi/ObjectLists.php
+@@ -16,7 +16,7 @@ class ObjectLists
+     /**
+      * @param ToolkitInterface $ToolkitSrvObj
+      */
+-    public function __construct(ToolkitInterface $ToolkitSrvObj = null)
++    public function __construct(?ToolkitInterface $ToolkitSrvObj = null)
+     {
+         if ($ToolkitSrvObj instanceof Toolkit) {
+             $this->ToolkitSrvObj = $ToolkitSrvObj;
+diff --git a/ToolkitApi/SpooledFiles.php b/ToolkitApi/SpooledFiles.php
+index 458f015..7f92368 100644
+--- a/ToolkitApi/SpooledFiles.php
++++ b/ToolkitApi/SpooledFiles.php
+@@ -19,7 +19,7 @@ class SpooledFiles
+      * @param ToolkitInterface $ToolkitSrvObj
+      * @param null $UserLib
+      */
+-    public function __construct(ToolkitInterface $ToolkitSrvObj = NULL, $UserLib = NULL)
++    public function __construct(?ToolkitInterface $ToolkitSrvObj = NULL, $UserLib = NULL)
+     {
+         if ($ToolkitSrvObj instanceof Toolkit) {
+             $this->ToolkitSrvObj = $ToolkitSrvObj;
+diff --git a/ToolkitApi/SystemValues.php b/ToolkitApi/SystemValues.php
+index 7f76807..af65c12 100644
+--- a/ToolkitApi/SystemValues.php
++++ b/ToolkitApi/SystemValues.php
+@@ -14,7 +14,7 @@ class SystemValues
+     /**
+      * @param ToolkitInterface $ToolkitSrvObj
+      */
+-    public function __construct(ToolkitInterface $ToolkitSrvObj = null){
++    public function __construct(?ToolkitInterface $ToolkitSrvObj = null){
+         if ($ToolkitSrvObj instanceof Toolkit) {
+             $this->ToolkitSrvObj = $ToolkitSrvObj;
+             return $this;
+diff --git a/ToolkitApi/ToolkitServiceXML.php b/ToolkitApi/ToolkitServiceXML.php
+index f817acf..ca70a00 100644
+--- a/ToolkitApi/ToolkitServiceXML.php
++++ b/ToolkitApi/ToolkitServiceXML.php
+@@ -369,7 +369,7 @@ class XMLWrapper
+      * @param null $function
+      * @return string
+      */
+-    public function buildXmlIn($inputOutputParams = NULL, array $returnParams = NULL,
++    public function buildXmlIn($inputOutputParams = NULL, ?array $returnParams = NULL,
+                     $pgm = "",
+                     $lib = "",
+                     $function = NULL)
+diff --git a/ToolkitApi/UserSpace.php b/ToolkitApi/UserSpace.php
+index e0649c7..ae8e4f6 100644
+--- a/ToolkitApi/UserSpace.php
++++ b/ToolkitApi/UserSpace.php
+@@ -13,7 +13,7 @@ class UserSpace
+     /**
+      * @param ToolkitInterface $ToolkitSrvObj
+      */
+-    public function __construct(ToolkitInterface $ToolkitSrvObj = null)
++    public function __construct(?ToolkitInterface $ToolkitSrvObj = null)
+     {
+         if ($ToolkitSrvObj instanceof Toolkit) {
+             $this->ToolkitSrvObj = $ToolkitSrvObj ;

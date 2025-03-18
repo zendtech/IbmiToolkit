@@ -14,7 +14,7 @@ class SystemValues
     /**
      * @param ToolkitInterface $ToolkitSrvObj
      */
-    public function __construct(ToolkitInterface $ToolkitSrvObj = null){
+    public function __construct(?ToolkitInterface $ToolkitSrvObj = null){
         if ($ToolkitSrvObj instanceof Toolkit) {
             $this->ToolkitSrvObj = $ToolkitSrvObj;
             return $this;
