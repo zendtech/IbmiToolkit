@@ -12,4 +12,4 @@ composer.phar
 phpunit.xml
 vendor/
 tests/config/db.config.php
-.phpunit.result.cache
+/.phpunit.cache
