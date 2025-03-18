@@ -35,7 +35,7 @@ final class ToolkitTest extends TestCase
      */
     protected $toolkit;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         $this->toolkit = new Toolkit('*LOCAL', '0', 'testPwd', 'http', false);
     }

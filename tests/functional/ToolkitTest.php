@@ -21,7 +21,7 @@ final class ToolkitTest extends TestCase
      */
     private $toolkitOptions;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         $config = getConfig();
 

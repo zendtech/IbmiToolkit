@@ -25,7 +25,7 @@ final class ProgramParameterTest extends TestCase
     protected $dim;
     protected $by;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         $this->size = 20;
         $this->type = sprintf('%dB', $this->size);
@@ -168,7 +168,7 @@ final class BinParamTest extends TestCase
      */
     protected $programParameter;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         $size = 20;
         $this->binParam = new BinParam('both', $size, 'UncodeSample', 'p1', 'test');
