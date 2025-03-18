@@ -137,7 +137,7 @@ class Toolkit implements ToolkitInterface
     /**
      * if passing an existing resource and naming, don't need the other params.
      *
-     * @param string|resource|PDO $databaseNameOrResource
+     * @param string|resource|PDO|Odbc\Connection $databaseNameOrResource
      * @param string $userOrI5NamingFlag 0 = DB2_I5_NAMING_OFF or 1 = DB2_I5_NAMING_ON
      * @param string $password
      * @param string $transportType (http, ibm_db2, odbc, ssh, local)
