@@ -21,16 +21,10 @@ final class ToolkitTest extends TestCase
      */
     private $toolkitOptions;
 
-    /**
-     * @var bool
-     */
-    private $mockDb2UsingSqlite;
-
     public function setUp(): void
     {
         $config = getConfig();
 
-        $this->mockDb2UsingSqlite = $config['db']['mockDb2UsingSqlite'] ?? false;
         $this->connectionOptions = $config['db']['odbc'];
         $this->toolkitOptions = $config['toolkit'];
     }
@@ -41,7 +35,7 @@ final class ToolkitTest extends TestCase
     public function testCanPassPdoOdbcObjectToToolkit()
     {
         $pdo = new \PDO(
-            $this->buildDsn('pdo'),
+            'odbc:' . $this->connectionOptions['dsn'],
             $this->connectionOptions['username'],
             $this->connectionOptions['password'],
             [
@@ -50,7 +44,7 @@ final class ToolkitTest extends TestCase
                     'quote_identifiers' => $this->connectionOptions['platform_options']['quote_identifiers'],
                 ]
             ]
-);
+        );
 
         $toolkit = new Toolkit($pdo, null, null, 'pdo');
         $toolkit->setOptions($this->toolkitOptions);
@@ -63,7 +57,7 @@ final class ToolkitTest extends TestCase
      */
     public function testCanPassOdbcResourceToToolkit()
     {
-        $connection = odbc_connect($this->buildDsn('odbc'), $this->connectionOptions['username'], $this->connectionOptions['password']);
+        $connection = odbc_connect($this->connectionOptions['dsn'], $this->connectionOptions['username'], $this->connectionOptions['password']);
 
         if (!$connection) {
             throw new \Exception('Connection failed');
@@ -80,7 +74,7 @@ final class ToolkitTest extends TestCase
     public function testCanPassOdbcConnectionParametersToToolkit()
     {
         $toolkit = new Toolkit(
-            $this->buildDsn('odbc'),
+            $this->connectionOptions['dsn'],
             $this->connectionOptions['username'],
             $this->connectionOptions['password'],
             'odbc'
@@ -88,16 +82,5 @@ final class ToolkitTest extends TestCase
         $toolkit->setOptions($this->toolkitOptions);
 
         $this->assertInstanceOf(Toolkit::class, $toolkit);
-    }
-
-    /**
-     * Builds the appropriate DSN based on configuration.
-     */
-    private function buildDsn(string $type = 'pdo'): string
-    {
-        if ($this->mockDb2UsingSqlite) {
-            return ($type === 'pdo') ? 'sqlite::memory:' : 'Driver=SQLite3;Database=:memory:';
-        }
-        return ($type === 'pdo') ? 'odbc:' . $this->connectionOptions['dsn'] : $this->connectionOptions['dsn'];
     }
 }
