@@ -1,7 +1,14 @@
 {
     "name": "zendtech/ibmitoolkit",
     "description": "PHP frontend to XMLSERVICE for IBM i development.",
-    "keywords": ["ibmitoolkit","ibmxmltoolkit","XMLSERVICE","IBM i","zend","as400"],
+    "keywords": [
+        "ibmitoolkit",
+        "ibmxmltoolkit",
+        "XMLSERVICE",
+        "IBM i",
+        "zend",
+        "as400"
+    ],
     "license": "BSD-3-Clause",
     "authors": [
         {
@@ -16,35 +23,37 @@
         }
     ],
     "require": {
-      "php": ">=5.3.3",
-      "ext-mbstring": "*",
-      "ext-pcre": "*",
-      "ext-pdo": "*",
-      "ext-simplexml": "*"
+        "php": ">=5.3.3",
+        "ext-mbstring": "*",
+        "ext-pcre": "*",
+        "ext-pdo": "*",
+        "ext-simplexml": "*"
     },
     "suggest": {
-      "ext-ibm_db2": "For the Db2 transport",
-      "ext-odbc": "For the ODBC transport",
-      "ext-pdo_ibm": "For the PDO Db2 transport",
-      "ext-pdo_odbc": "For the PDO ODBC transport",
-      "ext-pcntl": "For the local transport",
-      "ext-ssh2": "For the SSH transport"
+        "ext-ibm_db2": "For the Db2 transport",
+        "ext-odbc": "For the ODBC transport",
+        "ext-pdo_ibm": "For the PDO Db2 transport",
+        "ext-pdo_odbc": "For the PDO ODBC transport",
+        "ext-pcntl": "For the local transport",
+        "ext-ssh2": "For the SSH transport"
     },
     "autoload": {
-        "classmap": ["ToolkitApi/"],
+        "classmap": [
+            "ToolkitApi/"
+        ],
         "psr-4": {
-            "ToolkitApi\\":"ToolkitApi"
+            "ToolkitApi\\": "ToolkitApi"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "ToolkitApi\\":"ToolkitApi",
-            "ToolkitApiTest\\":"tests/ToolkitApiTest",
+            "ToolkitApi\\": "ToolkitApi",
+            "ToolkitApiTest\\": "tests/ToolkitApiTest",
             "ToolkitFunctionalTest\\": "tests/functional"
         }
     },
     "require-dev": {
-        "phpunit/phpunit": "^8.2",
+        "phpunit/phpunit": "^10.0",
         "symfony/process": "^4.3"
     }
 }
