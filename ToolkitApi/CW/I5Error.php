@@ -8,13 +8,13 @@ namespace ToolkitApi\CW;
  */
 class I5Error
 {
-    static $instance = null;
-    static protected $_i5Error = array();
+    public static $instance = null;
+    protected static $_i5Error = array();
 
     /**
      * @return null
      */
-    static function getInstance()
+    public static function getInstance()
     {
         if(self::$instance == NULL){
             $className = __CLASS__;

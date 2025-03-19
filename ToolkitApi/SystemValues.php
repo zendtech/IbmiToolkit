@@ -105,7 +105,7 @@ class SystemValues
     /**
      * @param $errCode
      */
-    private  function setError($errCode)
+    private function setError($errCode)
     {
         if ($errCode == '') /*clear error message*/ {
             $this->ErrMessage = '';

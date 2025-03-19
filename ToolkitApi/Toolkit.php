@@ -18,7 +18,7 @@ if (!defined('CONFIG_FILE')) {
  */
 class Toolkit implements ToolkitInterface
 {
-    const VERSION =  "1.9.6"; // version number for front-end PHP toolkit
+    public const VERSION =  "1.9.6"; // version number for front-end PHP toolkit
 
     /* @todo use inputXml and outputXml to make this class more flexibly OO-like. Fewer strings copied around.
      * Better would be to use a Request object that has a connection.
@@ -53,8 +53,8 @@ class Toolkit implements ToolkitInterface
 
     protected $_isCw = false; // whether the CW is used for this instance.
 
-    static protected $_config; // config options from INI file. Accessed by static method getConfigValue();
-    static protected $_os; // operating system
+    protected static $_config; // config options from INI file. Accessed by static method getConfigValue();
+    protected static $_os; // operating system
 
     // brought over from CW
     protected $joblog = '';
@@ -1139,7 +1139,7 @@ class Toolkit implements ToolkitInterface
      *
      * @return string Version number (e.g. '1.4.0')
      */
-    static function getFrontEndVersion()
+    public static function getFrontEndVersion()
     {
         return self::VERSION;
     }
@@ -1170,7 +1170,7 @@ class Toolkit implements ToolkitInterface
      * @param $library
      * @return string Version number (e.g. '1.8.0')
      */
-    static function getLocalBackEndVersion($library)
+    public static function getLocalBackEndVersion($library)
     {
         $cmd = "qsh -c /qsys.lib/$library.lib/xmlver.pgm";
 
@@ -1395,7 +1395,7 @@ class Toolkit implements ToolkitInterface
      * @param int $dimension
      * @return array
      */
-    static function AddParameter($type, $io, $comment, $varName = '', $value = '', $varying = 'off', $dimension = 0)
+    public static function AddParameter($type, $io, $comment, $varName = '', $value = '', $varying = 'off', $dimension = 0)
     {
         return array ('type' => $type, // storage
                       'io' => $io, // in/out/both
@@ -1421,7 +1421,7 @@ class Toolkit implements ToolkitInterface
      * @param bool $useHex
      * @return CharParam
      */
-    static function AddParameterChar($io, $size , $comment, $varName = '', $value= '', $varying = 'off',$dimension = 0,
+    public static function AddParameterChar($io, $size , $comment, $varName = '', $value= '', $varying = 'off',$dimension = 0,
                                       $by='', $isArray = false, $ccsidBefore = '', $ccsidAfter = '', $useHex = false)
     {
         return new CharParam($io, $size , $comment, $varName, $value , $varying , $dimension, $by,
@@ -1436,7 +1436,7 @@ class Toolkit implements ToolkitInterface
      * @param int $dimension
      * @return Int32Param
      */
-    static function AddParameterInt32($io, $comment, $varName = '', $value = '', $dimension = 0)
+    public static function AddParameterInt32($io, $comment, $varName = '', $value = '', $dimension = 0)
     {
         return new Int32Param($io, $comment, $varName, $value, $dimension);
     }
@@ -1447,7 +1447,7 @@ class Toolkit implements ToolkitInterface
      * @param $labelFindLen
      * @return SizeParam
      */
-    static function AddParameterSize($comment, $varName = '', $labelFindLen = 0)
+    public static function AddParameterSize($comment, $varName = '', $labelFindLen = 0)
     {
         return new SizeParam($comment, $varName, $labelFindLen);
     }
@@ -1458,7 +1458,7 @@ class Toolkit implements ToolkitInterface
      * @param $labelFindLen
      * @return SizePackParam
      */
-    static function AddParameterSizePack($comment, $varName = '', $labelFindLen = 0)
+    public static function AddParameterSizePack($comment, $varName = '', $labelFindLen = 0)
     {
         return new SizePackParam($comment, $varName, $labelFindLen);
     }
@@ -1497,7 +1497,7 @@ class Toolkit implements ToolkitInterface
      * @param int $dimension
      * @return Int64Param
      */
-    static function AddParameterInt64($io, $comment, $varName = '', $value = '', $dimension = 0)
+    public static function AddParameterInt64($io, $comment, $varName = '', $value = '', $dimension = 0)
     {
         return new Int64Param($io, $comment, $varName, $value, $dimension);
     }
@@ -1536,7 +1536,7 @@ class Toolkit implements ToolkitInterface
      * @param int $dimension
      * @return UInt32Param
      */
-    static function AddParameterUInt32($io, $comment, $varName = '', $value = '', $dimension =0)
+    public static function AddParameterUInt32($io, $comment, $varName = '', $value = '', $dimension =0)
     {
         return new UInt32Param($io, $comment, $varName, $value, $dimension) ; // removed erroneous "off"
     }
@@ -1549,7 +1549,7 @@ class Toolkit implements ToolkitInterface
      * @param int $dimension
      * @return UInt64Param
      */
-    static function AddParameterUInt64($io, $comment, $varName = '', $value='', $dimension=0)
+    public static function AddParameterUInt64($io, $comment, $varName = '', $value='', $dimension=0)
     {
         return new UInt64Param($io, $comment, $varName, $value, $dimension);
     }
@@ -1562,7 +1562,7 @@ class Toolkit implements ToolkitInterface
      * @param int $dimension
      * @return FloatParam
      */
-    static function AddParameterFloat($io, $comment, $varName = '', $value='', $dimension=0)
+    public static function AddParameterFloat($io, $comment, $varName = '', $value='', $dimension=0)
     {
         return(new FloatParam($io, $comment, $varName, $value, $dimension));
     }
@@ -1575,7 +1575,7 @@ class Toolkit implements ToolkitInterface
      * @param int $dimension
      * @return RealParam
      */
-    static function AddParameterReal($io, $comment, $varName = '', $value='', $dimension=0)
+    public static function AddParameterReal($io, $comment, $varName = '', $value='', $dimension=0)
     {
         return new RealParam($io, $comment, $varName, $value, $dimension);
     }
@@ -1590,7 +1590,7 @@ class Toolkit implements ToolkitInterface
      * @param int $dimension
      * @return PackedDecParam
      */
-    static function AddParameterPackDec($io, $length ,$scale , $comment, $varName = '', $value='', $dimension=0)
+    public static function AddParameterPackDec($io, $length ,$scale , $comment, $varName = '', $value='', $dimension=0)
     {
         return new PackedDecParam($io, $length ,$scale , $comment, $varName, $value, $dimension);
     }
@@ -1605,7 +1605,7 @@ class Toolkit implements ToolkitInterface
      * @param int $dimension
      * @return ZonedParam
      */
-    static function AddParameterZoned($io, $length ,$scale , $comment, $varName = '', $value='', $dimension=0)
+    public static function AddParameterZoned($io, $length ,$scale , $comment, $varName = '', $value='', $dimension=0)
     {
         return new ZonedParam($io, $length ,$scale , $comment, $varName , $value, $dimension);
     }
@@ -1617,7 +1617,7 @@ class Toolkit implements ToolkitInterface
      * @param string $comment
      * @return HoleParam
      */
-    static function AddParameterHole($size , $comment='hole')
+    public static function AddParameterHole($size , $comment='hole')
     {
         return new HoleParam($size, $comment);
     }
@@ -1631,7 +1631,7 @@ class Toolkit implements ToolkitInterface
      * @param int $dimension
      * @return BinParam
      */
-    static function AddParameterBin($io, $size , $comment, $varName = '', $value='',$dimension =0)
+    public static function AddParameterBin($io, $size , $comment, $varName = '', $value='',$dimension =0)
     {
         return new BinParam($io, $size , $comment, $varName, $value,$dimension);
     }
@@ -1640,7 +1640,7 @@ class Toolkit implements ToolkitInterface
      * @param $array
      * @return array
      */
-    static function AddParameterArray($array)
+    public static function AddParameterArray($array)
     {
         $params = array();
 
@@ -1668,7 +1668,7 @@ class Toolkit implements ToolkitInterface
      * @param string $io
      * @return DataStructure
      */
-    static function AddDataStruct(array $parameters, $name='struct_name', $dim=0, $by='', $isArray=false, $labelLen = null, $comment = '', $io = 'both')
+    public static function AddDataStruct(array $parameters, $name='struct_name', $dim=0, $by='', $isArray=false, $labelLen = null, $comment = '', $io = 'both')
     {
         return new DataStructure($parameters, $name, $dim, $comment, $by, $isArray, $labelLen, $io);
     }
@@ -1676,7 +1676,7 @@ class Toolkit implements ToolkitInterface
     /**
      * @return DataStructure
      */
-    static function AddErrorDataStruct()
+    public static function AddErrorDataStruct()
     {
         return new DataStructure(self::GenerateErrorParameter(), 'errorDs', 0);
     }
@@ -1688,7 +1688,7 @@ class Toolkit implements ToolkitInterface
      *
      * @return DataStructure
      */
-    static function AddErrorDataStructZeroBytes()
+    public static function AddErrorDataStructZeroBytes()
     {
         return new DataStructure(self::GenerateErrorParameterZeroBytes(), 'errorDs', 0);
     }
@@ -1715,7 +1715,7 @@ class Toolkit implements ToolkitInterface
      * @param int $paramNum
      * @return string
      */
-    static function getErrorDataStructXml($paramNum = 0)
+    public static function getErrorDataStructXml($paramNum = 0)
     {
         $paramNumStr = ($paramNum) ? ($paramNum . '.') : '';
 
@@ -1734,7 +1734,7 @@ class Toolkit implements ToolkitInterface
      * @param int $paramNum
      * @return string
      */
-    static function getErrorDataStructXmlWithCode($paramNum = 0)
+    public static function getErrorDataStructXmlWithCode($paramNum = 0)
     {
         $paramNumStr = ($paramNum) ? ($paramNum . '.') : '';
 
@@ -1754,7 +1754,7 @@ class Toolkit implements ToolkitInterface
      * @param int $paramNum
      * @return string
      */
-    static function getListInfoApiXml($paramNum = 0)
+    public static function getListInfoApiXml($paramNum = 0)
     {
         $paramNumStr = ($paramNum) ? ($paramNum . '.') : '';
 
@@ -1781,7 +1781,7 @@ class Toolkit implements ToolkitInterface
      * @param int $paramNum
      * @return string
      */
-    static function getNumberOfRecordsDesiredApiXml($paramNum = 0)
+    public static function getNumberOfRecordsDesiredApiXml($paramNum = 0)
     {
         $paramNumStr = ($paramNum) ? ($paramNum . '.') : '';
 
@@ -1796,7 +1796,7 @@ class Toolkit implements ToolkitInterface
      * @param int $paramNum
      * @return string
      */
-    static function getSortInformationApiXml($paramNum = 0)
+    public static function getSortInformationApiXml($paramNum = 0)
     {
         $paramNumStr = ($paramNum) ? ($paramNum . '.') : '';
 
@@ -1815,7 +1815,7 @@ class Toolkit implements ToolkitInterface
      * @param $lengthOfReceiverVariable
      * @return string
      */
-    static function getDummyReceiverAndLengthApiXml($paramNum, $lengthOfReceiverVariable)
+    public static function getDummyReceiverAndLengthApiXml($paramNum, $lengthOfReceiverVariable)
     {
         $paramNumStr = $paramNum . '.';
         $paramNumStrNext = ($paramNum + 1) . '.';
@@ -2060,7 +2060,7 @@ class Toolkit implements ToolkitInterface
      *
      * @return array
      */
-    static function GenerateErrorParameter()
+    public static function GenerateErrorParameter()
     {
         $ErrBytes   = 144;
         $ErrBytesAv = 144;
@@ -2083,7 +2083,7 @@ class Toolkit implements ToolkitInterface
      *
      * @return array
      */
-    static function GenerateErrorParameterZeroBytes()
+    public static function GenerateErrorParameterZeroBytes()
     {
         $ErrBytes   = 0;
         // changed $this to self so can work in static context
@@ -2244,7 +2244,7 @@ class Toolkit implements ToolkitInterface
      *
      * @return string
      */
-    static function classPath()
+    public static function classPath()
     {
         return __FILE__;
     }
@@ -2384,7 +2384,7 @@ class Toolkit implements ToolkitInterface
      * @param string $password
      * @return boolean  True on success, False on failure
      */
-    function changeCurrentUser($user, $password)
+    public function changeCurrentUser($user, $password)
     {
         // Force user/pw to uppercase. (should they?)
         // Ask Support team for opinion on uppercase or not.
@@ -2487,7 +2487,7 @@ class Toolkit implements ToolkitInterface
      * @param mixed|null $default
      * @return bool|null
      */
-    static function getConfigValue($heading, $key, $default = null)
+    public static function getConfigValue($heading, $key, $default = null)
     {
         // if we haven't read config file yet, do so.
         if (!isset(self::$_config)) {
@@ -2510,7 +2510,7 @@ class Toolkit implements ToolkitInterface
      *
      * @return string
      */
-    static function getPhpOperatingSystem() {
+    public static function getPhpOperatingSystem() {
 
         if (!isset(self::$_os)) {
             self::$_os = php_uname('s');
@@ -2524,7 +2524,7 @@ class Toolkit implements ToolkitInterface
      *
      * @return bool
      */
-    static function isPhpRunningOnIbmI()
+    public static function isPhpRunningOnIbmI()
     {
         return (self::getPhpOperatingSystem() == 'OS400');
     }
@@ -2539,7 +2539,7 @@ class Toolkit implements ToolkitInterface
      *
      * @return bool
      */
-    static function getPhpCcsid()
+    public static function getPhpCcsid()
     {
         if (isset($_SERVER['CCSID'])) {
             // web/fastcgi

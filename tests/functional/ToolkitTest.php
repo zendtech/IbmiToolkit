@@ -9,7 +9,7 @@ use ToolkitApi\Toolkit;
 
 final class ToolkitTest extends TestCase
 {
-    const TEMPORARY_LIBRARY = 'MYLIB1';
+    public const TEMPORARY_LIBRARY = 'MYLIB1';
 
     /**
      * @var array

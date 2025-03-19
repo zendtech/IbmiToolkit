@@ -155,7 +155,7 @@ interface ToolkitInterface
     /**
      * @return string Version number (e.g. '1.4.0')
      */
-    static function getFrontEndVersion();
+    public static function getFrontEndVersion();
 
     /**
      * @return string Version
@@ -166,7 +166,7 @@ interface ToolkitInterface
      * @param $library
      * @return string Version number (e.g. '1.8.0')
      */
-    static function getLocalBackEndVersion($library);
+    public static function getLocalBackEndVersion($library);
 
     /**
      * @param array $command string will be turned into an array
@@ -215,7 +215,7 @@ interface ToolkitInterface
      * @param int $dimension
      * @return array
      */
-    static function AddParameter($type, $io, $comment, $varName = '', $value = '', $varying = 'off', $dimension = 0);
+    public static function AddParameter($type, $io, $comment, $varName = '', $value = '', $varying = 'off', $dimension = 0);
 
     /**
      * @param $io
@@ -232,7 +232,7 @@ interface ToolkitInterface
      * @param bool $useHex
      * @return CharParam
      */
-    static function AddParameterChar($io, $size, $comment, $varName = '', $value = '', $varying = 'off', $dimension = 0, $by = '', $isArray = false, $ccsidBefore = '', $ccsidAfter = '', $useHex = false);
+    public static function AddParameterChar($io, $size, $comment, $varName = '', $value = '', $varying = 'off', $dimension = 0, $by = '', $isArray = false, $ccsidBefore = '', $ccsidAfter = '', $useHex = false);
 
     /**
      * @param $io
@@ -242,7 +242,7 @@ interface ToolkitInterface
      * @param int $dimension
      * @return Int32Param
      */
-    static function AddParameterInt32($io, $comment, $varName = '', $value = '', $dimension = 0);
+    public static function AddParameterInt32($io, $comment, $varName = '', $value = '', $dimension = 0);
 
     /**
      * @param $comment
@@ -250,7 +250,7 @@ interface ToolkitInterface
      * @param $labelFindLen
      * @return SizeParam
      */
-    static function AddParameterSize($comment, $varName = '', $labelFindLen = 0);
+    public static function AddParameterSize($comment, $varName = '', $labelFindLen = 0);
 
     /**
      * @param $comment
@@ -258,7 +258,7 @@ interface ToolkitInterface
      * @param $labelFindLen
      * @return SizePackParam
      */
-    static function AddParameterSizePack($comment, $varName = '', $labelFindLen = 0);
+    public static function AddParameterSizePack($comment, $varName = '', $labelFindLen = 0);
 
     /**
      * @param $io
@@ -288,7 +288,7 @@ interface ToolkitInterface
      * @param int $dimension
      * @return Int64Param
      */
-    static function AddParameterInt64($io, $comment, $varName = '', $value = '', $dimension = 0);
+    public static function AddParameterInt64($io, $comment, $varName = '', $value = '', $dimension = 0);
 
     /**
      * @param $io
@@ -318,7 +318,7 @@ interface ToolkitInterface
      * @param int $dimension
      * @return UInt32Param
      */
-    static function AddParameterUInt32($io, $comment, $varName = '', $value = '', $dimension = 0);
+    public static function AddParameterUInt32($io, $comment, $varName = '', $value = '', $dimension = 0);
 
     /**
      * @param $io
@@ -328,7 +328,7 @@ interface ToolkitInterface
      * @param int $dimension
      * @return UInt64Param
      */
-    static function AddParameterUInt64($io, $comment, $varName = '', $value = '', $dimension = 0);
+    public static function AddParameterUInt64($io, $comment, $varName = '', $value = '', $dimension = 0);
 
     /**
      * @param $io
@@ -338,7 +338,7 @@ interface ToolkitInterface
      * @param int $dimension
      * @return FloatParam
      */
-    static function AddParameterFloat($io, $comment, $varName = '', $value = '', $dimension = 0);
+    public static function AddParameterFloat($io, $comment, $varName = '', $value = '', $dimension = 0);
 
     /**
      * @param $io
@@ -348,7 +348,7 @@ interface ToolkitInterface
      * @param int $dimension
      * @return RealParam
      */
-    static function AddParameterReal($io, $comment, $varName = '', $value = '', $dimension = 0);
+    public static function AddParameterReal($io, $comment, $varName = '', $value = '', $dimension = 0);
 
     /**
      * @param $io
@@ -360,7 +360,7 @@ interface ToolkitInterface
      * @param int $dimension
      * @return PackedDecParam
      */
-    static function AddParameterPackDec($io, $length, $scale, $comment, $varName = '', $value = '', $dimension = 0);
+    public static function AddParameterPackDec($io, $length, $scale, $comment, $varName = '', $value = '', $dimension = 0);
 
     /**
      * @param $io
@@ -372,14 +372,14 @@ interface ToolkitInterface
      * @param int $dimension
      * @return ZonedParam
      */
-    static function AddParameterZoned($io, $length, $scale, $comment, $varName = '', $value = '', $dimension = 0);
+    public static function AddParameterZoned($io, $length, $scale, $comment, $varName = '', $value = '', $dimension = 0);
 
     /**
      * @param $size
      * @param string $comment
      * @return HoleParam
      */
-    static function AddParameterHole($size, $comment = 'hole');
+    public static function AddParameterHole($size, $comment = 'hole');
 
     /**
      * @param $io
@@ -390,13 +390,13 @@ interface ToolkitInterface
      * @param int $dimension
      * @return BinParam
      */
-    static function AddParameterBin($io, $size, $comment, $varName = '', $value = '', $dimension = 0);
+    public static function AddParameterBin($io, $size, $comment, $varName = '', $value = '', $dimension = 0);
 
     /**
      * @param $array
      * @return array
      */
-    static function AddParameterArray($array);
+    public static function AddParameterArray($array);
 
     /**
      * @param array $parameters
@@ -409,54 +409,54 @@ interface ToolkitInterface
      * @param string $io
      * @return DataStructure
      */
-    static function AddDataStruct(array $parameters, $name = 'struct_name', $dim = 0, $by = '', $isArray = false, $labelLen = null, $comment = '', $io = 'both');
+    public static function AddDataStruct(array $parameters, $name = 'struct_name', $dim = 0, $by = '', $isArray = false, $labelLen = null, $comment = '', $io = 'both');
 
     /**
      * @return DataStructure
      */
-    static function AddErrorDataStruct();
+    public static function AddErrorDataStruct();
 
     /**
      * @return DataStructure
      */
-    static function AddErrorDataStructZeroBytes();
+    public static function AddErrorDataStructZeroBytes();
 
     /**
      * @param int $paramNum
      * @return string
      */
-    static function getErrorDataStructXml($paramNum = 0);
+    public static function getErrorDataStructXml($paramNum = 0);
 
     /**
      * @param int $paramNum
      * @return string
      */
-    static function getErrorDataStructXmlWithCode($paramNum = 0);
+    public static function getErrorDataStructXmlWithCode($paramNum = 0);
 
     /**
      * @param int $paramNum
      * @return string
      */
-    static function getListInfoApiXml($paramNum = 0);
+    public static function getListInfoApiXml($paramNum = 0);
 
     /**
      * @param int $paramNum
      * @return string
      */
-    static function getNumberOfRecordsDesiredApiXml($paramNum = 0);
+    public static function getNumberOfRecordsDesiredApiXml($paramNum = 0);
 
     /**
      * @param int $paramNum
      * @return string
      */
-    static function getSortInformationApiXml($paramNum = 0);
+    public static function getSortInformationApiXml($paramNum = 0);
 
     /**
      * @param int $paramNum
      * @param $lengthOfReceiverVariable
      * @return string
      */
-    static function getDummyReceiverAndLengthApiXml($paramNum, $lengthOfReceiverVariable);
+    public static function getDummyReceiverAndLengthApiXml($paramNum, $lengthOfReceiverVariable);
 
     /**
      * @return string
@@ -501,12 +501,12 @@ interface ToolkitInterface
     /**
      * @return array
      */
-    static function GenerateErrorParameter();
+    public static function GenerateErrorParameter();
 
     /**
      * @return array
      */
-    static function GenerateErrorParameterZeroBytes();
+    public static function GenerateErrorParameterZeroBytes();
 
     /**
      * @param $retPgmArr
@@ -552,14 +552,14 @@ interface ToolkitInterface
     /**
      * @return string
      */
-    static function classPath();
+    public static function classPath();
 
     /**
      * @param string $user Generally should be uppercase
      * @param string $password
      * @return boolean  True on success, False on failure
      */
-    function changeCurrentUser($user, $password);
+    public function changeCurrentUser($user, $password);
 
     /**
      * @param $heading
@@ -567,20 +567,20 @@ interface ToolkitInterface
      * @param null $default
      * @return bool|null
      */
-    static function getConfigValue($heading, $key, $default = null);
+    public static function getConfigValue($heading, $key, $default = null);
 
     /**
      * @return string
      */
-    static function getPhpOperatingSystem();
+    public static function getPhpOperatingSystem();
 
     /**
      * @return bool
      */
-    static function isPhpRunningOnIbmI();
+    public static function isPhpRunningOnIbmI();
 
     /**
      * @return bool
      */
-    static function getPhpCcsid();
+    public static function getPhpCcsid();
 }
