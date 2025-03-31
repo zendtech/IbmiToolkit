@@ -19,7 +19,7 @@ class SpooledFiles
      * @param ToolkitInterface $ToolkitSrvObj
      * @param null $UserLib
      */
-    public function __construct(ToolkitInterface $ToolkitSrvObj = NULL, $UserLib = NULL)
+    public function __construct(?ToolkitInterface $ToolkitSrvObj = NULL, $UserLib = NULL)
     {
         if ($ToolkitSrvObj instanceof Toolkit) {
             $this->ToolkitSrvObj = $ToolkitSrvObj;

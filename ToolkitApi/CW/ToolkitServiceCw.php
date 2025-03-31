@@ -10,7 +10,7 @@ use ToolkitApi\Toolkit;
  */
 class ToolkitServiceCw extends Toolkit
 {
-    static $instance = null;
+    public static $instance = null;
 
     public function __construct($database, $userOrI5NamingFlag, $password, $extensionPrefix, $isPersistent = false)
     {
@@ -28,7 +28,7 @@ class ToolkitServiceCw extends Toolkit
      * @param bool $forceNew
      * @return bool|null
      */
-    static function getInstance($databaseNameOrResource = '*LOCAL', $userOrI5NamingFlag = '', $password = '', $extensionPrefix = '', $isPersistent = false, $forceNew = false)
+    public static function getInstance($databaseNameOrResource = '*LOCAL', $userOrI5NamingFlag = '', $password = '', $extensionPrefix = '', $isPersistent = false, $forceNew = false)
     {
         // if we're forcing a new instance, close db conn first if exists.
         if ($forceNew && self::hasInstance() && isset(self::$instance->conn))
@@ -64,7 +64,7 @@ class ToolkitServiceCw extends Toolkit
      *
      * @return boolean
      */
-    static function hasInstance()
+    public static function hasInstance()
     {
         if (isset(self::$instance) && is_object(self::$instance)) {
             return true;

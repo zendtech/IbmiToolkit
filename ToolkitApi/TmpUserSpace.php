@@ -11,7 +11,7 @@ class TmpUserSpace extends UserSpace
      * @param int $DftUsSize
      * @throws \Exception
      */
-    function __construct($Toolkit, $UsLib = DFTLIB, $DftUsSize = 32700)
+    public function __construct($Toolkit, $UsLib = DFTLIB, $DftUsSize = 32700)
     {
         parent::__construct($Toolkit);
 
@@ -27,7 +27,7 @@ class TmpUserSpace extends UserSpace
     /**
      * @todo do not delete
      */
-    function __destruct()
+    public function __destruct()
     {
 //        $this->DeleteUserSpace();
     }

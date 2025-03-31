@@ -615,7 +615,7 @@ function i5_pclose(ToolkitServiceCw &$connection)
  * @param ToolkitServiceCw $connection [optional] the result of i5_connect(), or omit
  * @return boolean  True on success, False on failure
  */
-function i5_adopt_authority($user, $password, ToolkitServiceCw $connection=null)
+function i5_adopt_authority($user, $password, ?ToolkitServiceCw $connection=null)
 {
     // if conn not passed in, get instance of toolkit. If can't be obtained, return false.
     if (!$connection = verifyConnection($connection)) {
@@ -801,7 +801,7 @@ function i5_errormsg()
  * @param ToolkitServiceCw $connection Optional connection object
  * @return boolean for success/failure
  */
-function i5_command($cmdString, $input = array(), $output = array(), ToolkitServiceCw $connection = null)
+function i5_command($cmdString, $input = array(), $output = array(), ?ToolkitServiceCw $connection = null)
 {
     // if conn not passed in, get instance of toolkit. If can't be obtained, return false.
     if (!$connection = verifyConnection($connection)) {
@@ -1464,7 +1464,7 @@ function i5_jobLog_list_close(&$list = null)
  * @param ToolkitServiceCw $connection
  * @return bool|null
  */
-function verifyConnection(ToolkitServiceCw $connection = null)
+function verifyConnection(?ToolkitServiceCw $connection = null)
 {
     // if conn passed and non-null but it's bad
     if ($connection && !is_a($connection, 'ToolkitApi\CW\ToolkitServiceCw')) {
@@ -2082,7 +2082,7 @@ function i5_data_area_read($name, $offsetOrConnection = null, $length = null, $c
  * @param ToolkitServiceCw $connection
  * @return boolean          True on success, false on failure
  */
-function i5_data_area_write($name, $value, $offsetOrConnection = null, $length = null, ToolkitServiceCw $connection=null)
+function i5_data_area_write($name, $value, $offsetOrConnection = null, $length = null, ?ToolkitServiceCw $connection=null)
 {
     if (isset($length)) {
         // assume offset and length are both provided, since they come as a pair.
@@ -2851,7 +2851,7 @@ function i5_objects_list_close(&$list)
  * @param ToolkitServiceCw $connection
  * @return \ToolkitApi\CW\DataDescription
  */
-function i5_dtaq_prepare($name, $description, $keySizeOrConnection = 0, ToolkitServiceCw $connection = null)
+function i5_dtaq_prepare($name, $description, $keySizeOrConnection = 0, ?ToolkitServiceCw $connection = null)
 {
     $keySize = 0; // init
     // user is allowed to omit $keySize, so there may be a variable number of parameters
