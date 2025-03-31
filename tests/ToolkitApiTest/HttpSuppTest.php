@@ -6,7 +6,7 @@ use ToolkitApi\httpsupp;
 
 final class HttpSuppTest extends TestCase
 {
-    public function testCanSetIpc()
+    public function testCanSetIpc(): void
     {
         $ipc = 'test';
 
@@ -16,7 +16,7 @@ final class HttpSuppTest extends TestCase
         $this->assertEquals($ipc, $httpsupp->getIpc());
     }
     
-    public function testIsIpcSet()
+    public function testIsIpcSet(): void
     {
         $ipc = 'test';
         

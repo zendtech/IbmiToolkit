@@ -21,7 +21,7 @@ final class ToolkitTest extends TestCase
      */
     private $toolkitOptions;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         $config = getConfig();
 
@@ -32,7 +32,7 @@ final class ToolkitTest extends TestCase
     /**
      * @throws \Exception
      */
-    public function testCanPassPdoOdbcObjectToToolkit()
+    public function testCanPassPdoOdbcObjectToToolkit(): void
     {
         $pdo = new \PDO(
             'odbc:' . $this->connectionOptions['dsn'],
@@ -55,7 +55,7 @@ final class ToolkitTest extends TestCase
     /**
      * @throws \Exception
      */
-    public function testCanPassOdbcResourceToToolkit()
+    public function testCanPassOdbcResourceToToolkit(): void
     {
         $connection = odbc_connect($this->connectionOptions['dsn'], $this->connectionOptions['username'], $this->connectionOptions['password']);
 
@@ -71,7 +71,7 @@ final class ToolkitTest extends TestCase
     /**
      * @throws \Exception
      */
-    public function testCanPassOdbcConnectionParametersToToolkit()
+    public function testCanPassOdbcConnectionParametersToToolkit(): void
     {
         $toolkit = new Toolkit(
             $this->connectionOptions['dsn'],

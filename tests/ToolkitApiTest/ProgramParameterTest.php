@@ -25,7 +25,7 @@ final class ProgramParameterTest extends TestCase
     protected $dim;
     protected $by;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         $this->size = 20;
         $this->type = sprintf('%dB', $this->size);
@@ -48,7 +48,7 @@ final class ProgramParameterTest extends TestCase
         );
     }
 
-    public function testCanGetParameterProperties()
+    public function testCanGetParameterProperties(): void
     {
         $data1 = $this->programParameter->getParamProperities();
         $data2 = array(
@@ -73,7 +73,7 @@ final class ProgramParameterTest extends TestCase
         $this->assertEquals($data1, $data2);
     }
 
-    public function testGetParameterPropertiesFacadeMethodReturnsSameAsRealMethod()
+    public function testGetParameterPropertiesFacadeMethodReturnsSameAsRealMethod(): void
     {
         $data1 = $this->programParameter->getParamProperities();
         $data2 = $this->programParameter->getParamProperties();
@@ -168,7 +168,7 @@ final class BinParamTest extends TestCase
      */
     protected $programParameter;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         $size = 20;
         $this->binParam = new BinParam('both', $size, 'UncodeSample', 'p1', 'test');
@@ -176,7 +176,7 @@ final class BinParamTest extends TestCase
         $this->programParameter = new ProgramParameter($type, 'both', 'p1', 'test', 'off', 0, '', false);
     }
 
-    public function testCanConvertBinaryToString()
+    public function testCanConvertBinaryToString(): void
     {
         $hex = '74657374';
         $data1 = $this->binParam->bin2str($hex);

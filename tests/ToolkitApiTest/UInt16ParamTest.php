@@ -11,7 +11,7 @@ use ToolkitApi\UInt16Param;
  */
 final class UInt16ParamTest extends TestCase
 {
-    public function testCanCreateInstance()
+    public function testCanCreateInstance(): void
     {
         $parameter = new UInt16Param('both', 'test comment', 'testVar', 8);
         $this->assertTrue($parameter instanceof ProgramParameter);

@@ -35,131 +35,131 @@ final class ToolkitTest extends TestCase
      */
     protected $toolkit;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         $this->toolkit = new Toolkit('*LOCAL', '0', 'testPwd', 'http', false);
     }
 
-    public function testCanAddSigned8ByteIntegerParameter()
+    public function testCanAddSigned8ByteIntegerParameter(): void
     {
         $parameter = $this->toolkit->AddParameterInt8('both', 'test comment', 'testVar', 8);
 
         $this->assertTrue($parameter instanceof Int8Param);
     }
 
-    public function testCanAddSigned16ByteIntegerParameter()
+    public function testCanAddSigned16ByteIntegerParameter(): void
     {
         $parameter = $this->toolkit->AddParameterInt16('both', 'test comment', 'testVar', 10);
 
         $this->assertTrue($parameter instanceof Int16Param);
     }
 
-    public function testCanAddSigned32ByteIntegerParameter()
+    public function testCanAddSigned32ByteIntegerParameter(): void
     {
         $parameter = $this->toolkit->AddParameterInt32('both', 'test comment', 'testVar', 100);
 
         $this->assertTrue($parameter instanceof Int32Param);
     }
 
-    public function testCanAddSigned64ByteIntegerParameter()
+    public function testCanAddSigned64ByteIntegerParameter(): void
     {
         $parameter = $this->toolkit->AddParameterInt64('both', 'test comment', 'testVar', 1000);
 
         $this->assertTrue($parameter instanceof Int64Param);
     }
 
-    public function testCanAddUnsigned8ByteIntegerParameter()
+    public function testCanAddUnsigned8ByteIntegerParameter(): void
     {
         $parameter = $this->toolkit->AddParameterUInt8('both', 'test comment', 'testVar', 8);
 
         $this->assertTrue($parameter instanceof UInt8Param);
     }
 
-    public function testCanAddUnsigned16ByteIntegerParameter()
+    public function testCanAddUnsigned16ByteIntegerParameter(): void
     {
         $parameter = $this->toolkit->AddParameterUInt16('both', 'test comment', 'testVar', 8);
 
         $this->assertTrue($parameter instanceof UInt16Param);
     }
 
-    public function testCanAddUnsigned32ByteIntegerParameter()
+    public function testCanAddUnsigned32ByteIntegerParameter(): void
     {
         $parameter = $this->toolkit->AddParameterUInt32('both', 'test comment', 'testVar', 8);
 
         $this->assertTrue($parameter instanceof UInt32Param);
     }
 
-    public function testCanAddUnsigned64ByteIntegerParameter()
+    public function testCanAddUnsigned64ByteIntegerParameter(): void
     {
         $parameter = $this->toolkit->AddParameterUInt64('both', 'test comment', 'testVar', 8);
 
         $this->assertTrue($parameter instanceof UInt64Param);
     }
 
-    public function testCanAddCharacterParameter()
+    public function testCanAddCharacterParameter(): void
     {
         $parameter = $this->toolkit->AddParameterChar('both', 10, 'CODE', 'CODE', 'code');
 
         $this->assertTrue($parameter instanceof CharParam);
     }
 
-    public function testCanAddFloatParameter()
+    public function testCanAddFloatParameter(): void
     {
         $parameter = $this->toolkit->AddParameterFloat('both', 'test comment', 'varName', 'false');
 
         $this->assertTrue($parameter instanceof FloatParam);
     }
 
-    public function testCanAddRealParameter()
+    public function testCanAddRealParameter(): void
     {
         $parameter = $this->toolkit->AddParameterReal('both', 'test comment', 'varName', 'testValue');
 
         $this->assertTrue($parameter instanceof RealParam);
     }
 
-    public function testCanAddPackedDecimalParameter()
+    public function testCanAddPackedDecimalParameter(): void
     {
         $parameter = $this->toolkit->AddParameterPackDec('both', 7,4, 'INDEC1', 'var3', '001.0001');
 
         $this->assertTrue($parameter instanceof PackedDecParam);
     }
 
-    public function testCanAddZonedParameter()
+    public function testCanAddZonedParameter(): void
     {
         $parameter = $this->toolkit->AddParameterZoned('both', 12, 2, 'Check amount', 'amount', '2000.25');
 
         $this->assertTrue($parameter instanceof ZonedParam);
     }
 
-    public function testCanAddParameterHole()
+    public function testCanAddParameterHole(): void
     {
         $parameter = $this->toolkit->AddParameterHole(12, 'hole');
 
         $this->assertTrue($parameter instanceof HoleParam);
     }
 
-    public function testCanAddBinaryParameter()
+    public function testCanAddBinaryParameter(): void
     {
         $parameter = $this->toolkit->AddParameterBin('both', 20, 'UncodeSample', 'p1', 'test');
 
         $this->assertTrue($parameter instanceof BinParam);
     }
 
-    public function testCanAddParameterSize()
+    public function testCanAddParameterSize(): void
     {
         $size = $this->toolkit->AddParameterSize('test comment', 'varName', 3);
 
         $this->assertTrue($size instanceof SizeParam);
     }
 
-    public function testCanAddParameterSizePack()
+    public function testCanAddParameterSizePack(): void
     {
         $parameter = $this->toolkit->AddParameterSizePack('test comment', 'varName', 4);
 
         $this->assertTrue($parameter instanceof SizePackParam);
     }
 
-    public function testCanSetPersistent()
+    public function testCanSetPersistent(): void
     {
         $isPersistent = false;
 
@@ -168,63 +168,63 @@ final class ToolkitTest extends TestCase
         $this->assertEquals($isPersistent, $this->toolkit->getIsPersistent());
     }
 
-    public function testCanReturnScriptAbsolutePath()
+    public function testCanReturnScriptAbsolutePath(): void
     {
         $path = Toolkit::classPath();
 
         $this->assertEquals($path, $this->toolkit->classPath());
     }
 
-    public function testCanGetPhpOperatingSystem()
+    public function testCanGetPhpOperatingSystem(): void
     {
         $os = php_uname('s');
 
         $this->assertEquals($os, $this->toolkit->getPhpOperatingSystem());
     }
 
-    public function testCanTellIfPhpIsRunningOnIbmI()
+    public function testCanTellIfPhpIsRunningOnIbmI(): void
     {
         $isRunningOnIbmI = (php_uname('s') === 'OS400');
 
         $this->assertEquals($isRunningOnIbmI, $this->toolkit->isPhpRunningOnIbmI());
     }
 
-    public function testDatabaseNameOrResourceIsNotBoolean()
+    public function testDatabaseNameOrResourceIsNotBoolean(): void
     {
         $resource = false;
         $this->expectException(Exception::class);
         new Toolkit($resource);
     }
 
-    public function testDatabaseNameOrResourceIsNotFloat()
+    public function testDatabaseNameOrResourceIsNotFloat(): void
     {
         $resource = 1.81;
         $this->expectException(Exception::class);
         new Toolkit($resource);
     }
 
-    public function testDatabaseNameOrResourceIsNotObject()
+    public function testDatabaseNameOrResourceIsNotObject(): void
     {
         $resource = new DataArea();
         $this->expectException(Exception::class);
         new Toolkit($resource);
     }
 
-    public function testDatabaseNameOrResourceIsNotInteger()
+    public function testDatabaseNameOrResourceIsNotInteger(): void
     {
         $resource = 12;
         $this->expectException(Exception::class);
         new Toolkit($resource);
     }
 
-    public function testDatabaseNameOrResourceIsNotArray()
+    public function testDatabaseNameOrResourceIsNotArray(): void
     {
         $resource = array(1, 2, 3);
         $this->expectException(Exception::class);
         new Toolkit($resource);
     }
 
-    public function testDatabaseNameOrResourceIsNotNull()
+    public function testDatabaseNameOrResourceIsNotNull(): void
     {
         $resource = null;
         $this->expectException(Exception::class);
