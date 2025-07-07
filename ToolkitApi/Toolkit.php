@@ -158,7 +158,7 @@ class Toolkit implements ToolkitInterface
         }
 
         // stop any types that are not valid for first parameter. Invalid values may cause toolkit to try to create another database connection.
-        if (!is_string($databaseNameOrResource) && !is_resource($databaseNameOrResource) && ((!is_object($databaseNameOrResource) || (is_object($databaseNameOrResource) && !in_array(get_class($databaseNameOrResource), [PDO::class, \Odbc\Connection::class], true))))) {
+        if (!is_string($databaseNameOrResource) && !is_resource($databaseNameOrResource) && ((!is_object($databaseNameOrResource) || (is_object($databaseNameOrResource) && !in_array(get_class($databaseNameOrResource), [PDO::class, \Odbc\Connection::class, \Pdo\Odbc::class], true))))) {
 
             // initialize generic message
             $this->error = "\nFailed to connect. databaseNameOrResource " . var_export($databaseNameOrResource, true) . " not valid.";
