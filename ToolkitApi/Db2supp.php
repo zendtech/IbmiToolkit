@@ -203,7 +203,7 @@ class db2supp
         $txt = array();
         $stmt = db2_exec($conn, $sql, array('cursor' => DB2_SCROLLABLE));
         if (is_resource($stmt)) {
-            if (db2_fetch_row($stmt)) {
+            while (db2_fetch_row($stmt)) {
                 $column = db2_result($stmt, 0);
                 $txt[] = $column;
             }
