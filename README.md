@@ -24,8 +24,9 @@ Current Main Features:
 - Compatibility wrapper to execute Easycom syntax
 - Support of all RPG parameter types, including data structures, packed decimal, and output parameters
 
-XMLSERVICE and the IBM i Toolkit are already shipped with Zend Server and Seiden CommunityPlus+ PHP. But being 
-open source they can also be downloaded, installed, and upgraded separately.
+XMLSERVICE ships with the IBM i in QXMLSERV.
+The PHP IBM i Toolkit is shipped with Zend Server and Seiden PHP+. 
+Being open source, they can also be downloaded, installed, and upgraded separately.
 
 For examples, please visit:
 https://github.com/zendtech/IbmiToolkit/tree/master/samples
