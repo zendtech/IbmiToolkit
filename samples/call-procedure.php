@@ -51,7 +51,7 @@ $retParam = $conn->AddParameterInt32('out', '4-byte int', 'MYRESULT', '13579');
 
 /* Call service program procedure. 
  * Procedure name is optional and specified in parameter 5, an array containing associative index 'func'.
- * Make sure your procedure name is 100% correct. It is case-sensitive. 
+ * Make sure your procedure name and case matches that shown in DSPSRVPGM command output. 
  * If you get an error, look for your procedure name in the output from this command (replacing LIBNAME/PGMNAME with your library and program names):
  * DSPSRVPGM SRVPGM(LIBNAME/PGMNAME) DETAIL(*PROCEXP)
  * In this example, assume your program is MYLIB/MYPGM and has a procedure/function 'myproc'
