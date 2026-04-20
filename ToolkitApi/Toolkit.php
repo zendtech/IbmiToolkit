@@ -86,6 +86,7 @@ class Toolkit implements ToolkitInterface
                                 'sbmjobCommand'  => '', // optional complete override of SBMJOB command when new toolkit job is submitted
                                 'prestart'       => false,
                                 'stateless'      => false,
+                                'stateless_mode_default' => true, // add new stateless flag for toolkit (non CW)
                                 'performance'    => false, // whether to enable performance collection (not fully implemented)
                                 'idleTimeout'    => '', // created for Compat. Wrapper (CW)
                                 'cdata'          => true, // whether to ask XMLSERVICE to wrap its output in CDATA to protect reserved XML characters
@@ -176,12 +177,16 @@ class Toolkit implements ToolkitInterface
         // set service parameters to use in object.
         $this->serviceParams = $this->getDefaultServiceParams();
 
+        /* We don't add these in getOptionalParams because the names are different */
         if ($this->getConfigValue('system', 'sbmjob_params')) {
             $this->serviceParams['sbmjobParams'] = $this->getConfigValue('system', 'sbmjob_params');
         }
+        if ($this->getConfigValue('system', 'stateless_mode_default')) {
+            $this->serviceParams['stateless'] = $this->getConfigValue('system', 'stateless_mode_default');
+        }
 
         // Optional params. Don't specify if not given in INI.
-        $this->getOptionalParams('system', array('v5r4', 'ccsidBefore', 'ccsidAfter', 'useHex', 'paseCcsid', 'trace', 'dataStructureIntegrity',  'arrayIntegrity'));
+        $this->getOptionalParams('system', array('v5r4', 'ccsidBefore', 'ccsidAfter', 'useHex', 'paseCcsid', 'trace', 'dataStructureIntegrity', 'arrayIntegrity'));
         $this->getOptionalParams('transport', array('httpTransportUrl', 'plugSize', 'xmlserviceCliPath'));
 
         // populate serviceParams with $transport, or get it from INI
@@ -1860,6 +1865,8 @@ class Toolkit implements ToolkitInterface
     }
 
     /**
+     * See if stateless mode has been turned on. Affects both CW and not-CW.
+     *
      * @return bool|void
      */
     public function isStateless()
