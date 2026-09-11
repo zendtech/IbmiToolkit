@@ -131,37 +131,17 @@ final class PdoSupp
             return false;
         }
 
-        $result = $statement->execute(array(
-            $bindArray['internalKey'],
-            $bindArray['controlKey'],
-            $bindArray['inputXml']
-        ));
+        $statement->bindParam(1, $bindArray["internalKey"], PDO::PARAM_STR);
+        $statement->bindParam(2, $bindArray["controlKey"], PDO::PARAM_STR);
+        $statement->bindParam(3, $bindArray["inputXml"], PDO::PARAM_STR);
+        $outputXml = $bindArray["outputXml"];
+        $statement->bindParam(4, $outputXml, PDO::PARAM_STR|PDO::PARAM_INPUT_OUTPUT);
+
+        $result = $statement->execute();
 
         if (!$result) {
             $this->setError($conn);
             return "PDO error code: " . $this->pdo->errorCode() . ' msg: ' . $this->pdo->errorInfo();
-        }
-
-        $outputXml = '';
-
-        if (!$bindArray['disconnect']) { // a disconnect request won't return data
-            // Loop through rows, concatenating XML into a final XML string.
-            foreach ($statement->fetchAll() as $row) {
-                // for each row, get XML string from first and only array element, 
-                // no matter whether assoc or numeric key
-                $xmlChunk = reset($row); 
-                if ($xmlChunk) {
-                    // Remove any "garbage" from after ending </script> tag (there used to be an ODBC clob issue)
-                    if (strstr($xmlChunk , "</script>")) {
-                        $pos = strpos($xmlChunk, "</script>");
-                        $pos += strlen("</script>"); 
-                        $outputXml .= substr($xmlChunk, 0, $pos);
-                        break;
-                    } else {
-                        $outputXml .= $xmlChunk;
-                    }
-                }
-            }
         }
 
         return $outputXml;
