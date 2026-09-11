@@ -494,7 +494,7 @@ class Toolkit implements ToolkitInterface
                 $this->setOptions(array('plugPrefix' => 'iPLUGR')); // "R" = "result set" which is how ODBC driver returns param results
                 $this->db = new odbcsupp();
         } elseif ($extensionName === 'pdo') {
-            $this->setOptions(array('plugPrefix' => 'iPLUGR'));
+            $this->setOptions(array('plugPrefix' => 'iPLUG'));
             $this->db = new PdoSupp($this->db);
         }
 
