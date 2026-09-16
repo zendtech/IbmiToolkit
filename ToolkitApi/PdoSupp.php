@@ -157,6 +157,11 @@ final class PdoSupp
                         $pos += strlen("</script>"); 
                         $outputXml .= substr($xmlChunk, 0, $pos);
                         break;
+                    } else if (strstr($xmlChunk , "</report>")) {
+                        $pos = strpos($xmlChunk, "</report>");
+                        $pos += strlen("</report>");
+                        $outputXml .= substr($xmlChunk, 0, $pos);
+                        break;
                     } else {
                         $outputXml .= $xmlChunk;
                     }

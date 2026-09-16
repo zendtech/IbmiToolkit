@@ -146,7 +146,12 @@ class odbcsupp
                     // because of ODBC problem blob transferring should execute some "clean" on returned data
                     if (strstr($tmp , "</script>")) {
                         $pos = strpos($tmp, "</script>");
-                        $pos += strlen("</script>"); // @todo why append this value?
+                        $pos += strlen("</script>");
+                        $row .= substr($tmp, 0, $pos);
+                        break;
+                    } else if (strstr($tmp , "</report>")) {
+                        $pos = strpos($tmp, "</report>");
+                        $pos += strlen("</report>");
                         $row .= substr($tmp, 0, $pos);
                         break;
                     } else {
